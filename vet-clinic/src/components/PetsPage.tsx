@@ -85,18 +85,22 @@ export function PetsPage() {
     <div className="pets-page">
       <div className="pets-page-container">
         <div className="pets-page-actions">
+        <AnimalFiltersComponent onSearch={handleSearch} onClear={handleClearFilters} />
           <button className="pets-page-create-btn btn btn-gradient" onClick={handleCreateNew}>
             Cadastrar novo pet
           </button>
         </div>
-
+       
         <div className="pets-page-header">
+
+
           <div className="pets-page-header-content">
             <div>
               <h1>Listagem de Pets</h1>
               <p className="pets-page-subtitle">Visualize todos os animais cadastrados</p>
-              <AnimalFiltersComponent onSearch={handleSearch} onClear={handleClearFilters} />
-              {selectedAnimalId ? (
+              
+            </div>
+            {selectedAnimalId ? (
           <AnimalDetails animalId={selectedAnimalId} onClose={handleCloseDetails} />
         ) : (
           <AnimalList 
@@ -105,7 +109,6 @@ export function PetsPage() {
             loading={loading}
           />
         )}
-            </div>
           </div>
 
         </div>

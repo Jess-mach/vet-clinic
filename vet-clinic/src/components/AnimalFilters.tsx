@@ -52,7 +52,6 @@ export function AnimalFiltersComponent({ onSearch, onClear }: AnimalFiltersProps
       <div className="animal-filters-header">
         <div className="animal-filters-title">
           <h3>🔍 Filtros de Busca</h3>
-          <p>Refine sua busca pelos animais cadastrados</p>
         </div>
       </div>
 
