@@ -48,7 +48,7 @@ export function AnimalFiltersComponent({ onSearch, onClear }: AnimalFiltersProps
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="animal-filters">
       <div className="animal-filters-header">
         <div className="animal-filters-title">
           <h3>🔍 Filtros de Busca</h3>

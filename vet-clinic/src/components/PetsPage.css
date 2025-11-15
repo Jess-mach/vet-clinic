@@ -20,8 +20,13 @@
 
 .pets-page-header-content {
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
+  flex-direction: column;
+  width: 100%;
+  gap: var(--spacing-lg);
+}
+
+.pets-page-header-content > div {
+  width: 100%;
 }
 
 .pets-page-header h1 {
@@ -60,6 +65,11 @@
 
 .pets-page-error p {
   margin: 0;
+}
+
+/* Animal Filters container fullwidth */
+.pets-page-header-content form {
+  width: 100%;
 }
 
 @media (max-width: 768px) {

@@ -1,3 +1,6 @@
+.animal-filters {
+  width: 100%;
+}
 
 .animal-filters-header {
   display: flex;
@@ -22,15 +25,19 @@
 
 
 .filters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(700px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
+  align-items: flex-end;
+  width: 100%;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .filter-group label {
@@ -43,6 +50,7 @@
 }
 
 .filter-group input {
+  width: 100%;
   padding: var(--spacing-sm) var(--spacing-md);
   border: 2px solid var(--color-gray-200);
   border-radius: var(--radius-md);
@@ -50,6 +58,7 @@
   transition: border-color var(--transition-base), box-shadow var(--transition-base);
   background-color: var(--color-white);
   color: var(--color-text-primary);
+  box-sizing: border-box;
 }
 
 .filter-group input::placeholder {
@@ -67,6 +76,8 @@
   gap: var(--spacing-md);
   justify-content: flex-end;
   flex-wrap: wrap;
+  margin-left: auto;
+  align-self: flex-end;
 }
 
 .btn-primary,
@@ -78,6 +89,7 @@
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   transition: all var(--transition-base);
+  white-space: nowrap;
 }
 
 .btn-primary {
@@ -130,13 +142,20 @@
   }
 
   .filters-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
+    align-items: stretch;
+  }
+
+  .filter-group {
+    min-width: auto;
   }
 
   .filters-actions {
+    margin-left: 0;
     justify-content: stretch;
+    width: 100%;
   }
 
   .btn-primary,
