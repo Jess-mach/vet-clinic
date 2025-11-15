@@ -1,6 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import './Hero.css';
 
 export function Hero() {
+  const navigate = useNavigate();
+
   return (
     <section className="hero">
       <div className="hero-container">
@@ -14,6 +17,18 @@ export function Hero() {
             <a href="#agendar" className="btn btn-primary btn-large">
               🐾 Agendar consulta
             </a>
+            <button 
+              className="btn btn-secondary btn-large"
+              onClick={() => navigate('/pets')}
+            >
+              🐱 Ver Pets
+            </button>
+            <button 
+              className="btn btn-secondary btn-large"
+              onClick={() => navigate('/consultas')}
+            >
+              📋 Ver Consultas
+            </button>
           </div>
         </div>
         <div className="hero-image-placeholder">
