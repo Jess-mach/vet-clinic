@@ -1,11 +1,23 @@
 :root {
-  /* Colors - Baseado em tons de roxo/violeta para clínica veterinária */
+  /* Colors - Paleta de Roxo Purple (Baseado em tons de roxo/violeta para clínica veterinária) */
   --color-primary: #7c3aed;
   --color-primary-dark: #6d28d9;
   --color-primary-light: #a855f7;
   --color-secondary: #9333ea;
   --color-secondary-dark: #5b21b6;
   --color-accent: #a78bfa;
+  
+  /* Purple Palette Extensions */
+  --color-purple-dark-800: #5b21b6;
+  --color-purple-dark-900: #4c1d95;
+  --color-purple-darkest: #3b0764;
+  --color-purple-medium: #8b5cf6;
+  --color-purple-lighter: #c084fc;
+  --color-purple-pale: #ddd6fe;
+  --color-purple-bg-light: #f3e8ff;
+  --color-violet-primary: #9333ea;
+  --color-violet-light: #a78bfa;
+  --color-violet-pale: #c4b5fd;
   
   /* Neutrals */
   --color-white: #ffffff;

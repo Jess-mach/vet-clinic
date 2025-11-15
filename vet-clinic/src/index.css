@@ -122,14 +122,15 @@ img {
 }
 
 .btn-primary {
-  background-color: #a855f7;
+  background-color: var(--color-primary);
   color: var(--color-white);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
 }
 
 .btn-primary:hover {
-  background-color: #8b5cf6;
+  background-color: var(--color-primary-dark);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4);
 }
 
 .btn-secondary {
@@ -141,6 +142,17 @@ img {
 .btn-secondary:hover {
   background-color: var(--color-primary);
   color: var(--color-white);
+}
+
+.btn-large {
+  padding: var(--spacing-lg) var(--spacing-2xl);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.btn-large:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
 }
 
 @media (max-width: 768px) {
