@@ -192,6 +192,44 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(problemDetail);
     }
 
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ProblemDetail> handleHttpRequestMethodNotSupportedException(
+            HttpRequestMethodNotSupportedException ex, WebRequest request) {
+        
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.METHOD_NOT_ALLOWED,
+                ex.getMessage()
+        );
+        
+        problemDetail.setTitle("Method Not Allowed");
+        problemDetail.setType(URI.create("https://syscecilia.vet/problems/method-not-allowed"));
+        problemDetail.setProperty("timestamp", Instant.now());
+        problemDetail.setProperty("path", request.getDescription(false).replace("uri=", ""));
+        
+        if (ex.getSupportedMethods() != null && ex.getSupportedMethods().length > 0) {
+            problemDetail.setProperty("supportedMethods", String.join(", ", ex.getSupportedMethods()));
+        }
+        
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(problemDetail);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ProblemDetail> handleNoHandlerFoundException(
+            NoHandlerFoundException ex, WebRequest request) {
+        
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                "The requested resource was not found"
+        );
+        
+        problemDetail.setTitle("Resource Not Found");
+        problemDetail.setType(URI.create("https://syscecilia.vet/problems/resource-not-found"));
+        problemDetail.setProperty("timestamp", Instant.now());
+        problemDetail.setProperty("path", ex.getRequestURI());
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(
             Exception ex, WebRequest request) {
