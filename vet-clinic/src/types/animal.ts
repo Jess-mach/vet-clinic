@@ -21,6 +21,20 @@ export interface AnimalFilters {
   ownerName?: string;
 }
 
+export interface AnimalRequest {
+  name: string;
+  species: string;
+  breed?: string | null;
+  gender: string;
+  birthDate?: string | null;
+  color?: string | null;
+  weight?: number | null;
+  microchipNumber?: string | null;
+  ownerName: string;
+  ownerPhone?: string | null;
+  ownerEmail?: string | null;
+}
+
 export interface ApiError {
   type: string;
   title: string;
@@ -28,5 +42,7 @@ export interface ApiError {
   detail: string;
   timestamp: string;
   path: string;
+  errors?: Record<string, string>;
 }
+
 

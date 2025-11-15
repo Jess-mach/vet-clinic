@@ -3,17 +3,19 @@ package syscecilia.vet.SysCecilia.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import syscecilia.vet.SysCecilia.dto.AnimalRequest;
 import syscecilia.vet.SysCecilia.dto.AnimalResponse;
+import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
 import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
-@Transactional(readOnly = true)
 public class AnimalService {
 
     private final AnimalRepository animalRepository;
@@ -23,6 +25,52 @@ public class AnimalService {
         this.animalRepository = animalRepository;
     }
 
+    @Transactional(readOnly = true)
+    public AnimalResponse findById(Long id) {
+        Animal animal = animalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + id));
+        return convertToResponse(animal);
+    }
+
+    @Transactional
+    public AnimalResponse create(AnimalRequest request) {
+        validateBusinessRules(request);
+        
+        Animal animal = convertToEntity(request);
+        Animal savedAnimal = animalRepository.save(animal);
+        
+        return convertToResponse(savedAnimal);
+    }
+
+    private void validateBusinessRules(AnimalRequest request) {
+        if (request.getMicrochipNumber() != null && !request.getMicrochipNumber().isBlank()) {
+            Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumber(request.getMicrochipNumber());
+            if (existingAnimal.isPresent()) {
+                throw new BusinessException(
+                    "Microchip number already exists: " + request.getMicrochipNumber(),
+                    "An animal with this microchip number is already registered"
+                );
+            }
+        }
+    }
+
+    private Animal convertToEntity(AnimalRequest request) {
+        Animal animal = new Animal();
+        animal.setName(request.getName());
+        animal.setSpecies(request.getSpecies());
+        animal.setBreed(request.getBreed());
+        animal.setGender(request.getGender());
+        animal.setBirthDate(request.getBirthDate());
+        animal.setColor(request.getColor());
+        animal.setWeight(request.getWeight());
+        animal.setMicrochipNumber(request.getMicrochipNumber());
+        animal.setOwnerName(request.getOwnerName());
+        animal.setOwnerPhone(request.getOwnerPhone());
+        animal.setOwnerEmail(request.getOwnerEmail());
+        return animal;
+    }
+
+    @Transactional(readOnly = true)
     public List<AnimalResponse> search(String name, String species, String ownerName) {
         Stream<Animal> animalStream;
 
@@ -53,12 +101,6 @@ public class AnimalService {
                 .sorted((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName()))
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
-    }
-
-    public AnimalResponse findById(Long id) {
-        Animal animal = animalRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + id));
-        return convertToResponse(animal);
     }
 
     private AnimalResponse convertToResponse(Animal animal) {

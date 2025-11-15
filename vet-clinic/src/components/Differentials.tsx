@@ -36,7 +36,7 @@ const differentials: Differential[] = [
 
 export function Differentials() {
   return (
-    <section id="diferenciais" className="section differentials">
+    <section id="sobre" className="section differentials">
       <div className="container">
         <div className="section-title">
           <h2>Nossos Diferenciais</h2>

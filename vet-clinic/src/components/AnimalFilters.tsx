@@ -96,3 +96,4 @@ export function AnimalFiltersComponent({ onSearch, onClear }: AnimalFiltersProps
   );
 }
 
+

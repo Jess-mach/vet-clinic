@@ -7,14 +7,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import syscecilia.vet.SysCecilia.dto.AnimalRequest;
 import syscecilia.vet.SysCecilia.dto.AnimalResponse;
 import syscecilia.vet.SysCecilia.service.AnimalService;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -28,6 +32,48 @@ public class AnimalController {
     @Autowired
     public AnimalController(AnimalService animalService) {
         this.animalService = animalService;
+    }
+
+    @PostMapping
+    @Operation(
+            summary = "Create a new animal",
+            description = "Creates a new animal record in the system. " +
+                    "All required fields must be provided. " +
+                    "Microchip number must be unique if provided."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Animal successfully created",
+                    content = @Content(schema = @Schema(implementation = AnimalResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validation error - one or more fields are invalid",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "Business rule violation - microchip number already exists",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error"
+            )
+    })
+    public ResponseEntity<AnimalResponse> createAnimal(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Animal data to be created",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = AnimalRequest.class))
+            )
+            @Valid @RequestBody AnimalRequest request) {
+        AnimalResponse createdAnimal = animalService.create(request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .location(URI.create("/api/animals/" + createdAnimal.getId()))
+                .body(createdAnimal);
     }
 
     @GetMapping

@@ -1,4 +1,4 @@
-import type { Animal, AnimalFilters, ApiError as ApiErrorResponse } from '../types/animal';
+import type { Animal, AnimalFilters, AnimalRequest, ApiError as ApiErrorResponse } from '../types/animal';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -63,6 +63,43 @@ export async function getAnimalById(id: number): Promise<Animal> {
       }
       const error: ApiErrorResponse = await response.json();
       throw new ApiError(response.status, error.detail || 'Failed to get animal', error);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Network error or server unavailable');
+  }
+}
+
+export async function createAnimal(animal: AnimalRequest): Promise<Animal> {
+  const url = `${API_BASE_URL}/animals`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(animal),
+    });
+    
+    if (!response.ok) {
+      const error: ApiErrorResponse = await response.json();
+      
+      if (response.status === 400) {
+        // Validation errors - includes errors object
+        throw new ApiError(response.status, error.detail || 'Validation failed', error);
+      }
+      
+      if (response.status === 422) {
+        // Business rule violation
+        throw new ApiError(response.status, error.detail || 'Business rule violation', error);
+      }
+      
+      throw new ApiError(response.status, error.detail || 'Failed to create animal', error);
     }
     
     return await response.json();

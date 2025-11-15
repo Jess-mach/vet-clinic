@@ -76,3 +76,5 @@ next-env.d.ts
 *.swo
 *~
 
+.cursorrules
+start.sh
