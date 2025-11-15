@@ -6,7 +6,7 @@ export function Footer() {
       <div className="container">
         <div className="footer-content">
           <div className="footer-section">
-            <h3 className="footer-title">Nosso Vet</h3>
+            <h3 className="footer-title">Vet Clínica Cecília</h3>
             <p className="footer-subtitle">Clínica Veterinária</p>
             <p className="footer-description">
               Compromisso com a saúde do seu pet. Cuidado em cada fase da vida.
@@ -27,7 +27,7 @@ export function Footer() {
           <div className="footer-section">
             <h4 className="footer-heading">Sobre</h4>
             <ul className="footer-links">
-              <li><a href="#sobre">Sobre o Nosso Vet</a></li>
+              <li><a href="#sobre">Sobre a Vet Clínica Cecília</a></li>
               <li><a href="#especialidades">Especialidades</a></li>
               <li><a href="#contato">Fale conosco</a></li>
               <li><a href="#trabalhe">Trabalhe Conosco</a></li>
@@ -73,7 +73,7 @@ export function Footer() {
               <strong>Responsável técnico:</strong> Dra. Juliana Weckx Peña Muñoz - CRMV-SP 51.569
             </p>
             <p className="footer-copyright">
-              Nosso Vet Clínica Veterinária - Compromisso com a saúde do seu pet | 2025 © Todos direitos reservados
+              Vet Clínica Cecília - Compromisso com a saúde do seu pet | 2025 © Todos direitos reservados
             </p>
           </div>
         </div>

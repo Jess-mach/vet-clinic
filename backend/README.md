@@ -17,3 +17,4 @@ lsof -ti :8080
 # Depois mate o processo
 kill <PID>
 
+http://localhost:8080/swagger-ui.html
