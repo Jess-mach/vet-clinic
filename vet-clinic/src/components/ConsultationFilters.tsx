@@ -11,31 +11,22 @@ export function ConsultationFiltersComponent({
   onSearch,
   onClear,
 }: ConsultationFiltersComponentProps) {
-  const [animalName, setAnimalName] = useState('');
-  const [ownerName, setOwnerName] = useState('');
-  const [status, setStatus] = useState('');
-  const [veterinarian, setVeterinarian] = useState('');
+  const [animalId, setAnimalId] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSearch({
-      animalName: animalName || undefined,
-      ownerName: ownerName || undefined,
-      status: status || undefined,
-      veterinarian: veterinarian || undefined,
+      animalId: animalId ? parseInt(animalId) : undefined,
     });
   };
 
   const handleClear = () => {
-    setAnimalName('');
-    setOwnerName('');
-    setStatus('');
-    setVeterinarian('');
+    setAnimalId('');
     onClear();
   };
 
-  const hasFilters = animalName || ownerName || status || veterinarian;
+  const hasFilters = animalId;
 
   return (
     <form className="consultation-filters" onSubmit={handleSearch}>
@@ -46,7 +37,7 @@ export function ConsultationFiltersComponent({
       >
         <span className="filter-icon">🔍</span>
         <span className="filter-text">Filtros</span>
-        {hasFilters && <span className="filter-badge">{[animalName, ownerName, status, veterinarian].filter(Boolean).length}</span>}
+        {hasFilters && <span className="filter-badge">1</span>}
         <span className={`arrow ${isExpanded ? 'expanded' : ''}`}>▼</span>
       </button>
 
@@ -54,57 +45,31 @@ export function ConsultationFiltersComponent({
         <div className="consultation-filters-content">
           <div className="filters-grid">
             <div className="filter-group">
-              <label htmlFor="animalName" className="filter-label">
-                🐾 Nome do Animal
+              <label htmlFor="animalId" className="filter-label">
+                🐾 ID do Animal
               </label>
               <input
-                id="animalName"
-                type="text"
-                placeholder="Ex: Rex, Fluffy..."
-                value={animalName}
-                onChange={(e) => setAnimalName(e.target.value)}
+                id="animalId"
+                type="number"
+                placeholder="Ex: 1, 2, 3..."
+                value={animalId}
+                onChange={(e) => setAnimalId(e.target.value)}
                 className="filter-input"
+                min="1"
               />
             </div>
 
-            <div className="filter-group">
-              <label htmlFor="ownerName" className="filter-label">
-                👤 Proprietário
+            <div className="filter-group" style={{ opacity: 0.5, pointerEvents: 'none' }}>
+              <label className="filter-label">
+                💡 Filtros Avançados
               </label>
               <input
-                id="ownerName"
                 type="text"
-                placeholder="Ex: João Silva..."
-                value={ownerName}
-                onChange={(e) => setOwnerName(e.target.value)}
+                placeholder="Em desenvolvimento..."
+                disabled
                 className="filter-input"
               />
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="status" className="filter-label">
-                ✓ Status
-              </label>
-              <select value={status} onChange={(e) => setStatus(e.target.value)} className="filter-select">
-                <option value="">Todos os status</option>
-                <option value="COMPLETED">Concluída</option>
-                <option value="SCHEDULED">Agendada</option>
-                <option value="CANCELLED">Cancelada</option>
-              </select>
-            </div>
-
-            <div className="filter-group">
-              <label htmlFor="veterinarian" className="filter-label">
-                👨‍⚕️ Veterinário
-              </label>
-              <input
-                id="veterinarian"
-                type="text"
-                placeholder="Ex: Dr. Silva..."
-                value={veterinarian}
-                onChange={(e) => setVeterinarian(e.target.value)}
-                className="filter-input"
-              />
+              <small style={{ color: '#999', fontSize: '0.8rem' }}>Backend: apenas animalId suportado</small>
             </div>
           </div>
 

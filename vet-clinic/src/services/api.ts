@@ -197,17 +197,9 @@ export async function searchConsultations(
 ): Promise<Consultation[]> {
   const params = new URLSearchParams();
   
-  if (filters?.animalName) {
-    params.append('animalName', filters.animalName);
-  }
-  if (filters?.ownerName) {
-    params.append('ownerName', filters.ownerName);
-  }
-  if (filters?.status) {
-    params.append('status', filters.status);
-  }
-  if (filters?.veterinarian) {
-    params.append('veterinarian', filters.veterinarian);
+  // Backend suporta: GET /api/consultations?animalId={id}
+  if (filters?.animalId) {
+    params.append('animalId', filters.animalId.toString());
   }
 
   const url = `${API_BASE_URL}/consultations${params.toString() ? `?${params.toString()}` : ''}`;

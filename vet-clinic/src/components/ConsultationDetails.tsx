@@ -98,7 +98,7 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
 
         <div className="consultation-details-header">
           <div>
-            <h2 className="consultation-details-title">{consultation.animalName}</h2>
+            <h2 className="consultation-details-title">{consultation.animal.name}</h2>
             <p className="consultation-details-subtitle">Consulta Veterinária</p>
           </div>
           <span className={`consultation-status-large ${getStatusBadgeClass(consultation.status)}`}>
@@ -112,19 +112,19 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
             <div className="details-grid">
               <div className="detail-row">
                 <span className="detail-label">Animal:</span>
-                <span className="detail-value">{consultation.animalName}</span>
+                <span className="detail-value">{consultation.animal.name}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Espécie:</span>
+                <span className="detail-value">{consultation.animal.species}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Raça:</span>
+                <span className="detail-value">{consultation.animal.breed || 'N/A'}</span>
               </div>
               <div className="detail-row">
                 <span className="detail-label">Proprietário:</span>
-                <span className="detail-value">{consultation.ownerName}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Telefone:</span>
-                <span className="detail-value">{consultation.ownerPhone || 'N/A'}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Email:</span>
-                <span className="detail-value">{consultation.ownerEmail || 'N/A'}</span>
+                <span className="detail-value">{consultation.animal.ownerName}</span>
               </div>
             </div>
           </div>
@@ -137,12 +137,8 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
                 <span className="detail-value">{formatDate(consultation.consultationDate)}</span>
               </div>
               <div className="detail-row">
-                <span className="detail-label">Tipo de Consulta:</span>
-                <span className="detail-value">{consultation.consultationType}</span>
-              </div>
-              <div className="detail-row">
                 <span className="detail-label">Veterinário:</span>
-                <span className="detail-value">{consultation.veterinarian}</span>
+                <span className="detail-value">{consultation.veterinarianName}</span>
               </div>
               <div className="detail-row">
                 <span className="detail-label">Motivo:</span>
@@ -152,30 +148,40 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
           </div>
 
           <div className="details-section">
-            <h3 className="section-title">📝 Diagnóstico e Tratamento</h3>
+            <h3 className="section-title">📝 Descrição</h3>
+            <div className="details-grid">
+              <div className="detail-row full-width">
+                <span className="detail-label">Descrição:</span>
+                <span className="detail-value">{consultation.description || 'Não informado'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="details-section">
+            <h3 className="section-title">🩺 Diagnóstico e Tratamento</h3>
             <div className="details-grid">
               <div className="detail-row full-width">
                 <span className="detail-label">Diagnóstico:</span>
                 <span className="detail-value">{consultation.diagnosis || 'Não informado'}</span>
               </div>
               <div className="detail-row full-width">
-                <span className="detail-label">Tratamento:</span>
-                <span className="detail-value">{consultation.treatment || 'Não informado'}</span>
+                <span className="detail-label">Tratamento Prescrito:</span>
+                <span className="detail-value">{consultation.treatmentPrescribed || 'Não informado'}</span>
               </div>
               <div className="detail-row full-width">
                 <span className="detail-label">Observações:</span>
-                <span className="detail-value">{consultation.notes || 'Sem observações'}</span>
+                <span className="detail-value">{consultation.observations || 'Sem observações'}</span>
               </div>
             </div>
           </div>
 
-          {consultation.nextConsultationDate && (
+          {consultation.nextAppointmentDate && (
             <div className="details-section">
               <h3 className="section-title">📅 Próxima Consulta</h3>
               <div className="details-grid">
                 <div className="detail-row">
                   <span className="detail-label">Data Agendada:</span>
-                  <span className="detail-value">{formatDate(consultation.nextConsultationDate)}</span>
+                  <span className="detail-value">{formatDate(consultation.nextAppointmentDate)}</span>
                 </div>
               </div>
             </div>

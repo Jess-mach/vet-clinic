@@ -1,41 +1,43 @@
+// ✅ Compatível com Backend Contract V0002
+export interface AnimalBasicInfo {
+  id: number;
+  name: string;
+  species: string;
+  breed: string;
+  ownerName: string;
+}
+
 export interface Consultation {
   id: number;
-  animalId: number;
-  animalName: string;
-  ownerName: string;
-  ownerPhone: string | null;
-  ownerEmail: string | null;
+  animal: AnimalBasicInfo;
   consultationDate: string;
-  consultationType: string;
+  veterinarianName: string;
   reason: string;
-  diagnosis: string | null;
-  treatment: string | null;
-  notes: string | null;
-  veterinarian: string;
-  status: string;
-  nextConsultationDate: string | null;
+  description?: string;
+  diagnosis?: string;
+  treatmentPrescribed?: string;
+  observations?: string;
+  nextAppointmentDate?: string;
+  status: 'COMPLETED' | 'SCHEDULED' | 'CANCELLED';
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ConsultationFilters {
-  animalName?: string;
-  ownerName?: string;
-  status?: string;
-  veterinarian?: string;
+  animalId?: number;
 }
 
 export interface ConsultationRequest {
   animalId: number;
   consultationDate: string;
-  consultationType: string;
+  veterinarianName: string;
   reason: string;
-  diagnosis?: string | null;
-  treatment?: string | null;
-  notes?: string | null;
-  veterinarian: string;
-  status: string;
-  nextConsultationDate?: string | null;
+  description?: string;
+  diagnosis?: string;
+  treatmentPrescribed?: string;
+  observations?: string;
+  nextAppointmentDate?: string;
+  status?: 'COMPLETED' | 'SCHEDULED' | 'CANCELLED';
 }
 
 export interface ApiError {
@@ -43,8 +45,8 @@ export interface ApiError {
   title: string;
   status: number;
   detail: string;
-  timestamp: string;
-  path: string;
+  timestamp?: string;
+  path?: string;
   errors?: Record<string, string>;
 }
 

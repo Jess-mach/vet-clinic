@@ -97,8 +97,8 @@ export function ConsultationList({
           >
             <div className="consultation-card-header">
               <div className="consultation-info">
-                <h3 className="consultation-animal-name">{consultation.animalName}</h3>
-                <p className="consultation-owner">👤 {consultation.ownerName}</p>
+                <h3 className="consultation-animal-name">{consultation.animal.name}</h3>
+                <p className="consultation-owner">👤 {consultation.animal.ownerName}</p>
               </div>
               <span className={`consultation-status ${getStatusBadgeClass(consultation.status)}`}>
                 {consultation.status}
@@ -111,12 +111,8 @@ export function ConsultationList({
                 <span className="detail-value">{formatDate(consultation.consultationDate)}</span>
               </div>
               <div className="consultation-detail-item">
-                <span className="detail-label">🩺 Tipo:</span>
-                <span className="detail-value">{consultation.consultationType}</span>
-              </div>
-              <div className="consultation-detail-item">
                 <span className="detail-label">👨‍⚕️ Veterinário:</span>
-                <span className="detail-value">{consultation.veterinarian}</span>
+                <span className="detail-value">{consultation.veterinarianName}</span>
               </div>
               <div className="consultation-detail-item">
                 <span className="detail-label">📝 Motivo:</span>
