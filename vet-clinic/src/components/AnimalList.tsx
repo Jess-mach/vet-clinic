@@ -1,13 +1,29 @@
+import { useState } from 'react';
 import type { Animal } from '../types/animal';
+import { deleteAnimal, ApiError } from '../services/api';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { ErrorModal } from './ErrorModal';
 import './AnimalList.css';
 
 interface AnimalListProps {
   animals: Animal[];
   onAnimalClick: (animal: Animal) => void;
   loading?: boolean;
+  onAnimalDeleted?: () => void;
 }
 
-export function AnimalList({ animals, onAnimalClick, loading }: AnimalListProps) {
+export function AnimalList({ animals, onAnimalClick, loading, onAnimalDeleted }: AnimalListProps) {
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
+    isOpen: boolean;
+    animal: Animal | null;
+  }>({ isOpen: false, animal: null });
+  
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<{ isOpen: boolean; message: string; details?: Record<string, string> }>({
+    isOpen: false,
+    message: '',
+  });
+
   if (loading) {
     return (
       <div className="animal-list-loading">
@@ -41,10 +57,36 @@ export function AnimalList({ animals, onAnimalClick, loading }: AnimalListProps)
 
   const handleDelete = (event: React.MouseEvent, animal: Animal) => {
     event.stopPropagation();
-    if (window.confirm(`Tem certeza que deseja deletar o animal ${animal.name}?`)) {
-      console.log('Deletar animal:', animal.id);
-      // TODO: Implementar chamada à API de exclusão
+    setDeleteConfirmModal({ isOpen: true, animal });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmModal.animal) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteAnimal(deleteConfirmModal.animal.id);
+      setDeleteConfirmModal({ isOpen: false, animal: null });
+      
+      // Notify parent component to refresh the list
+      if (onAnimalDeleted) {
+        onAnimalDeleted();
+      }
+    } catch (err) {
+      const apiError = err instanceof ApiError ? err : new ApiError(500, 'Erro desconhecido');
+      setError({
+        isOpen: true,
+        message: apiError.detail,
+        details: apiError.errorData?.errors,
+      });
+      setDeleteConfirmModal({ isOpen: false, animal: null });
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmModal({ isOpen: false, animal: null });
   };
 
   return (
@@ -115,6 +157,27 @@ export function AnimalList({ animals, onAnimalClick, loading }: AnimalListProps)
           </tbody>
         </table>
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={deleteConfirmModal.isOpen}
+        title="Confirmar Exclusão"
+        message={
+          deleteConfirmModal.animal
+            ? `Tem certeza que deseja deletar o animal "${deleteConfirmModal.animal.name}"? Esta ação não pode ser desfeita.`
+            : 'Tem certeza que deseja deletar este animal?'
+        }
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        isLoading={isDeleting}
+      />
+
+      <ErrorModal
+        isOpen={error.isOpen}
+        title="Erro ao Deletar Animal"
+        message={error.message}
+        onClose={() => setError({ isOpen: false, message: '' })}
+        details={error.details}
+      />
     </div>
   );
 }

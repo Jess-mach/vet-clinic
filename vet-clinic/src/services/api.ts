@@ -157,3 +157,35 @@ export async function updateAnimal(id: number, animal: AnimalRequest): Promise<A
   }
 }
 
+export async function deleteAnimal(id: number): Promise<void> {
+  if (id <= 0) {
+    throw new ApiError(400, 'ID must be greater than 0');
+  }
+
+  const url = `${API_BASE_URL}/animals/${id}`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      const error: ApiErrorResponse = await response.json();
+      
+      if (response.status === 404) {
+        throw new ApiError(404, 'Animal not found', error);
+      }
+      
+      throw new ApiError(response.status, error.detail || 'Failed to delete animal', error);
+    }
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Network error or server unavailable');
+  }
+}
+
