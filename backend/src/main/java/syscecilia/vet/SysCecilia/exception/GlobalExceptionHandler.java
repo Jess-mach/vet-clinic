@@ -5,11 +5,16 @@ import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
 import java.net.URI;
 import java.time.Instant;
@@ -42,6 +47,67 @@ public class GlobalExceptionHandler {
         });
         
         problemDetail.setProperty("errors", errors);
+        
+        return ResponseEntity.badRequest().body(problemDetail);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ProblemDetail> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex, WebRequest request) {
+        
+        Map<String, String> errors = new HashMap<>();
+        String errorMessage = "Invalid JSON format or type mismatch";
+        
+        if (ex.getCause() instanceof JsonMappingException) {
+            JsonMappingException jsonEx = (JsonMappingException) ex.getCause();
+            
+            if (jsonEx instanceof InvalidFormatException) {
+                InvalidFormatException ife = (InvalidFormatException) jsonEx;
+                String fieldName = ife.getPath().stream()
+                        .map(JsonMappingException.Reference::getFieldName)
+                        .collect(Collectors.joining("."));
+                
+                Object invalidValue = ife.getValue();
+                Class<?> targetType = ife.getTargetType();
+                
+                if (targetType != null) {
+                    errorMessage = String.format(
+                            "Field '%s' has invalid type. Received: %s, but expected: %s",
+                            fieldName,
+                            invalidValue != null ? invalidValue.getClass().getSimpleName() : "null",
+                            targetType.getSimpleName()
+                    );
+                } else {
+                    errorMessage = String.format("Invalid value '%s' for field '%s'", invalidValue, fieldName);
+                }
+                
+                if (!fieldName.isEmpty()) {
+                    errors.put(fieldName, errorMessage);
+                }
+            } else {
+                String path = jsonEx.getPath().stream()
+                        .map(JsonMappingException.Reference::getFieldName)
+                        .collect(Collectors.joining("."));
+                errorMessage = jsonEx.getOriginalMessage();
+                if (!path.isEmpty()) {
+                    errors.put(path, errorMessage);
+                }
+            }
+        }
+        
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                errorMessage
+        );
+        
+        problemDetail.setTitle("Invalid Request Format");
+        problemDetail.setType(URI.create("https://syscecilia.vet/problems/invalid-format"));
+        problemDetail.setProperty("timestamp", Instant.now());
+        problemDetail.setProperty("path", request.getDescription(false).replace("uri=", ""));
+        
+        if (!errors.isEmpty()) {
+            problemDetail.setProperty("errors", errors);
+        }
         
         return ResponseEntity.badRequest().body(problemDetail);
     }

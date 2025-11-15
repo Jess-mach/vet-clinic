@@ -830,5 +830,51 @@ class AnimalControllerIntegrationTest {
 
         verify(animalService, never()).update(anyLong(), any(AnimalRequest.class));
     }
+
+    @Test
+    @DisplayName("PUT /api/animals/{id} - Should return 400 with detailed error when birthDate format is invalid")
+    void shouldReturn400WithDetailedErrorWhenInvalidBirthDateFormat() throws Exception {
+        // Given - Sending raw JSON with invalid date format
+        String invalidRequestJson = "{\"name\":\"Maria Cecilia\",\"species\":\"Dog\",\"gender\":\"Neutered\"," +
+                "\"ownerName\":\"Wagner Costa\",\"breed\":\"Chettos\",\"color\":\"Sujeira\"," +
+                "\"microchipNumber\":\"0001\",\"ownerPhone\":\"11934002606\",\"ownerEmail\":\"wg.o.costa@gmail.com\"," +
+                "\"birthDate\":\"26-05-2020\",\"weight\":25.5}";
+
+        // When/Then
+        mockMvc.perform(put("/api/animals/3")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidRequestJson))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.errors").exists())
+                .andExpect(jsonPath("$.errors.birthDate").exists());
+
+        verify(animalService, never()).update(anyLong(), any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("POST /api/animals - Should return 400 with detailed error when birthDate format is invalid")
+    void shouldReturn400WithDetailedErrorOnCreateWhenInvalidBirthDateFormat() throws Exception {
+        // Given - Sending raw JSON with invalid date format (DD-MM-YYYY instead of YYYY-MM-DD)
+        String invalidRequestJson = "{\"name\":\"Maria Cecilia\",\"species\":\"Dog\",\"gender\":\"Neutered\"," +
+                "\"ownerName\":\"Wagner Costa\",\"breed\":\"Chettos\",\"color\":\"Sujeira\"," +
+                "\"microchipNumber\":\"0001\",\"ownerPhone\":\"11934002606\",\"ownerEmail\":\"wg.o.costa@gmail.com\"," +
+                "\"birthDate\":\"26-05-2020\",\"weight\":25.5}";
+
+        // When/Then
+        mockMvc.perform(post("/api/animals")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidRequestJson))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.errors").exists())
+                .andExpect(jsonPath("$.errors.birthDate").exists());
+
+        verify(animalService, never()).create(any(AnimalRequest.class));
+    }
 }
 
