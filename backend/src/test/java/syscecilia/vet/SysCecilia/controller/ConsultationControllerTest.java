@@ -8,6 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -66,64 +70,215 @@ public class ConsultationControllerTest {
     }
 
     @Test
-    @DisplayName("Should find all consultations")
-    public void testFindAllConsultations() throws Exception {
-        when(consultationService.findAll()).thenReturn(Arrays.asList(testConsultation));
+    @DisplayName("Should find consultation by ID")
+    public void testFindConsultationById() throws Exception {
+        when(consultationService.findById(1L)).thenReturn(testConsultation);
 
-        mockMvc.perform(get("/api/consultations")
+        mockMvc.perform(get("/api/consultations/1")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(1)))
-                .andExpect(jsonPath("$[0].veterinarianName", is("Dr. Silva")))
-                .andExpect(jsonPath("$[0].reason", is("Routine checkup")))
-                .andExpect(jsonPath("$[0].animal.name", is("Rex")))
-                .andExpect(jsonPath("$[0].animal.species", is("Dog")));
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.veterinarianName", is("Dr. Silva")))
+                .andExpect(jsonPath("$.reason", is("Routine checkup")))
+                .andExpect(jsonPath("$.animal.name", is("Rex")))
+                .andExpect(jsonPath("$.animal.species", is("Dog")));
 
-        verify(consultationService, times(1)).findAll();
+        verify(consultationService, times(1)).findById(1L);
     }
 
     @Test
-    @DisplayName("Should find consultations by animal ID")
-    public void testFindAllConsultationsByAnimalId() throws Exception {
-        when(consultationService.findAllByAnimalId(1L)).thenReturn(Arrays.asList(testConsultation));
+    @DisplayName("Should return 404 when consultation not found by ID")
+    public void testFindConsultationByIdNotFound() throws Exception {
+        when(consultationService.findById(9999L))
+                .thenThrow(new ResourceNotFoundException("Consultation not found with id: 9999"));
 
-        mockMvc.perform(get("/api/consultations")
-                .param("animalId", "1")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].animal.id", is(1)))
-                .andExpect(jsonPath("$[0].veterinarianName", is("Dr. Silva")));
-
-        verify(consultationService, times(1)).findAllByAnimalId(1L);
-    }
-
-    @Test
-    @DisplayName("Should return 404 when animal not found")
-    public void testFindAllConsultationsByAnimalIdNotFound() throws Exception {
-        when(consultationService.findAllByAnimalId(9999L))
-                .thenThrow(new ResourceNotFoundException("Animal not found with id: 9999"));
-
-        mockMvc.perform(get("/api/consultations")
-                .param("animalId", "9999")
+        mockMvc.perform(get("/api/consultations/9999")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
 
-        verify(consultationService, times(1)).findAllByAnimalId(9999L);
+        verify(consultationService, times(1)).findById(9999L);
     }
 
     @Test
-    @DisplayName("Should return empty list when no consultations exist")
-    public void testFindAllConsultationsEmpty() throws Exception {
-        when(consultationService.findAll()).thenReturn(Collections.emptyList());
+    @DisplayName("Should find all consultations with pagination (no filters)")
+    public void testFindAllConsultationsWithPagination() throws Exception {
+        Page<ConsultationResponse> page = new PageImpl<>(
+                Arrays.asList(testConsultation),
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "consultationDate")),
+                1
+        );
+
+        when(consultationService.findByFilters(
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), any()
+        )).thenReturn(page);
 
         mockMvc.perform(get("/api/consultations")
+                .param("page", "0")
+                .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].id", is(1)))
+                .andExpect(jsonPath("$.content[0].veterinarianName", is("Dr. Silva")))
+                .andExpect(jsonPath("$.totalElements", is(1)))
+                .andExpect(jsonPath("$.totalPages", is(1)));
 
-        verify(consultationService, times(1)).findAll();
+        verify(consultationService, times(1)).findByFilters(
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), any()
+        );
+    }
+
+    @Test
+    @DisplayName("Should find consultations filtered by animal name")
+    public void testFindConsultationsByAnimalName() throws Exception {
+        Page<ConsultationResponse> page = new PageImpl<>(
+                Arrays.asList(testConsultation),
+                PageRequest.of(0, 10),
+                1
+        );
+
+        when(consultationService.findByFilters(
+                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), any()
+        )).thenReturn(page);
+
+        mockMvc.perform(get("/api/consultations")
+                .param("animalName", "Rex")
+                .param("page", "0")
+                .param("size", "10")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].animal.name", is("Rex")));
+
+        verify(consultationService, times(1)).findByFilters(
+                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), any()
+        );
+    }
+
+    @Test
+    @DisplayName("Should find consultations filtered by veterinarian name")
+    public void testFindConsultationsByVeterinarianName() throws Exception {
+        Page<ConsultationResponse> page = new PageImpl<>(
+                Arrays.asList(testConsultation),
+                PageRequest.of(0, 10),
+                1
+        );
+
+        when(consultationService.findByFilters(
+                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(),
+                isNull(), isNull(), any()
+        )).thenReturn(page);
+
+        mockMvc.perform(get("/api/consultations")
+                .param("veterinarianName", "Dr. Silva")
+                .param("page", "0")
+                .param("size", "10")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].veterinarianName", is("Dr. Silva")));
+
+        verify(consultationService, times(1)).findByFilters(
+                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(),
+                isNull(), isNull(), any()
+        );
+    }
+
+    @Test
+    @DisplayName("Should find consultations filtered by status")
+    public void testFindConsultationsByStatus() throws Exception {
+        Page<ConsultationResponse> page = new PageImpl<>(
+                Arrays.asList(testConsultation),
+                PageRequest.of(0, 10),
+                1
+        );
+
+        when(consultationService.findByFilters(
+                isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
+                isNull(), isNull(), any()
+        )).thenReturn(page);
+
+        mockMvc.perform(get("/api/consultations")
+                .param("status", "COMPLETED")
+                .param("page", "0")
+                .param("size", "10")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].status", is("COMPLETED")));
+
+        verify(consultationService, times(1)).findByFilters(
+                isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
+                isNull(), isNull(), any()
+        );
+    }
+
+    @Test
+    @DisplayName("Should find consultations with multiple filters applied together")
+    public void testFindConsultationsWithMultipleFilters() throws Exception {
+        Page<ConsultationResponse> page = new PageImpl<>(
+                Arrays.asList(testConsultation),
+                PageRequest.of(0, 10),
+                1
+        );
+
+        when(consultationService.findByFilters(
+                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), eq("COMPLETED"), 
+                isNull(), isNull(), isNull(), isNull(), any()
+        )).thenReturn(page);
+
+        mockMvc.perform(get("/api/consultations")
+                .param("animalName", "Rex")
+                .param("ownerName", "John Doe")
+                .param("veterinarianName", "Dr. Silva")
+                .param("status", "COMPLETED")
+                .param("page", "0")
+                .param("size", "10")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].animal.name", is("Rex")))
+                .andExpect(jsonPath("$.content[0].animal.ownerName", is("John Doe")))
+                .andExpect(jsonPath("$.content[0].veterinarianName", is("Dr. Silva")))
+                .andExpect(jsonPath("$.content[0].status", is("COMPLETED")));
+
+        verify(consultationService, times(1)).findByFilters(
+                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), eq("COMPLETED"),
+                isNull(), isNull(), isNull(), isNull(), any()
+        );
+    }
+
+    @Test
+    @DisplayName("Should return empty page when no consultations match filters")
+    public void testFindConsultationsEmptyResult() throws Exception {
+        Page<ConsultationResponse> emptyPage = new PageImpl<>(
+                Collections.emptyList(),
+                PageRequest.of(0, 10),
+                0
+        );
+
+        when(consultationService.findByFilters(
+                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), any()
+        )).thenReturn(emptyPage);
+
+        mockMvc.perform(get("/api/consultations")
+                .param("animalName", "NonExistent")
+                .param("page", "0")
+                .param("size", "10")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(0)))
+                .andExpect(jsonPath("$.totalElements", is(0)));
+
+        verify(consultationService, times(1)).findByFilters(
+                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), any()
+        );
     }
 }
 

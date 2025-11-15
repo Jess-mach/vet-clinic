@@ -1,10 +1,14 @@
 package syscecilia.vet.SysCecilia.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import syscecilia.vet.SysCecilia.dto.AnimalRequest;
 import syscecilia.vet.SysCecilia.dto.AnimalResponse;
+import syscecilia.vet.SysCecilia.dto.PageResponse;
 import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
 import syscecilia.vet.SysCecilia.model.Animal;
@@ -153,6 +157,60 @@ public class AnimalService {
                 .sorted((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName()))
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<AnimalResponse> searchPaginated(Integer page, Integer pageSize, String name, String species, String ownerName) {
+        // Use default values if not provided
+        int pageNumber = page != null ? page : 0;
+        int size = pageSize != null ? pageSize : 20;
+
+        Pageable pageable = PageRequest.of(pageNumber, size);
+        Page<Animal> animalPage;
+
+        if (name != null && !name.isBlank() && species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            // Fetch by name and apply other filters in memory
+            animalPage = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(name, pageable)
+                    .filter(animal -> animal.getSpecies().equalsIgnoreCase(species)
+                            && animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (name != null && !name.isBlank() && species != null && !species.isBlank()) {
+            // Fetch by name and apply species filter in memory
+            animalPage = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(name, pageable)
+                    .filter(animal -> animal.getSpecies().equalsIgnoreCase(species));
+        } else if (name != null && !name.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            // Fetch by name and apply owner filter in memory
+            animalPage = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(name, pageable)
+                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            // Fetch by species and apply owner filter in memory
+            animalPage = animalRepository.findBySpeciesAndIsActiveTrueOrderByNameAsc(species, pageable)
+                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (name != null && !name.isBlank()) {
+            animalPage = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(name, pageable);
+        } else if (species != null && !species.isBlank()) {
+            animalPage = animalRepository.findBySpeciesAndIsActiveTrueOrderByNameAsc(species, pageable);
+        } else if (ownerName != null && !ownerName.isBlank()) {
+            animalPage = animalRepository.findByOwnerNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(ownerName, pageable);
+        } else {
+            animalPage = animalRepository.findAllByIsActiveTrueOrderByNameAsc(pageable);
+        }
+
+        List<AnimalResponse> content = animalPage.getContent()
+                .stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+
+        return new PageResponse<>(
+                content,
+                animalPage.getNumber(),
+                animalPage.getSize(),
+                animalPage.getTotalElements(),
+                animalPage.getTotalPages(),
+                animalPage.isFirst(),
+                animalPage.isLast(),
+                animalPage.hasNext(),
+                animalPage.hasPrevious()
+        );
     }
 
     private AnimalResponse convertToResponse(Animal animal) {

@@ -5,6 +5,22 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "consultations")
+@NamedQueries({
+        @NamedQuery(
+                name = "Consultation.findByFilters",
+                query = "SELECT c FROM Consultation c " +
+                        "LEFT JOIN c.animal a " +
+                        "WHERE (:animalName IS NULL OR LOWER(a.name) LIKE LOWER(CONCAT('%', :animalName, '%'))) " +
+                        "AND (:ownerName IS NULL OR LOWER(a.ownerName) LIKE LOWER(CONCAT('%', :ownerName, '%'))) " +
+                        "AND (:veterinarianName IS NULL OR LOWER(c.veterinarianName) LIKE LOWER(CONCAT('%', :veterinarianName, '%'))) " +
+                        "AND (:status IS NULL OR c.status = :status) " +
+                        "AND (:reason IS NULL OR LOWER(c.reason) LIKE LOWER(CONCAT('%', :reason, '%'))) " +
+                        "AND (:description IS NULL OR LOWER(c.description) LIKE LOWER(CONCAT('%', :description, '%'))) " +
+                        "AND (:createdAtStart IS NULL OR c.createdAt >= :createdAtStart) " +
+                        "AND (:createdAtEnd IS NULL OR c.createdAt <= :createdAtEnd) " +
+                        "ORDER BY c.consultationDate DESC"
+        )
+})
 public class Consultation {
 
     @Id

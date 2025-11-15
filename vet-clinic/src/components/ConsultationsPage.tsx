@@ -104,21 +104,21 @@ export function ConsultationsPage() {
         <div className="consultations-page-header">
           <div className="consultations-page-header-content">
             <div>
-              <h1>Listagem de Consultas</h1>
-              <p className="consultations-page-subtitle">Visualize todas as consultas veterinárias</p>
+              <h1>Consultas Veterinárias</h1>
+              <p className="consultations-page-subtitle">Gerenciamento de consultas e histórico</p>
             </div>
-            {selectedConsultationId ? (
-              <ConsultationDetails consultationId={selectedConsultationId} onClose={handleCloseDetails} />
-            ) : (
-              <ConsultationList
-                consultations={consultations}
-                onConsultationClick={handleConsultationClick}
-                loading={loading}
-                onConsultationDeleted={loadConsultations}
-              />
-            )}
+            <ConsultationList
+              consultations={consultations}
+              onConsultationClick={handleConsultationClick}
+              loading={loading}
+              onConsultationDeleted={loadConsultations}
+            />
           </div>
         </div>
+
+        {selectedConsultationId && (
+          <ConsultationDetails consultationId={selectedConsultationId} onClose={handleCloseDetails} />
+        )}
 
         <ErrorModal
           isOpen={errorModalOpen}

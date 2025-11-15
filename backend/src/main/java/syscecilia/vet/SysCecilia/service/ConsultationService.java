@@ -1,6 +1,8 @@
 package syscecilia.vet.SysCecilia.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import syscecilia.vet.SysCecilia.dto.ConsultationResponse;
@@ -11,8 +13,7 @@ import syscecilia.vet.SysCecilia.model.Consultation;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @Service
 public class ConsultationService {
@@ -27,20 +28,47 @@ public class ConsultationService {
     }
 
     @Transactional(readOnly = true)
-    public List<ConsultationResponse> findAllByAnimalId(Long animalId) {
-        verifyAnimalExists(animalId);
-        List<Consultation> consultations = consultationRepository.findByAnimalIdOrderByConsultationDateDesc(animalId);
-        return consultations.stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
+    public ConsultationResponse findById(Long id) {
+        Consultation consultation = consultationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consultation not found with id: " + id));
+        return convertToResponse(consultation);
     }
 
     @Transactional(readOnly = true)
-    public List<ConsultationResponse> findAll() {
-        List<Consultation> consultations = consultationRepository.findAll();
-        return consultations.stream()
-                .map(this::convertToResponse)
-                .collect(Collectors.toList());
+    public Page<ConsultationResponse> findByFilters(
+            String animalName,
+            String ownerName,
+            String veterinarianName,
+            String status,
+            String reason,
+            String description,
+            LocalDateTime createdAtStart,
+            LocalDateTime createdAtEnd,
+            Pageable pageable) {
+        Page<Consultation> consultations = consultationRepository.findByFilters(
+                animalName,
+                ownerName,
+                veterinarianName,
+                status,
+                reason,
+                description,
+                createdAtStart,
+                createdAtEnd,
+                pageable
+        );
+        return consultations.map(this::convertToResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ConsultationResponse> findAll(Pageable pageable) {
+        Page<Consultation> consultations = consultationRepository.findAll(pageable);
+        return consultations.map(this::convertToResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ConsultationResponse> findAllByAnimalId(Long animalId, Pageable pageable) {
+        verifyAnimalExists(animalId);
+        return findByFilters(null, null, null, null, null, null, null, null, pageable);
     }
 
     private void verifyAnimalExists(Long animalId) {
