@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres_syscecilia
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-jess}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-morangos}
+      POSTGRES_DB: ${DB_NAME:-appdb}
+      POSTGRES_SCHEMA: ${DB_SCHEMA:-syscecilia}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - syscecilia_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jess -d appdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend - Spring Boot
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend_syscecilia
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-appdb}
+      DB_USERNAME: ${DB_USERNAME:-jess}
+      DB_PASSWORD: ${DB_PASSWORD:-morangos}
+      DB_SCHEMA: ${DB_SCHEMA:-syscecilia}
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - syscecilia_network
+    restart: unless-stopped
+
+  # Frontend - React + Vite
+  frontend:
+    build:
+      context: ./vet-clinic
+      dockerfile: Dockerfile
+    container_name: frontend_syscecilia
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - syscecilia_network
+    restart: unless-stopped
+
+networks:
+  syscecilia_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+

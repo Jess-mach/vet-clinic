@@ -1,0 +1,167 @@
+package syscecilia.vet.SysCecilia.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import syscecilia.vet.SysCecilia.dto.AnimalRequest;
+import syscecilia.vet.SysCecilia.dto.AnimalResponse;
+import syscecilia.vet.SysCecilia.exception.BusinessException;
+import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
+import syscecilia.vet.SysCecilia.model.Animal;
+import syscecilia.vet.SysCecilia.repository.AnimalRepository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+@Service
+public class AnimalService {
+
+    private final AnimalRepository animalRepository;
+
+    @Autowired
+    public AnimalService(AnimalRepository animalRepository) {
+        this.animalRepository = animalRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public AnimalResponse findById(Long id) {
+        Animal animal = animalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + id));
+        return convertToResponse(animal);
+    }
+
+    @Transactional
+    public AnimalResponse create(AnimalRequest request) {
+        validateBusinessRules(request);
+        
+        Animal animal = convertToEntity(request);
+        Animal savedAnimal = animalRepository.save(animal);
+        
+        return convertToResponse(savedAnimal);
+    }
+
+    @Transactional
+    public AnimalResponse update(Long id, AnimalRequest request) {
+        Animal entity = animalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + id));
+        
+        validateBusinessRulesForUpdate(entity, request);
+        
+        updateEntityFromRequest(entity, request);
+        Animal updatedAnimal = animalRepository.save(entity);
+        
+        return convertToResponse(updatedAnimal);
+    }
+
+    private void validateBusinessRules(AnimalRequest request) {
+        if (request.getMicrochipNumber() != null && !request.getMicrochipNumber().isBlank()) {
+            Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumber(request.getMicrochipNumber());
+            if (existingAnimal.isPresent()) {
+                throw new BusinessException(
+                    "Microchip number already exists: " + request.getMicrochipNumber(),
+                    "An animal with this microchip number is already registered"
+                );
+            }
+        }
+    }
+
+    private void validateBusinessRulesForUpdate(Animal animal, AnimalRequest request) {
+        if (request.getMicrochipNumber() != null && !request.getMicrochipNumber().isBlank()) {
+            // Only validate if microchip is changing
+            if (!request.getMicrochipNumber().equals(animal.getMicrochipNumber())) {
+                Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumber(request.getMicrochipNumber());
+                if (existingAnimal.isPresent()) {
+                    throw new BusinessException(
+                        "Microchip number already exists: " + request.getMicrochipNumber(),
+                        "An animal with this microchip number is already registered"
+                    );
+                }
+            }
+        }
+    }
+
+    private Animal convertToEntity(AnimalRequest request) {
+        Animal animal = new Animal();
+        animal.setName(request.getName());
+        animal.setSpecies(request.getSpecies());
+        animal.setBreed(request.getBreed());
+        animal.setGender(request.getGender());
+        animal.setBirthDate(request.getBirthDate());
+        animal.setColor(request.getColor());
+        animal.setWeight(request.getWeight());
+        animal.setMicrochipNumber(request.getMicrochipNumber());
+        animal.setOwnerName(request.getOwnerName());
+        animal.setOwnerPhone(request.getOwnerPhone());
+        animal.setOwnerEmail(request.getOwnerEmail());
+        return animal;
+    }
+
+    private void updateEntityFromRequest(Animal entity, AnimalRequest request) {
+        entity.setName(request.getName());
+        entity.setSpecies(request.getSpecies());
+        entity.setBreed(request.getBreed());
+        entity.setGender(request.getGender());
+        entity.setBirthDate(request.getBirthDate());
+        entity.setColor(request.getColor());
+        entity.setWeight(request.getWeight());
+        entity.setMicrochipNumber(request.getMicrochipNumber());
+        entity.setOwnerName(request.getOwnerName());
+        entity.setOwnerPhone(request.getOwnerPhone());
+        entity.setOwnerEmail(request.getOwnerEmail());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AnimalResponse> search(String name, String species, String ownerName) {
+        Stream<Animal> animalStream;
+
+        if (name != null && !name.isBlank() && species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream()
+                    .filter(animal -> animal.getSpecies().equalsIgnoreCase(species))
+                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (name != null && !name.isBlank() && species != null && !species.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream()
+                    .filter(animal -> animal.getSpecies().equalsIgnoreCase(species));
+        } else if (name != null && !name.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream()
+                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findBySpecies(species).stream()
+                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (name != null && !name.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream();
+        } else if (species != null && !species.isBlank()) {
+            animalStream = animalRepository.findBySpecies(species).stream();
+        } else if (ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findByOwnerNameContainingIgnoreCase(ownerName).stream();
+        } else {
+            animalStream = animalRepository.findAllByOrderByNameAsc().stream();
+        }
+
+        return animalStream
+                .sorted((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName()))
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    private AnimalResponse convertToResponse(Animal animal) {
+        return new AnimalResponse(
+                animal.getId(),
+                animal.getName(),
+                animal.getSpecies(),
+                animal.getBreed(),
+                animal.getGender(),
+                animal.getBirthDate(),
+                animal.getColor(),
+                animal.getWeight(),
+                animal.getMicrochipNumber(),
+                animal.getOwnerName(),
+                animal.getOwnerPhone(),
+                animal.getOwnerEmail(),
+                animal.getCreatedAt(),
+                animal.getUpdatedAt()
+        );
+    }
+}
+

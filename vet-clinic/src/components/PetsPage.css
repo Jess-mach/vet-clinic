@@ -1,0 +1,104 @@
+.pets-page {
+  min-height: calc(100vh - 200px);
+  background: linear-gradient(135deg, var(--color-purple-bg-light) 0%, var(--color-purple-pale) 100%);
+  padding: var(--spacing-2xl) var(--container-padding);
+}
+
+.pets-page-container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+}
+
+.pets-page-header {
+  background: white;
+  padding: var(--spacing-2xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--spacing-2xl);
+  position: relative;
+}
+
+.pets-page-header-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: var(--spacing-lg);
+}
+
+.pets-page-header-content > div {
+  width: 100%;
+}
+
+.pets-page-header h1 {
+  font-size: var(--font-size-3xl);
+  color: var(--color-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.pets-page-subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.pets-page-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.pets-page-create-btn {
+  white-space: nowrap;
+  /* Uses .btn-gradient from buttons.css */
+}
+
+.pets-page-error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+  border: 2px solid #ef4444;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+  color: #dc2626;
+  font-size: var(--font-size-base);
+}
+
+.pets-page-error p {
+  margin: 0;
+}
+
+/* Animal Filters container fullwidth */
+.pets-page-header-content form {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .pets-page-header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pets-page-header .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .pets-page {
+    padding: var(--spacing-lg) var(--container-padding);
+  }
+
+  .pets-page-header {
+    padding: var(--spacing-lg);
+  }
+
+  .pets-page-header h1 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .pets-page-subtitle {
+    font-size: var(--font-size-base);
+  }
+}
+

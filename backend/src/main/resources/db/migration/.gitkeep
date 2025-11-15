@@ -1,0 +1,4 @@
+# Flyway migration files should be placed in this directory
+# Naming convention: V{version}__{description}.sql
+# Example: V1__create_users_table.sql
+
