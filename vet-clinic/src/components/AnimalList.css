@@ -1,0 +1,125 @@
+.animal-list {
+  margin-top: 24px;
+}
+
+.animal-list h2 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 24px;
+}
+
+.animal-list-loading,
+.animal-list-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #888;
+  font-size: 16px;
+}
+
+.animal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.animal-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.animal-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  border-color: #646cff;
+}
+
+.animal-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.animal-card-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.animal-species {
+  background-color: #646cff;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.animal-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.animal-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #666;
+}
+
+.info-value {
+  color: #333;
+  text-align: right;
+}
+
+@media (prefers-color-scheme: dark) {
+  .animal-list h2 {
+    color: rgba(255, 255, 255, 0.87);
+  }
+
+  .animal-card {
+    background: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .animal-card:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+  }
+
+  .animal-card-header {
+    border-bottom-color: #444;
+  }
+
+  .animal-card-header h3 {
+    color: rgba(255, 255, 255, 0.87);
+  }
+
+  .info-label {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .info-value {
+    color: rgba(255, 255, 255, 0.87);
+  }
+}
+
+@media (max-width: 768px) {
+  .animal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

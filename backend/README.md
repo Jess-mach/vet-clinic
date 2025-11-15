@@ -2,3 +2,7 @@ sudo docker run -d   --name postgres   -e POSTGRES_PASSWORD=morangos   -e POSTGR
 
 
 lsof -ti:8080 | xargs kill -9
+
+```bash
+/usr/bin/env /usr/lib/jvm/java-21-openjdk-amd64/bin/java @/tmp/cp_6fjog0vdhpvissoy16sjj0sd3.argfile syscecilia.vet.SysCecilia.SysCeciliaApplication
+```

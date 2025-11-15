@@ -2,16 +2,8 @@
 -- Execute este script como superusuário do PostgreSQL (postgres)
 
 -- Criar o banco de dados
-CREATE DATABASE syscecilia;
+CREATE DATABASE sysCecilia;
 
--- Criar o usuário (se não existir)
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT FROM pg_user WHERE usename = 'jess') THEN
-        CREATE USER jess WITH PASSWORD 'morangos';
-    END IF;
-END
-$$;
 
 -- Conceder privilégios ao usuário
 GRANT ALL PRIVILEGES ON DATABASE syscecilia TO jess;
