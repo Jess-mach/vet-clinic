@@ -10,6 +10,7 @@ import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
 import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,7 +28,7 @@ public class AnimalService {
 
     @Transactional(readOnly = true)
     public AnimalResponse findById(Long id) {
-        Animal animal = animalRepository.findById(id)
+        Animal animal = animalRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + id));
         return convertToResponse(animal);
     }
@@ -55,9 +56,18 @@ public class AnimalService {
         return convertToResponse(updatedAnimal);
     }
 
+    @Transactional
+    public void delete(Long id) {
+        Animal animal = animalRepository.findByIdAndIsActiveTrue(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + id));
+        animal.setIsActive(false);
+        animal.setInactivatedAt(LocalDateTime.now());
+        animalRepository.save(animal);
+    }
+
     private void validateBusinessRules(AnimalRequest request) {
         if (request.getMicrochipNumber() != null && !request.getMicrochipNumber().isBlank()) {
-            Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumber(request.getMicrochipNumber());
+            Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumberAndIsActiveTrue(request.getMicrochipNumber());
             if (existingAnimal.isPresent()) {
                 throw new BusinessException(
                     "Microchip number already exists: " + request.getMicrochipNumber(),
@@ -71,7 +81,7 @@ public class AnimalService {
         if (request.getMicrochipNumber() != null && !request.getMicrochipNumber().isBlank()) {
             // Only validate if microchip is changing
             if (!request.getMicrochipNumber().equals(animal.getMicrochipNumber())) {
-                Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumber(request.getMicrochipNumber());
+                Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumberAndIsActiveTrue(request.getMicrochipNumber());
                 if (existingAnimal.isPresent()) {
                     throw new BusinessException(
                         "Microchip number already exists: " + request.getMicrochipNumber(),
@@ -117,26 +127,26 @@ public class AnimalService {
         Stream<Animal> animalStream;
 
         if (name != null && !name.isBlank() && species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
-            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream()
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
                     .filter(animal -> animal.getSpecies().equalsIgnoreCase(species))
                     .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
         } else if (name != null && !name.isBlank() && species != null && !species.isBlank()) {
-            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream()
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
                     .filter(animal -> animal.getSpecies().equalsIgnoreCase(species));
         } else if (name != null && !name.isBlank() && ownerName != null && !ownerName.isBlank()) {
-            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream()
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
                     .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
         } else if (species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
-            animalStream = animalRepository.findBySpecies(species).stream()
+            animalStream = animalRepository.findBySpeciesAndIsActiveTrue(species).stream()
                     .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
         } else if (name != null && !name.isBlank()) {
-            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream();
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream();
         } else if (species != null && !species.isBlank()) {
-            animalStream = animalRepository.findBySpecies(species).stream();
+            animalStream = animalRepository.findBySpeciesAndIsActiveTrue(species).stream();
         } else if (ownerName != null && !ownerName.isBlank()) {
-            animalStream = animalRepository.findByOwnerNameContainingIgnoreCase(ownerName).stream();
+            animalStream = animalRepository.findByOwnerNameContainingIgnoreCaseAndIsActiveTrue(ownerName).stream();
         } else {
-            animalStream = animalRepository.findAllByOrderByNameAsc().stream();
+            animalStream = animalRepository.findAllByIsActiveTrueOrderByNameAsc().stream();
         }
 
         return animalStream

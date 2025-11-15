@@ -30,7 +30,7 @@ class GlobalExceptionHandlerTest {
     private AnimalService animalService;
 
     @Test
-    @DisplayName("DELETE /api/animals/{id} - Should return 405 Method Not Allowed")
+    @DisplayName("DELETE /api/animals/{id}/not-allowed - Should return 405 Method Not Allowed")
     void shouldReturn405MethodNotAllowedForDeleteRequest() throws Exception {
         mockMvc.perform(delete("/api/animals/1"))
                 .andDo(print())

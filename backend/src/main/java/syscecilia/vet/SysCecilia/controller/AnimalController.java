@@ -177,4 +177,37 @@ public class AnimalController {
         AnimalResponse updatedAnimal = animalService.update(id, request);
         return ResponseEntity.ok(updatedAnimal);
     }
+
+    @DeleteMapping("/{id}")
+    @Operation(
+            summary = "Delete an animal",
+            description = "Deletes an existing animal record from the system. " +
+                    "Once deleted, all associated data will be permanently removed."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Animal successfully deleted"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid ID parameter",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Animal not found",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error"
+            )
+    })
+    public ResponseEntity<Void> deleteAnimal(
+            @Parameter(description = "Animal ID", required = true, example = "1")
+            @PathVariable @Min(value = 1, message = "ID must be greater than 0") Long id) {
+        animalService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

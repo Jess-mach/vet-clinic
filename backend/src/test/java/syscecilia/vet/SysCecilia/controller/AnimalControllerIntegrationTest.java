@@ -34,6 +34,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -875,6 +876,64 @@ class AnimalControllerIntegrationTest {
                 .andExpect(jsonPath("$.errors.birthDate").exists());
 
         verify(animalService, never()).create(any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/animals/{id} - Should delete animal successfully")
+    void shouldDeleteAnimalSuccessfully() throws Exception {
+        // Given
+        doNothing().when(animalService).delete(1L);
+
+        // When/Then
+        mockMvc.perform(delete("/api/animals/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        verify(animalService, times(1)).delete(1L);
+    }
+
+    @Test
+    @DisplayName("DELETE /api/animals/{id} - Should return 404 when animal not found")
+    void shouldReturn404WhenDeletingNonExistentAnimal() throws Exception {
+        // Given
+        doThrow(new ResourceNotFoundException("Animal not found with id: 999"))
+                .when(animalService).delete(999L);
+
+        // When/Then
+        mockMvc.perform(delete("/api/animals/999")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Resource Not Found"))
+                .andExpect(jsonPath("$.detail").value("Animal not found with id: 999"));
+
+        verify(animalService, times(1)).delete(999L);
+    }
+
+    @Test
+    @DisplayName("DELETE /api/animals/{id} - Should return 400 when ID is invalid")
+    void shouldReturn400WhenDeletingWithInvalidId() throws Exception {
+        // When/Then
+        mockMvc.perform(delete("/api/animals/0")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+        verify(animalService, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("DELETE /api/animals/{id} - Should return 400 when ID is negative")
+    void shouldReturn400WhenDeletingWithNegativeId() throws Exception {
+        // When/Then
+        mockMvc.perform(delete("/api/animals/-1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+        verify(animalService, never()).delete(any());
     }
 }
 

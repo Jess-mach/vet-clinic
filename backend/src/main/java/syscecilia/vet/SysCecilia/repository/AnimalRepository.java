@@ -10,15 +10,17 @@ import java.util.Optional;
 @Repository
 public interface AnimalRepository extends JpaRepository<Animal, Long> {
 
-    List<Animal> findAllByOrderByNameAsc();
+    List<Animal> findAllByIsActiveTrueOrderByNameAsc();
 
-    Optional<Animal> findByMicrochipNumber(String microchipNumber);
+    Optional<Animal> findByIdAndIsActiveTrue(Long id);
 
-    List<Animal> findBySpecies(String species);
+    Optional<Animal> findByMicrochipNumberAndIsActiveTrue(String microchipNumber);
 
-    List<Animal> findByOwnerNameContainingIgnoreCase(String ownerName);
+    List<Animal> findBySpeciesAndIsActiveTrue(String species);
 
-    List<Animal> findByNameContainingIgnoreCase(String name);
+    List<Animal> findByOwnerNameContainingIgnoreCaseAndIsActiveTrue(String ownerName);
+
+    List<Animal> findByNameContainingIgnoreCaseAndIsActiveTrue(String name);
 }
 
 
