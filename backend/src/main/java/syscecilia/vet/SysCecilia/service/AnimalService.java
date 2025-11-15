@@ -42,6 +42,19 @@ public class AnimalService {
         return convertToResponse(savedAnimal);
     }
 
+    @Transactional
+    public AnimalResponse update(Long id, AnimalRequest request) {
+        Animal entity = animalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + id));
+        
+        validateBusinessRulesForUpdate(entity, request);
+        
+        updateEntityFromRequest(entity, request);
+        Animal updatedAnimal = animalRepository.save(entity);
+        
+        return convertToResponse(updatedAnimal);
+    }
+
     private void validateBusinessRules(AnimalRequest request) {
         if (request.getMicrochipNumber() != null && !request.getMicrochipNumber().isBlank()) {
             Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumber(request.getMicrochipNumber());
@@ -50,6 +63,21 @@ public class AnimalService {
                     "Microchip number already exists: " + request.getMicrochipNumber(),
                     "An animal with this microchip number is already registered"
                 );
+            }
+        }
+    }
+
+    private void validateBusinessRulesForUpdate(Animal animal, AnimalRequest request) {
+        if (request.getMicrochipNumber() != null && !request.getMicrochipNumber().isBlank()) {
+            // Only validate if microchip is changing
+            if (!request.getMicrochipNumber().equals(animal.getMicrochipNumber())) {
+                Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumber(request.getMicrochipNumber());
+                if (existingAnimal.isPresent()) {
+                    throw new BusinessException(
+                        "Microchip number already exists: " + request.getMicrochipNumber(),
+                        "An animal with this microchip number is already registered"
+                    );
+                }
             }
         }
     }
@@ -68,6 +96,20 @@ public class AnimalService {
         animal.setOwnerPhone(request.getOwnerPhone());
         animal.setOwnerEmail(request.getOwnerEmail());
         return animal;
+    }
+
+    private void updateEntityFromRequest(Animal entity, AnimalRequest request) {
+        entity.setName(request.getName());
+        entity.setSpecies(request.getSpecies());
+        entity.setBreed(request.getBreed());
+        entity.setGender(request.getGender());
+        entity.setBirthDate(request.getBirthDate());
+        entity.setColor(request.getColor());
+        entity.setWeight(request.getWeight());
+        entity.setMicrochipNumber(request.getMicrochipNumber());
+        entity.setOwnerName(request.getOwnerName());
+        entity.setOwnerPhone(request.getOwnerPhone());
+        entity.setOwnerEmail(request.getOwnerEmail());
     }
 
     @Transactional(readOnly = true)

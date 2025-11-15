@@ -131,4 +131,50 @@ public class AnimalController {
         AnimalResponse animal = animalService.findById(id);
         return ResponseEntity.ok(animal);
     }
+
+    @PutMapping("/{id}")
+    @Operation(
+            summary = "Update an existing animal",
+            description = "Updates an existing animal record in the system. " +
+                    "All required fields must be provided. " +
+                    "Microchip number must be unique if provided and changed."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Animal successfully updated",
+                    content = @Content(schema = @Schema(implementation = AnimalResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validation error - one or more fields are invalid",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Animal not found",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "Business rule violation - microchip number already exists",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error"
+            )
+    })
+    public ResponseEntity<AnimalResponse> updateAnimal(
+            @Parameter(description = "Animal ID", required = true, example = "1")
+            @PathVariable @Min(value = 1, message = "ID must be greater than 0") Long id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Updated animal data",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = AnimalRequest.class))
+            )
+            @Valid @RequestBody AnimalRequest request) {
+        AnimalResponse updatedAnimal = animalService.update(id, request);
+        return ResponseEntity.ok(updatedAnimal);
+    }
 }

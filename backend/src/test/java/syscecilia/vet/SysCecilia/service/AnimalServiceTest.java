@@ -466,5 +466,210 @@ class AnimalServiceTest {
         assertThat(result.getOwnerPhone()).isEqualTo(request.getOwnerPhone());
         assertThat(result.getOwnerEmail()).isEqualTo(request.getOwnerEmail());
     }
+
+    @Test
+    @DisplayName("Should update animal successfully when all data is valid")
+    void shouldUpdateAnimalSuccessfullyWhenAllDataIsValid() {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Rex Updated");
+        request.setSpecies("Dog");
+        request.setBreed("German Shepherd");
+        request.setGender("Male");
+        request.setBirthDate(LocalDate.of(2020, 5, 15));
+        request.setColor("Brown");
+        request.setWeight(new BigDecimal("28.5"));
+        request.setMicrochipNumber("CHIP001");
+        request.setOwnerName("John Doe");
+        request.setOwnerPhone("1234567890");
+        request.setOwnerEmail("john.updated@example.com");
+
+        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
+        when(animalRepository.save(any(Animal.class))).thenReturn(animal1);
+
+        // When
+        AnimalResponse result = animalService.update(1L, request);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getName()).isEqualTo("Rex Updated");
+        assertThat(result.getBreed()).isEqualTo("German Shepherd");
+        assertThat(result.getColor()).isEqualTo("Brown");
+        verify(animalRepository, times(1)).findById(1L);
+        verify(animalRepository, times(1)).save(any(Animal.class));
+    }
+
+    @Test
+    @DisplayName("Should throw ResourceNotFoundException when updating non-existent animal")
+    void shouldThrowResourceNotFoundExceptionWhenUpdatingNonExistentAnimal() {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Rex");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setOwnerName("John Doe");
+
+        when(animalRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> animalService.update(999L, request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Animal not found with id: 999");
+        verify(animalRepository, times(1)).findById(999L);
+        verify(animalRepository, never()).save(any(Animal.class));
+    }
+
+    @Test
+    @DisplayName("Should throw BusinessException when microchip number already exists (different animal)")
+    void shouldThrowBusinessExceptionWhenMicrochipNumberAlreadyExistsForDifferentAnimal() {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Rex");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setMicrochipNumber("CHIP002"); // Different from animal1's microchip
+        request.setOwnerName("John Doe");
+
+        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
+        when(animalRepository.findByMicrochipNumber("CHIP002")).thenReturn(Optional.of(animal2));
+
+        // When/Then
+        assertThatThrownBy(() -> animalService.update(1L, request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Microchip number already exists: CHIP002");
+        verify(animalRepository, times(1)).findById(1L);
+        verify(animalRepository, times(1)).findByMicrochipNumber("CHIP002");
+        verify(animalRepository, never()).save(any(Animal.class));
+    }
+
+    @Test
+    @DisplayName("Should update animal successfully when microchip remains the same")
+    void shouldUpdateAnimalSuccessfullyWhenMicrochipRemainsSame() {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Rex Updated");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setMicrochipNumber("CHIP001"); // Same microchip
+        request.setOwnerName("John Doe Updated");
+
+        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
+        when(animalRepository.save(any(Animal.class))).thenReturn(animal1);
+
+        // When
+        AnimalResponse result = animalService.update(1L, request);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
+        // Verify that findByMicrochipNumber was never called since microchip didn't change
+        verify(animalRepository, times(1)).findById(1L);
+        verify(animalRepository, never()).findByMicrochipNumber(anyString());
+        verify(animalRepository, times(1)).save(any(Animal.class));
+    }
+
+    @Test
+    @DisplayName("Should update animal successfully changing microchip to new unique value")
+    void shouldUpdateAnimalSuccessfullyChangingMicrochipToNewUniqueValue() {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Rex");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setMicrochipNumber("CHIP999"); // New unique microchip
+        request.setOwnerName("John Doe");
+
+        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
+        when(animalRepository.findByMicrochipNumber("CHIP999")).thenReturn(Optional.empty());
+        when(animalRepository.save(any(Animal.class))).thenReturn(animal1);
+
+        // When
+        AnimalResponse result = animalService.update(1L, request);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
+        verify(animalRepository, times(1)).findById(1L);
+        verify(animalRepository, times(1)).findByMicrochipNumber("CHIP999");
+        verify(animalRepository, times(1)).save(any(Animal.class));
+    }
+
+    @Test
+    @DisplayName("Should update animal successfully without microchip")
+    void shouldUpdateAnimalSuccessfullyWithoutMicrochip() {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Rex Updated");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setOwnerName("John Doe");
+        // No microchip set
+
+        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
+        when(animalRepository.save(any(Animal.class))).thenReturn(animal1);
+
+        // When
+        AnimalResponse result = animalService.update(1L, request);
+
+        // Then
+        assertThat(result).isNotNull();
+        verify(animalRepository, times(1)).findById(1L);
+        verify(animalRepository, never()).findByMicrochipNumber(anyString());
+        verify(animalRepository, times(1)).save(any(Animal.class));
+    }
+
+    @Test
+    @DisplayName("Should update only specific fields of animal")
+    void shouldUpdateOnlySpecificFieldsOfAnimal() {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Rex Updated");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setOwnerName("John Doe");
+        // Only updating name, other fields remain unchanged
+
+        Animal existingAnimal = new Animal();
+        existingAnimal.setId(1L);
+        existingAnimal.setName("Rex");
+        existingAnimal.setSpecies("Dog");
+        existingAnimal.setBreed("Golden Retriever");
+        existingAnimal.setGender("Male");
+        existingAnimal.setColor("Golden");
+        existingAnimal.setWeight(new BigDecimal("25.5"));
+        existingAnimal.setMicrochipNumber("CHIP001");
+        existingAnimal.setOwnerName("John Doe");
+        existingAnimal.setCreatedAt(LocalDateTime.now().minusDays(1));
+        existingAnimal.setUpdatedAt(LocalDateTime.now().minusHours(1));
+
+        Animal updatedAnimal = new Animal();
+        updatedAnimal.setId(1L);
+        updatedAnimal.setName("Rex Updated");
+        updatedAnimal.setSpecies("Dog");
+        updatedAnimal.setBreed("Golden Retriever");
+        updatedAnimal.setGender("Male");
+        updatedAnimal.setColor("Golden");
+        updatedAnimal.setWeight(new BigDecimal("25.5"));
+        updatedAnimal.setMicrochipNumber("CHIP001");
+        updatedAnimal.setOwnerName("John Doe");
+        updatedAnimal.setCreatedAt(LocalDateTime.now().minusDays(1));
+        updatedAnimal.setUpdatedAt(LocalDateTime.now());
+
+        when(animalRepository.findById(1L)).thenReturn(Optional.of(existingAnimal));
+        when(animalRepository.save(any(Animal.class))).thenReturn(updatedAnimal);
+
+        // When
+        AnimalResponse result = animalService.update(1L, request);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getName()).isEqualTo("Rex Updated");
+        assertThat(result.getBreed()).isEqualTo("Golden Retriever");
+        assertThat(result.getWeight()).isEqualTo(new BigDecimal("25.5"));
+        verify(animalRepository, times(1)).findById(1L);
+        verify(animalRepository, times(1)).save(any(Animal.class));
+    }
 }
 

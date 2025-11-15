@@ -33,6 +33,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -541,6 +542,293 @@ class AnimalControllerIntegrationTest {
                 .andExpect(jsonPath("$.errors.birthDate").exists());
 
         verify(animalService, never()).create(any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("PUT /api/animals/{id} - Should update animal successfully")
+    void shouldUpdateAnimalSuccessfully() throws Exception {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Rex Updated");
+        request.setSpecies("Dog");
+        request.setBreed("German Shepherd");
+        request.setGender("Male");
+        request.setBirthDate(LocalDate.of(2020, 5, 15));
+        request.setColor("Brown");
+        request.setWeight(new BigDecimal("28.5"));
+        request.setMicrochipNumber("CHIP001");
+        request.setOwnerName("John Doe");
+        request.setOwnerPhone("1234567890");
+        request.setOwnerEmail("john@example.com");
+
+        AnimalResponse updatedResponse = new AnimalResponse();
+        updatedResponse.setId(1L);
+        updatedResponse.setName("Rex Updated");
+        updatedResponse.setSpecies("Dog");
+        updatedResponse.setBreed("German Shepherd");
+        updatedResponse.setGender("Male");
+        updatedResponse.setBirthDate(LocalDate.of(2020, 5, 15));
+        updatedResponse.setColor("Brown");
+        updatedResponse.setWeight(new BigDecimal("28.5"));
+        updatedResponse.setMicrochipNumber("CHIP001");
+        updatedResponse.setOwnerName("John Doe");
+        updatedResponse.setOwnerPhone("1234567890");
+        updatedResponse.setOwnerEmail("john@example.com");
+        updatedResponse.setCreatedAt(LocalDateTime.now());
+        updatedResponse.setUpdatedAt(LocalDateTime.now());
+
+        when(animalService.update(eq(1L), any(AnimalRequest.class))).thenReturn(updatedResponse);
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When/Then
+        mockMvc.perform(put("/api/animals/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.name").value("Rex Updated"))
+                .andExpect(jsonPath("$.species").value("Dog"))
+                .andExpect(jsonPath("$.breed").value("German Shepherd"))
+                .andExpect(jsonPath("$.color").value("Brown"))
+                .andExpect(jsonPath("$.weight").value(28.5));
+
+        verify(animalService, times(1)).update(eq(1L), any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("PUT /api/animals/{id} - Should return 404 when animal not found")
+    void shouldReturn404WhenUpdatingNonExistentAnimal() throws Exception {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Max");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setOwnerName("John Doe");
+
+        when(animalService.update(eq(999L), any(AnimalRequest.class)))
+                .thenThrow(new ResourceNotFoundException("Animal not found with id: 999"));
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When/Then
+        mockMvc.perform(put("/api/animals/999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Resource Not Found"))
+                .andExpect(jsonPath("$.detail").value("Animal not found with id: 999"));
+
+        verify(animalService, times(1)).update(eq(999L), any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("PUT /api/animals/{id} - Should return 400 when required fields are missing")
+    void shouldReturn400WhenUpdatingWithMissingRequiredFields() throws Exception {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Max");
+        // Missing required fields: species, gender, ownerName
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When/Then
+        mockMvc.perform(put("/api/animals/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.errors").exists())
+                .andExpect(jsonPath("$.errors.species").exists())
+                .andExpect(jsonPath("$.errors.gender").exists())
+                .andExpect(jsonPath("$.errors.ownerName").exists());
+
+        verify(animalService, never()).update(anyLong(), any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("PUT /api/animals/{id} - Should return 422 when microchip number already exists")
+    void shouldReturn422WhenUpdatingWithDuplicateMicrochip() throws Exception {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Max");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setMicrochipNumber("CHIP002");
+        request.setOwnerName("John Doe");
+
+        when(animalService.update(eq(1L), any(AnimalRequest.class)))
+                .thenThrow(new BusinessException("Microchip number already exists: CHIP002"));
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When/Then
+        mockMvc.perform(put("/api/animals/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andDo(print())
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Business Rule Violation"))
+                .andExpect(jsonPath("$.detail").value("Microchip number already exists: CHIP002"));
+
+        verify(animalService, times(1)).update(eq(1L), any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("PUT /api/animals/{id} - Should return 400 when ID is invalid")
+    void shouldReturn400WhenUpdatingWithInvalidId() throws Exception {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Max");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setOwnerName("John Doe");
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When/Then
+        mockMvc.perform(put("/api/animals/0")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+        verify(animalService, never()).update(anyLong(), any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("PUT /api/animals/{id} - Should update animal with valid email format")
+    void shouldUpdateAnimalWithValidEmailFormat() throws Exception {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Rex");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setOwnerName("John Doe");
+        request.setOwnerEmail("john.doe@example.com");
+
+        AnimalResponse updatedResponse = new AnimalResponse();
+        updatedResponse.setId(1L);
+        updatedResponse.setName("Rex");
+        updatedResponse.setSpecies("Dog");
+        updatedResponse.setGender("Male");
+        updatedResponse.setOwnerName("John Doe");
+        updatedResponse.setOwnerEmail("john.doe@example.com");
+        updatedResponse.setCreatedAt(LocalDateTime.now());
+        updatedResponse.setUpdatedAt(LocalDateTime.now());
+
+        when(animalService.update(eq(1L), any(AnimalRequest.class))).thenReturn(updatedResponse);
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When/Then
+        mockMvc.perform(put("/api/animals/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ownerEmail").value("john.doe@example.com"));
+
+        verify(animalService, times(1)).update(eq(1L), any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("PUT /api/animals/{id} - Should return 400 when email format is invalid")
+    void shouldReturn400WhenUpdatingWithInvalidEmailFormat() throws Exception {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Max");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setOwnerName("John Doe");
+        request.setOwnerEmail("invalid-email");
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When/Then
+        mockMvc.perform(put("/api/animals/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.errors").exists())
+                .andExpect(jsonPath("$.errors.ownerEmail").exists());
+
+        verify(animalService, never()).update(anyLong(), any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("PUT /api/animals/{id} - Should update animal when keeping same microchip")
+    void shouldUpdateAnimalWhenKeepingSameMicrochip() throws Exception {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Rex Updated");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setMicrochipNumber("CHIP001");
+        request.setOwnerName("John Doe");
+
+        AnimalResponse updatedResponse = new AnimalResponse();
+        updatedResponse.setId(1L);
+        updatedResponse.setName("Rex Updated");
+        updatedResponse.setSpecies("Dog");
+        updatedResponse.setGender("Male");
+        updatedResponse.setMicrochipNumber("CHIP001");
+        updatedResponse.setOwnerName("John Doe");
+        updatedResponse.setCreatedAt(LocalDateTime.now());
+        updatedResponse.setUpdatedAt(LocalDateTime.now());
+
+        when(animalService.update(eq(1L), any(AnimalRequest.class))).thenReturn(updatedResponse);
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When/Then
+        mockMvc.perform(put("/api/animals/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.name").value("Rex Updated"))
+                .andExpect(jsonPath("$.microchipNumber").value("CHIP001"));
+
+        verify(animalService, times(1)).update(eq(1L), any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("PUT /api/animals/{id} - Should return 400 when weight is negative")
+    void shouldReturn400WhenUpdatingWithNegativeWeight() throws Exception {
+        // Given
+        AnimalRequest request = new AnimalRequest();
+        request.setName("Max");
+        request.setSpecies("Dog");
+        request.setGender("Male");
+        request.setOwnerName("John Doe");
+        request.setWeight(new BigDecimal("-10.5"));
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        // When/Then
+        mockMvc.perform(put("/api/animals/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.errors").exists())
+                .andExpect(jsonPath("$.errors.weight").exists());
+
+        verify(animalService, never()).update(anyLong(), any(AnimalRequest.class));
     }
 }
 
