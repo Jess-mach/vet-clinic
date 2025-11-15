@@ -1,125 +1,296 @@
+@import '../styles/variables.css';
+
 .animal-list {
-  margin-top: 24px;
+  margin-top: var(--spacing-lg);
+}
+
+.animal-list-header {
+  margin-bottom: var(--spacing-lg);
 }
 
 .animal-list h2 {
-  margin-bottom: 20px;
-  color: #333;
-  font-size: 24px;
+  margin: 0;
+  padding-bottom: var(--spacing-md);
+  color: var(--color-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
 }
 
 .animal-list-loading,
 .animal-list-empty {
   text-align: center;
-  padding: 60px 20px;
-  color: #888;
-  font-size: 16px;
+  padding: var(--spacing-3xl) var(--spacing-lg);
+  color: var(--color-primary);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
 }
 
-.animal-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+/* Table Container */
+.animal-table-container {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-gray-200);
+  background: linear-gradient(135deg, var(--color-purple-bg-light) 0%, var(--color-purple-pale) 100%);
 }
 
-.animal-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
+.animal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
 }
 
-.animal-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  border-color: #646cff;
+.animal-table thead {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  color: var(--color-text-white);
+  font-weight: var(--font-weight-bold);
 }
 
-.animal-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #eee;
-}
-
-.animal-card-header h3 {
-  margin: 0;
-  font-size: 20px;
-  color: #333;
-}
-
-.animal-species {
-  background-color: #646cff;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
+.animal-table th {
+  padding: 0.75rem var(--spacing-md);
+  text-align: left;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
-.animal-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.animal-table th.col-id {
+  width: 60px;
+  text-align: center;
 }
 
-.animal-info-row {
+.animal-table th.col-name {
+  width: 300px;
+}
+
+.animal-table th.col-species {
+  width: 100px;
+}
+
+.animal-table th.col-breed {
+  width: 120px;
+}
+
+.animal-table th.col-gender {
+  width: 100px;
+}
+
+.animal-table th.col-birth {
+  width: 140px;
+}
+
+.animal-table th.col-owner {
+  width: 150px;
+}
+
+.animal-table th.col-actions {
+  width: 120px;
+  text-align: center;
+}
+
+/* Table Body */
+.animal-table tbody tr {
+  border-bottom: 1px solid var(--color-gray-200);
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+.animal-table tbody tr:hover {
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.animal-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.animal-table td {
+  padding: 0.625rem var(--spacing-md);
+  vertical-align: middle;
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.animal-table td.col-id {
+  text-align: center;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+/* Special styles for name and species */
+.animal-name-badge {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: rgba(124, 58, 237, 0.1);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-primary-dark);
+}
+
+.animal-species-badge {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  color: var(--color-white);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+}
+
+/* Actions */
+.animal-table td.col-actions {
+  text-align: center;
+  background: rgba(124, 58, 237, 0.04);
+  border-left: 2px solid rgba(124, 58, 237, 0.1);
+}
+
+.action-buttons {
   display: flex;
-  justify-content: space-between;
+  flex-direction: row;
+  gap: var(--spacing-xs);
   align-items: center;
-  font-size: 14px;
+  justify-content: center;
+  flex-wrap: nowrap;
 }
 
-.info-label {
-  font-weight: 600;
-  color: #666;
+.btn-action {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-.info-value {
-  color: #333;
-  text-align: right;
+.btn-edit {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+  color: var(--color-white);
 }
 
-@media (prefers-color-scheme: dark) {
-  .animal-list h2 {
-    color: rgba(255, 255, 255, 0.87);
+.btn-edit:hover {
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.btn-delete {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: var(--color-white);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.btn-delete:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.btn-action svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Button Container - Horizontal Layout */
+.animal-table td.col-actions {
+  padding: 0.625rem 0.5rem;
+  min-width: 120px;
+}
+
+/* Responsiveness */
+@media (max-width: 1024px) {
+  .animal-table {
+    font-size: 0.9rem;
   }
 
-  .animal-card {
-    background: #1a1a1a;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  .animal-table th,
+  .animal-table td {
+    padding: 1rem 0.75rem;
   }
 
-  .animal-card:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
-  }
-
-  .animal-card-header {
-    border-bottom-color: #444;
-  }
-
-  .animal-card-header h3 {
-    color: rgba(255, 255, 255, 0.87);
-  }
-
-  .info-label {
-    color: rgba(255, 255, 255, 0.6);
-  }
-
-  .info-value {
-    color: rgba(255, 255, 255, 0.87);
+  .animal-table th.col-breed,
+  .animal-table th.col-birth,
+  .animal-table th.col-owner {
+    font-size: 0.85rem;
   }
 }
 
 @media (max-width: 768px) {
-  .animal-grid {
-    grid-template-columns: 1fr;
+  .animal-table-container {
+    overflow-x: auto;
+  }
+
+  .animal-table {
+    min-width: 900px;
+    font-size: 0.85rem;
+  }
+
+  .animal-table th,
+  .animal-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .animal-list h2 {
+    font-size: 22px;
+  }
+
+  .btn-action {
+    width: 32px;
+    height: 32px;
+  }
+
+  .btn-action svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .action-buttons {
+    gap: 4px;
+  }
+
+  .animal-species-badge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+  }
+}
+
+@media (prefers-color-scheme: white) {
+  .animal-table-container {
+    background: #1a1a1a;
+    border-color: rgba(124, 58, 237, 0.2);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+  }
+
+  .animal-table tbody tr {
+    border-bottom-color: #333;
+  }
+
+  .animal-table tbody tr:hover {
+    background: linear-gradient(90deg, rgba(124, 58, 237, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+  }
+
+  .animal-table td {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .animal-table td.col-id {
+    color: #a855f7;
+  }
+
+  .animal-name-badge {
+    color: rgba(255, 255, 255, 0.9);
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(168, 85, 247, 0.1) 100%);
+  }
+
+  .animal-table td.col-actions {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%);
+    border-left-color: rgba(124, 58, 237, 0.2);
   }
 }
 

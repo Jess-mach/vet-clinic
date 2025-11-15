@@ -1,6 +1,6 @@
 .pets-page {
   min-height: calc(100vh - 200px);
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, var(--color-purple-bg-light) 0%, var(--color-purple-pale) 100%);
   padding: var(--spacing-2xl) var(--container-padding);
 }
 
@@ -54,12 +54,12 @@
 }
 
 .pets-page-error {
-  background-color: #fee;
-  border: 2px solid #f88;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+  border: 2px solid #ef4444;
   border-radius: var(--radius-md);
   padding: var(--spacing-lg);
   margin-bottom: var(--spacing-2xl);
-  color: #c33;
+  color: #dc2626;
   font-size: var(--font-size-base);
 }
 
