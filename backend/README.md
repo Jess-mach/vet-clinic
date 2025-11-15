@@ -1,5 +1,7 @@
-sudo docker run -d   --name postgres   -e POSTGRES_PASSWORD=morangos   -e POSTGRES_USER=jess   -e POSTGRES_DB=appdb   -p 5432:5432   ^Cstgres:16
-
+# 1 Primeiro Uso
+```shell
+sudo docker run -d   --name postgres   -e POSTGRES_PASSWORD=morangos   -e POSTGRES_USER=jess   -e POSTGRES_DB=appdb   -p 5432:5432  
+```
 
 lsof -ti:8080 | xargs kill -9
 
@@ -7,6 +9,15 @@ lsof -ti:8080 | xargs kill -9
 /usr/bin/env /usr/lib/jvm/java-21-openjdk-amd64/bin/java @/tmp/cp_6fjog0vdhpvissoy16sjj0sd3.argfile syscecilia.vet.SysCecilia.SysCeciliaApplication
 ```
 
+
+# 2 - Para iniciar a aplicação
+docker ps -a
+docker start 9b4
+
+```shell
+cd /media/jess/WORKSPACE/win/jessica/workspace/SysCecilia/backend
+mvn spring-boot:run
+```
 
 lsof -i :8080 || netstat -tuln | grep 8080 || ss -tuln | grep 8080
 

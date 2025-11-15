@@ -12,9 +12,12 @@ export function Hero() {
           </p>
           <div className="hero-actions">
             <a href="#agendar" className="btn btn-primary btn-large">
-              Agendar consulta
+              🐾 Agendar consulta
             </a>
           </div>
+        </div>
+        <div className="hero-image-placeholder">
+          <img src="/pet-hero.jpg" alt="Pet feliz na clínica veterinária" />
         </div>
       </div>
     </section>

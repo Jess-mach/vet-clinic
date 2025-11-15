@@ -8,6 +8,7 @@ import { Differentials } from './components/Differentials';
 import { Testimonials } from './components/Testimonials';
 import { Footer } from './components/Footer';
 import { CreateAnimal } from './components/CreateAnimal';
+import { PetsPage } from './components/PetsPage';
 import './App.css';
 
 function ScrollToHash() {
@@ -53,6 +54,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/cadastrar-animal" element={<CreateAnimal />} />
+            <Route path="/pets" element={<PetsPage />} />
           </Routes>
         </main>
         <Footer />

@@ -47,14 +47,12 @@ export function Header() {
             <li><a href="#vacinas" onClick={(e) => handleNavClick(e, '#vacinas')}>Vacinação</a></li>
             <li><a href="#especialidades" onClick={(e) => handleNavClick(e, '#especialidades')}>Especialidades</a></li>
             <li><a href="#sobre" onClick={(e) => handleNavClick(e, '#sobre')}>Sobre</a></li>
+            <li><Link to="/pets" onClick={closeMenu}>Pet</Link></li>
             <li><a href="#contato" onClick={(e) => handleNavClick(e, '#contato')}>Contato</a></li>
           </ul>
         </nav>
 
         <div className="header-actions">
-          <Link to="/cadastrar-animal" className="btn btn-secondary header-cta" onClick={closeMenu}>
-            Cadastre seu pet
-          </Link>
           <a href="#agendar" className="btn btn-primary header-cta" onClick={closeMenu}>
             Agendar agora
           </a>
