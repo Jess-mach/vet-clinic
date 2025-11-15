@@ -78,3 +78,10 @@ next-env.d.ts
 
 .cursorrules
 start.sh
+docker.bat
+docker.sh
+ARQUIVOS_DOCKER_CRIADOS.md
+FILES_CREATED.txt
+.gitignore
+DOCKER_SETUP.md
+DOCKER_QUICKSTART.md
