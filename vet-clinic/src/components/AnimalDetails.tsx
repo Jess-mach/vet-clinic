@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getAnimalById, ApiError } from '../services/api';
 import type { Animal } from '../types/animal';
 import './AnimalDetails.css';
@@ -9,6 +10,7 @@ interface AnimalDetailsProps {
 }
 
 export function AnimalDetails({ animalId, onClose }: AnimalDetailsProps) {
+  const navigate = useNavigate();
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +62,30 @@ export function AnimalDetails({ animalId, onClose }: AnimalDetailsProps) {
       return date.toLocaleString('pt-BR');
     } catch {
       return dateString;
+    }
+  };
+
+  const handleEdit = () => {
+    if (animal) {
+      // Navega para a página de cadastro passando os dados do animal no location state
+      navigate('/cadastrar-animal', { 
+        state: { 
+          animal: {
+            id: animal.id,
+            name: animal.name,
+            species: animal.species,
+            breed: animal.breed,
+            gender: animal.gender,
+            birthDate: animal.birthDate,
+            color: animal.color,
+            weight: animal.weight,
+            microchipNumber: animal.microchipNumber,
+            ownerName: animal.ownerName,
+            ownerPhone: animal.ownerPhone,
+            ownerEmail: animal.ownerEmail,
+          }
+        }
+      });
     }
   };
 
@@ -157,6 +183,12 @@ export function AnimalDetails({ animalId, onClose }: AnimalDetailsProps) {
                   </div>
                 </div>
               </section>
+            </div>
+
+            <div className="animal-details-actions">
+              <button className="btn btn-primary" onClick={handleEdit}>
+                ✏️ Editar
+              </button>
             </div>
           </div>
         )}

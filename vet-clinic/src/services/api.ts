@@ -111,3 +111,49 @@ export async function createAnimal(animal: AnimalRequest): Promise<Animal> {
   }
 }
 
+export async function updateAnimal(id: number, animal: AnimalRequest): Promise<Animal> {
+  if (id <= 0) {
+    throw new ApiError(400, 'ID must be greater than 0');
+  }
+
+  const url = `${API_BASE_URL}/animals/${id}`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(animal),
+    });
+    
+    if (!response.ok) {
+      const error: ApiErrorResponse = await response.json();
+      
+      if (response.status === 400) {
+        // Validation errors - includes errors object
+        throw new ApiError(response.status, error.detail || 'Validation failed', error);
+      }
+      
+      if (response.status === 404) {
+        // Animal not found
+        throw new ApiError(response.status, 'Animal not found', error);
+      }
+      
+      if (response.status === 422) {
+        // Business rule violation
+        throw new ApiError(response.status, error.detail || 'Business rule violation', error);
+      }
+      
+      throw new ApiError(response.status, error.detail || 'Failed to update animal', error);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Network error or server unavailable');
+  }
+}
+

@@ -5,27 +5,29 @@ import { searchAnimals, ApiError } from '../services/api';
 import { AnimalList } from './AnimalList';
 import { AnimalDetails } from './AnimalDetails';
 import { AnimalFiltersComponent } from './AnimalFilters';
+import { ErrorModal } from './ErrorModal';
 import './PetsPage.css';
 
 export function PetsPage() {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedAnimalId, setSelectedAnimalId] = useState<number | null>(null);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorModalTitle, setErrorModalTitle] = useState('Erro');
+  const [errorModalMessage, setErrorModalMessage] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadAnimals = async () => {
       try {
         setLoading(true);
-        setError(null);
         const data = await searchAnimals();
         setAnimals(data);
       } catch (err) {
         if (err instanceof ApiError) {
-          setError(`Erro ao carregar animais: ${err.detail}`);
+          showErrorModal('Erro ao Carregar', err.detail || 'Erro ao carregar animais. Tente novamente mais tarde.');
         } else {
-          setError('Erro ao carregar animais. Tente novamente mais tarde.');
+          showErrorModal('Erro', 'Erro ao carregar animais. Tente novamente mais tarde.');
         }
       } finally {
         setLoading(false);
@@ -38,14 +40,13 @@ export function PetsPage() {
   const handleSearch = async (filters: AnimalFilters) => {
     try {
       setLoading(true);
-      setError(null);
       const data = await searchAnimals(filters);
       setAnimals(data);
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(`Erro ao buscar animais: ${err.detail}`);
+        showErrorModal('Erro ao Buscar', err.detail || 'Erro ao buscar animais. Tente novamente mais tarde.');
       } else {
-        setError('Erro ao buscar animais. Tente novamente mais tarde.');
+        showErrorModal('Erro', 'Erro ao buscar animais. Tente novamente mais tarde.');
       }
     } finally {
       setLoading(false);
@@ -55,14 +56,13 @@ export function PetsPage() {
   const handleClearFilters = async () => {
     try {
       setLoading(true);
-      setError(null);
       const data = await searchAnimals();
       setAnimals(data);
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(`Erro ao carregar animais: ${err.detail}`);
+        showErrorModal('Erro ao Carregar', err.detail || 'Erro ao carregar animais. Tente novamente mais tarde.');
       } else {
-        setError('Erro ao carregar animais. Tente novamente mais tarde.');
+        showErrorModal('Erro', 'Erro ao carregar animais. Tente novamente mais tarde.');
       }
     } finally {
       setLoading(false);
@@ -79,6 +79,16 @@ export function PetsPage() {
 
   const handleCreateNew = () => {
     navigate('/cadastrar-animal');
+  };
+
+  const showErrorModal = (title: string, message: string) => {
+    setErrorModalTitle(title);
+    setErrorModalMessage(message);
+    setErrorModalOpen(true);
+  };
+
+  const closeErrorModal = () => {
+    setErrorModalOpen(false);
   };
 
   return (
@@ -113,13 +123,12 @@ export function PetsPage() {
 
         </div>
 
-        {error && (
-          <div className="pets-page-error">
-            <p>{error}</p>
-          </div>
-        )}
-
-        
+        <ErrorModal
+          isOpen={errorModalOpen}
+          title={errorModalTitle}
+          message={errorModalMessage}
+          onClose={closeErrorModal}
+        />
 
 
       </div>

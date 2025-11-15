@@ -1,15 +1,19 @@
-import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createAnimal, ApiError } from '../services/api';
-import type { AnimalRequest } from '../types/animal';
+import { useState, useEffect } from 'react';
+import type { FormEvent } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { createAnimal, updateAnimal, ApiError } from '../services/api';
+import type { AnimalRequest, Animal } from '../types/animal';
 import './CreateAnimal.css';
 
 export function CreateAnimal() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingAnimalId, setEditingAnimalId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<AnimalRequest>({
     name: '',
@@ -24,6 +28,28 @@ export function CreateAnimal() {
     ownerPhone: null,
     ownerEmail: null,
   });
+
+  // Detect if we're in edit mode and load the animal data
+  useEffect(() => {
+    const state = location.state as { animal?: Animal } | null;
+    if (state?.animal) {
+      setIsEditMode(true);
+      setEditingAnimalId(state.animal.id);
+      setFormData({
+        name: state.animal.name,
+        species: state.animal.species,
+        breed: state.animal.breed,
+        gender: state.animal.gender,
+        birthDate: state.animal.birthDate,
+        color: state.animal.color,
+        weight: state.animal.weight,
+        microchipNumber: state.animal.microchipNumber,
+        ownerName: state.animal.ownerName,
+        ownerPhone: state.animal.ownerPhone,
+        ownerEmail: state.animal.ownerEmail,
+      });
+    }
+  }, [location.state]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -180,13 +206,25 @@ export function CreateAnimal() {
         weight: formData.weight || null,
       };
 
-      await createAnimal(requestData);
-      setSuccess(true);
-      
-      // Reset form after 2 seconds and redirect
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+      if (isEditMode && editingAnimalId) {
+        // Update existing animal
+        await updateAnimal(editingAnimalId, requestData);
+        setSuccess(true);
+        
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          navigate('/pets');
+        }, 2000);
+      } else {
+        // Create new animal
+        await createAnimal(requestData);
+        setSuccess(true);
+        
+        // Reset form after 2 seconds and redirect
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+      }
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 400 && error.errorData?.errors) {
@@ -215,13 +253,19 @@ export function CreateAnimal() {
     <div className="create-animal-container">
       <div className="create-animal-content">
         <div className="create-animal-header">
-          <h1>Cadastre seu Pet</h1>
-          <p>Preencha os dados abaixo para cadastrar um novo animal na clínica</p>
+          <h1>{isEditMode ? '✏️ Editar Pet' : 'Cadastre seu Pet'}</h1>
+          <p>
+            {isEditMode
+              ? 'Atualize os dados do animal abaixo'
+              : 'Preencha os dados abaixo para cadastrar um novo animal na clínica'}
+          </p>
         </div>
 
         {success && (
           <div className="create-animal-success">
-            <p>✓ Animal cadastrado com sucesso! Redirecionando...</p>
+            <p>
+              ✓ Animal {isEditMode ? 'atualizado' : 'cadastrado'} com sucesso! Redirecionando...
+            </p>
           </div>
         )}
 
@@ -455,7 +499,13 @@ export function CreateAnimal() {
               className="btn btn-primary"
               disabled={loading}
             >
-              {loading ? 'Cadastrando...' : 'Cadastrar Animal'}
+              {loading 
+                ? isEditMode 
+                  ? 'Atualizando...' 
+                  : 'Cadastrando...' 
+                : isEditMode 
+                  ? 'Salvar' 
+                  : 'Salvar'}
             </button>
           </div>
         </form>
