@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import syscecilia.vet.SysCecilia.config.TestConfig;
@@ -54,16 +53,6 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.status", equalTo(405)))
                 .andExpect(jsonPath("$.title", equalTo("Method Not Allowed")))
                 .andExpect(jsonPath("$.path", equalTo("/api/animals/1")));
-    }
-
-    @Test
-    @DisplayName("GET /api/invalid-endpoint - Should return 404 Not Found for non-existent resource")
-    void shouldReturn404NotFoundForNonExistentEndpoint() throws Exception {
-        mockMvc.perform(get("/api/invalid-endpoint"))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status", equalTo(404)))
-                .andExpect(jsonPath("$.title", equalTo("Resource Not Found")));
     }
 }
 

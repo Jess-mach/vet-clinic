@@ -29,9 +29,9 @@ EXPOSE 8080
 # Variáveis de ambiente padrão
 ENV DB_HOST=postgres
 ENV DB_PORT=5432
-ENV DB_NAME=appdb
-ENV DB_USERNAME=jess
-ENV DB_PASSWORD=morangos
+ENV DB_NAME=syscecilia
+ENV DB_USERNAME=postgresql
+ENV DB_PASSWORD=postgresql
 
 # Entrypoint
 ENTRYPOINT ["java", "-jar", "app.jar"]
