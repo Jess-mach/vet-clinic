@@ -85,7 +85,7 @@ export function PetsPage() {
     <div className="pets-page">
       <div className="pets-page-container">
         <div className="pets-page-actions">
-          <button className="pets-page-create-btn btn btn-primary" onClick={handleCreateNew}>
+          <button className="pets-page-create-btn btn btn-gradient" onClick={handleCreateNew}>
             Cadastrar novo pet
           </button>
         </div>

@@ -53,7 +53,7 @@ export function Specialties() {
               </div>
               <div className="specialty-content">
                 <h3 className="specialty-title">{specialty.title}</h3>
-                <a href={`#${specialty.id}`} className="btn btn-primary specialty-btn">
+                <a href={`#${specialty.id}`} className="btn btn-gradient specialty-btn">
                   Agendar
                 </a>
               </div>

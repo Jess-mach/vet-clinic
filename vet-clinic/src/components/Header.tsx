@@ -53,7 +53,7 @@ export function Header() {
         </nav>
 
         <div className="header-actions">
-          <a href="#agendar" className="btn btn-primary header-cta" onClick={closeMenu}>
+          <a href="#agendar" className="btn btn-gradient header-cta" onClick={closeMenu}>
             Agendar agora
           </a>
           <button

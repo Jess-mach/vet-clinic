@@ -48,7 +48,14 @@ export function AnimalFiltersComponent({ onSearch, onClear }: AnimalFiltersProps
   };
 
   return (
-    <form className="animal-filters" onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
+      <div className="animal-filters-header">
+        <div className="animal-filters-title">
+          <h3>🔍 Filtros de Busca</h3>
+          <p>Refine sua busca pelos animais cadastrados</p>
+        </div>
+      </div>
+
       <div className="filters-grid">
         <div className="filter-group">
           <label htmlFor="name">Nome do Animal</label>
@@ -66,7 +73,7 @@ export function AnimalFiltersComponent({ onSearch, onClear }: AnimalFiltersProps
           <input
             id="species"
             type="text"
-            placeholder="Ex: Dog, Cat, Bird"
+            placeholder="Ex: Cachorro, Gato, Pássaro"
             value={filters.species || ''}
             onChange={(e) => handleChange('species', e.target.value)}
           />
@@ -86,10 +93,10 @@ export function AnimalFiltersComponent({ onSearch, onClear }: AnimalFiltersProps
 
       <div className="filters-actions">
         <button type="submit" className="btn-primary">
-          Buscar
+          🔍 Buscar
         </button>
         <button type="button" onClick={handleClear} className="btn-secondary">
-          Limpar
+          ✕ Limpar Filtros
         </button>
       </div>
     </form>

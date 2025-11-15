@@ -45,15 +45,7 @@
 
 .pets-page-create-btn {
   white-space: nowrap;
-  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
-  border: none;
-  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-  transition: all var(--transition-base);
-}
-
-.pets-page-create-btn:hover {
-  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
-  transform: translateY(-3px);
+  /* Uses .btn-gradient from buttons.css */
 }
 
 .pets-page-error {
