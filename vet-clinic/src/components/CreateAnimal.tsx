@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createAnimal, updateAnimal, ApiError } from '../services/api';
 import type { AnimalRequest, Animal } from '../types/animal';
+import { ErrorModal } from './ErrorModal';
 import './CreateAnimal.css';
 
 export function CreateAnimal() {
@@ -14,6 +15,10 @@ export function CreateAnimal() {
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingAnimalId, setEditingAnimalId] = useState<number | null>(null);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorModalTitle, setErrorModalTitle] = useState('Erro');
+  const [errorModalMessage, setErrorModalMessage] = useState('');
+  const [errorModalDetails, setErrorModalDetails] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState<AnimalRequest>({
     name: '',
@@ -230,15 +235,34 @@ export function CreateAnimal() {
         if (error.status === 400 && error.errorData?.errors) {
           // Validation errors from backend
           setFieldErrors(error.errorData.errors);
-          setGeneralError('Por favor, corrija os erros no formulário');
+          showErrorModal(
+            'Erros de Validação',
+            'Por favor, corrija os erros no formulário',
+            error.errorData.errors
+          );
+        } else if (error.status === 404) {
+          // Animal not found (edit mode only)
+          showErrorModal(
+            'Animal Não Encontrado',
+            error.detail || 'O animal que você está tentando editar não existe mais.'
+          );
         } else if (error.status === 422) {
           // Business rule violation
-          setGeneralError(error.detail);
+          showErrorModal(
+            'Erro na Operação',
+            error.detail || 'Não foi possível salvar o animal. Tente novamente.'
+          );
         } else {
-          setGeneralError(error.detail || 'Erro ao cadastrar animal');
+          showErrorModal(
+            'Erro ao Salvar',
+            error.detail || 'Erro inesperado ao salvar o animal. Tente novamente.'
+          );
         }
       } else {
-        setGeneralError('Erro inesperado ao cadastrar animal');
+        showErrorModal(
+          'Erro',
+          'Erro inesperado ao salvar o animal. Tente novamente.'
+        );
       }
     } finally {
       setLoading(false);
@@ -247,6 +271,21 @@ export function CreateAnimal() {
 
   const handleCancel = () => {
     navigate('/');
+  };
+
+  const showErrorModal = (
+    title: string,
+    message: string,
+    details?: Record<string, string>
+  ) => {
+    setErrorModalTitle(title);
+    setErrorModalMessage(message);
+    setErrorModalDetails(details || {});
+    setErrorModalOpen(true);
+  };
+
+  const closeErrorModal = () => {
+    setErrorModalOpen(false);
   };
 
   return (
@@ -510,6 +549,14 @@ export function CreateAnimal() {
           </div>
         </form>
       </div>
+
+      <ErrorModal
+        isOpen={errorModalOpen}
+        title={errorModalTitle}
+        message={errorModalMessage}
+        details={errorModalDetails}
+        onClose={closeErrorModal}
+      />
     </div>
   );
 }
