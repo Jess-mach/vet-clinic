@@ -225,7 +225,7 @@ public class GlobalExceptionHandler {
         problemDetail.setTitle("Resource Not Found");
         problemDetail.setType(URI.create("https://syscecilia.vet/problems/resource-not-found"));
         problemDetail.setProperty("timestamp", Instant.now());
-        problemDetail.setProperty("path", ex.getRequestURI());
+        problemDetail.setProperty("path", ex.getRequestURL().toString());
         
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
     }
