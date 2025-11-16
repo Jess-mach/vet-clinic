@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Animal, AnimalFilters } from '../types/animal';
+import type { Animal, AnimalFilters, PaginatedResponse } from '../types/animal';
 import { searchAnimals, ApiError } from '../services/api';
 import { AnimalList } from './AnimalList';
 import { AnimalDetails } from './AnimalDetails';
@@ -9,19 +9,28 @@ import { ErrorModal } from './ErrorModal';
 import './PetsPage.css';
 
 export function PetsPage() {
-  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [paginatedData, setPaginatedData] = useState<PaginatedResponse<Animal> | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedAnimalId, setSelectedAnimalId] = useState<number | null>(null);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalTitle, setErrorModalTitle] = useState('Erro');
   const [errorModalMessage, setErrorModalMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  const [activeFilters, setActiveFilters] = useState<AnimalFilters>({});
   const navigate = useNavigate();
 
-  const loadAnimals = async () => {
+  const loadAnimals = async (page: number = 0, filters: AnimalFilters = {}) => {
     try {
       setLoading(true);
-      const data = await searchAnimals();
-      setAnimals(data);
+      const data = await searchAnimals({
+        ...filters,
+        page,
+        pageSize: 10
+      });
+      setPaginatedData(data);
+      setCurrentPage(page);
+      setActiveFilters(filters);
     } catch (err) {
       if (err instanceof ApiError) {
         showErrorModal('Erro ao Carregar', err.detail || 'Erro ao carregar animais. Tente novamente mais tarde.');
@@ -34,38 +43,26 @@ export function PetsPage() {
   };
 
   useEffect(() => {
-    loadAnimals();
+    loadAnimals(0, {});
   }, []);
 
   const handleSearch = async (filters: AnimalFilters) => {
-    try {
-      setLoading(true);
-      const data = await searchAnimals(filters);
-      setAnimals(data);
-    } catch (err) {
-      if (err instanceof ApiError) {
-        showErrorModal('Erro ao Buscar', err.detail || 'Erro ao buscar animais. Tente novamente mais tarde.');
-      } else {
-        showErrorModal('Erro', 'Erro ao buscar animais. Tente novamente mais tarde.');
-      }
-    } finally {
-      setLoading(false);
-    }
+    loadAnimals(0, filters);
   };
 
   const handleClearFilters = async () => {
-    try {
-      setLoading(true);
-      const data = await searchAnimals();
-      setAnimals(data);
-    } catch (err) {
-      if (err instanceof ApiError) {
-        showErrorModal('Erro ao Carregar', err.detail || 'Erro ao carregar animais. Tente novamente mais tarde.');
-      } else {
-        showErrorModal('Erro', 'Erro ao carregar animais. Tente novamente mais tarde.');
-      }
-    } finally {
-      setLoading(false);
+    loadAnimals(0, {});
+  };
+
+  const handleNextPage = () => {
+    if (paginatedData?.hasNext) {
+      loadAnimals(currentPage + 1, activeFilters);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (paginatedData?.hasPrevious) {
+      loadAnimals(currentPage - 1, activeFilters);
     }
   };
 
@@ -95,33 +92,53 @@ export function PetsPage() {
     <div className="pets-page">
       <div className="pets-page-container">
         <div className="pets-page-actions">
-        <AnimalFiltersComponent onSearch={handleSearch} onClear={handleClearFilters} />
+          <AnimalFiltersComponent onSearch={handleSearch} onClear={handleClearFilters} />
           <button className="pets-page-create-btn btn btn-gradient" onClick={handleCreateNew}>
             Cadastrar novo pet
           </button>
         </div>
        
         <div className="pets-page-header">
-
-
           <div className="pets-page-header-content">
             <div>
               <h1>Listagem de Pets</h1>
               <p className="pets-page-subtitle">Visualize todos os animais cadastrados</p>
-              
             </div>
             {selectedAnimalId ? (
-          <AnimalDetails animalId={selectedAnimalId} onClose={handleCloseDetails} />
-        ) : (
-          <AnimalList 
-            animals={animals} 
-            onAnimalClick={handleAnimalClick}
-            loading={loading}
-            onAnimalDeleted={loadAnimals}
-          />
-        )}
+              <AnimalDetails animalId={selectedAnimalId} onClose={handleCloseDetails} />
+            ) : (
+              <>
+                <AnimalList 
+                  animals={paginatedData?.content || []} 
+                  onAnimalClick={handleAnimalClick}
+                  loading={loading}
+                  onAnimalDeleted={() => loadAnimals(currentPage, activeFilters)}
+                />
+                {paginatedData && paginatedData.totalElements > 0 && (
+                  <div className="pagination-controls">
+                    <button 
+                      className="btn btn-pagination"
+                      onClick={handlePreviousPage}
+                      disabled={paginatedData.isFirst || loading}
+                    >
+                      ← Anterior
+                    </button>
+                    <span className="pagination-info">
+                      Página {paginatedData.pageNumber + 1} de {paginatedData.totalPages} 
+                      ({paginatedData.totalElements} animais)
+                    </span>
+                    <button 
+                      className="btn btn-pagination"
+                      onClick={handleNextPage}
+                      disabled={paginatedData.isLast || loading}
+                    >
+                      Próxima →
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-
         </div>
 
         <ErrorModal
@@ -130,8 +147,6 @@ export function PetsPage() {
           message={errorModalMessage}
           onClose={closeErrorModal}
         />
-
-
       </div>
     </div>
   );

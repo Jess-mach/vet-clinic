@@ -123,6 +123,14 @@ public class ConsultationController {
                 createdAtEndDateTime = LocalDateTime.parse(createdAtEnd, formatter);
             }
             
+            // Converter strings vazias em null para melhor compatibilidade com query
+            animalName = (animalName != null && animalName.trim().isEmpty()) ? null : animalName;
+            ownerName = (ownerName != null && ownerName.trim().isEmpty()) ? null : ownerName;
+            veterinarianName = (veterinarianName != null && veterinarianName.trim().isEmpty()) ? null : veterinarianName;
+            status = (status != null && status.trim().isEmpty()) ? null : status;
+            reason = (reason != null && reason.trim().isEmpty()) ? null : reason;
+            description = (description != null && description.trim().isEmpty()) ? null : description;
+            
             String[] sortParts = sort.split(",");
             String sortField = sortParts[0];
             Sort.Direction direction = sortParts.length > 1 && sortParts[1].equalsIgnoreCase("asc") 

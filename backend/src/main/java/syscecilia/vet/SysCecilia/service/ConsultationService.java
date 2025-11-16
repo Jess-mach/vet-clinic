@@ -12,6 +12,7 @@ import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.model.Consultation;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
+import syscecilia.vet.SysCecilia.repository.ConsultationSpecification;
 
 import java.time.LocalDateTime;
 
@@ -45,15 +46,17 @@ public class ConsultationService {
             LocalDateTime createdAtStart,
             LocalDateTime createdAtEnd,
             Pageable pageable) {
-        Page<Consultation> consultations = consultationRepository.findByFilters(
-                animalName,
-                ownerName,
-                veterinarianName,
-                status,
-                reason,
-                description,
-                createdAtStart,
-                createdAtEnd,
+        Page<Consultation> consultations = consultationRepository.findAll(
+                ConsultationSpecification.withFilters(
+                        animalName,
+                        ownerName,
+                        veterinarianName,
+                        status,
+                        reason,
+                        description,
+                        createdAtStart,
+                        createdAtEnd
+                ),
                 pageable
         );
         return consultations.map(this::convertToResponse);

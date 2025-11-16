@@ -15,6 +15,7 @@ import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -165,52 +166,76 @@ public class AnimalService {
         int pageNumber = page != null ? page : 0;
         int size = pageSize != null ? pageSize : 20;
 
-        Pageable pageable = PageRequest.of(pageNumber, size);
-        Page<Animal> animalPage;
-
-        if (name != null && !name.isBlank() && species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
-            // Fetch by name and apply other filters in memory
-            animalPage = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(name, pageable)
-                    .filter(animal -> animal.getSpecies().equalsIgnoreCase(species)
-                            && animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
-        } else if (name != null && !name.isBlank() && species != null && !species.isBlank()) {
-            // Fetch by name and apply species filter in memory
-            animalPage = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(name, pageable)
-                    .filter(animal -> animal.getSpecies().equalsIgnoreCase(species));
-        } else if (name != null && !name.isBlank() && ownerName != null && !ownerName.isBlank()) {
-            // Fetch by name and apply owner filter in memory
-            animalPage = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(name, pageable)
-                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
-        } else if (species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
-            // Fetch by species and apply owner filter in memory
-            animalPage = animalRepository.findBySpeciesAndIsActiveTrueOrderByNameAsc(species, pageable)
-                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
-        } else if (name != null && !name.isBlank()) {
-            animalPage = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(name, pageable);
-        } else if (species != null && !species.isBlank()) {
-            animalPage = animalRepository.findBySpeciesAndIsActiveTrueOrderByNameAsc(species, pageable);
-        } else if (ownerName != null && !ownerName.isBlank()) {
-            animalPage = animalRepository.findByOwnerNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(ownerName, pageable);
-        } else {
-            animalPage = animalRepository.findAllByIsActiveTrueOrderByNameAsc(pageable);
+        // Get all matching animals without pagination first, then apply pagination manually
+        List<Animal> allAnimals = getFilteredAnimals(name, species, ownerName);
+        
+        // Calculate total elements and pages
+        long totalElements = allAnimals.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        if (totalPages == 0) {
+            totalPages = 1;
         }
-
-        List<AnimalResponse> content = animalPage.getContent()
+        
+        // Validate page number
+        if (pageNumber < 0) {
+            pageNumber = 0;
+        }
+        if (pageNumber >= totalPages && totalElements > 0) {
+            pageNumber = Math.max(0, totalPages - 1);
+        }
+        
+        // Apply pagination
+        int startIndex = pageNumber * size;
+        int endIndex = Math.min(startIndex + size, (int) totalElements);
+        List<Animal> pageContent = allAnimals.isEmpty() ? Collections.emptyList() : allAnimals.subList(startIndex, endIndex);
+        
+        List<AnimalResponse> content = pageContent
                 .stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
 
         return new PageResponse<>(
                 content,
-                animalPage.getNumber(),
-                animalPage.getSize(),
-                animalPage.getTotalElements(),
-                animalPage.getTotalPages(),
-                animalPage.isFirst(),
-                animalPage.isLast(),
-                animalPage.hasNext(),
-                animalPage.hasPrevious()
+                pageNumber,
+                size,
+                totalElements,
+                totalPages,
+                pageNumber == 0,
+                pageNumber == totalPages - 1 || totalElements == 0,
+                pageNumber < totalPages - 1,
+                pageNumber > 0
         );
+    }
+
+    private List<Animal> getFilteredAnimals(String name, String species, String ownerName) {
+        Stream<Animal> animalStream;
+
+        if (name != null && !name.isBlank() && species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
+                    .filter(animal -> animal.getSpecies().equalsIgnoreCase(species))
+                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (name != null && !name.isBlank() && species != null && !species.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
+                    .filter(animal -> animal.getSpecies().equalsIgnoreCase(species));
+        } else if (name != null && !name.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
+                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findBySpeciesAndIsActiveTrue(species).stream()
+                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (name != null && !name.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream();
+        } else if (species != null && !species.isBlank()) {
+            animalStream = animalRepository.findBySpeciesAndIsActiveTrue(species).stream();
+        } else if (ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findByOwnerNameContainingIgnoreCaseAndIsActiveTrue(ownerName).stream();
+        } else {
+            animalStream = animalRepository.findAllByIsActiveTrueOrderByNameAsc().stream();
+        }
+
+        return animalStream
+                .sorted((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName()))
+                .collect(Collectors.toList());
     }
 
     private AnimalResponse convertToResponse(Animal animal) {

@@ -10,6 +10,14 @@ interface ConsultationListProps {
   onConsultationClick: (consultation: Consultation) => void;
   loading?: boolean;
   onConsultationDeleted?: () => void;
+  pagination?: {
+    page: number;
+    size: number;
+    totalPages: number;
+    totalElements: number;
+  };
+  onPageChange?: (page: number) => void;
+  onSizeChange?: (size: number) => void;
 }
 
 export function ConsultationList({
@@ -17,6 +25,9 @@ export function ConsultationList({
   onConsultationClick,
   loading,
   onConsultationDeleted,
+  pagination,
+  onPageChange,
+  onSizeChange,
 }: ConsultationListProps) {
   const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
     isOpen: boolean;
@@ -37,7 +48,10 @@ export function ConsultationList({
     );
   }
 
-  if (consultations.length === 0) {
+  const totalElements = pagination?.totalElements ?? consultations.length;
+  const isEmpty = consultations.length === 0 && (!pagination || pagination.totalElements === 0);
+
+  if (isEmpty) {
     return (
       <div className="consultation-list-empty">
         <p>Nenhuma consulta encontrada.</p>
@@ -117,10 +131,40 @@ export function ConsultationList({
     setDeleteConfirmModal({ isOpen: false, consultation: null });
   };
 
+  const handleFirstPage = () => {
+    if (onPageChange && pagination) {
+      onPageChange(0);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (onPageChange && pagination && pagination.page > 0) {
+      onPageChange(pagination.page - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (onPageChange && pagination && pagination.page < pagination.totalPages - 1) {
+      onPageChange(pagination.page + 1);
+    }
+  };
+
+  const handleLastPage = () => {
+    if (onPageChange && pagination && pagination.totalPages > 0) {
+      onPageChange(pagination.totalPages - 1);
+    }
+  };
+
+  const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (onSizeChange) {
+      onSizeChange(parseInt(e.target.value));
+    }
+  };
+
   return (
     <div className="consultation-list">
       <div className="consultation-list-header">
-        <h2>Consultas Registradas ({consultations.length})</h2>
+        <h2>Consultas Registradas ({totalElements})</h2>
       </div>
       <div className="consultation-table-container">
         <table className="consultation-table">
@@ -187,6 +231,73 @@ export function ConsultationList({
           </tbody>
         </table>
       </div>
+
+      {pagination && pagination.totalPages > 0 && (
+        <div className="consultation-pagination">
+          <div className="pagination-info">
+            <span>
+              Página {pagination.page + 1} de {pagination.totalPages}
+            </span>
+            <span className="pagination-separator">•</span>
+            <span>Total: {pagination.totalElements} registros</span>
+          </div>
+          
+          <div className="pagination-controls">
+            <button
+              className="pagination-btn"
+              onClick={handleFirstPage}
+              disabled={pagination.page === 0}
+              title="Primeira página"
+            >
+              ⏮
+            </button>
+            <button
+              className="pagination-btn"
+              onClick={handlePreviousPage}
+              disabled={pagination.page === 0}
+              title="Página anterior"
+            >
+              ◀
+            </button>
+            <span className="pagination-page-info">
+              {pagination.page + 1} / {pagination.totalPages}
+            </span>
+            <button
+              className="pagination-btn"
+              onClick={handleNextPage}
+              disabled={pagination.page >= pagination.totalPages - 1}
+              title="Próxima página"
+            >
+              ▶
+            </button>
+            <button
+              className="pagination-btn"
+              onClick={handleLastPage}
+              disabled={pagination.page >= pagination.totalPages - 1}
+              title="Última página"
+            >
+              ⏭
+            </button>
+          </div>
+
+          <div className="pagination-size">
+            <label htmlFor="page-size-select" className="pagination-size-label">
+              Itens por página:
+            </label>
+            <select
+              id="page-size-select"
+              className="pagination-size-select"
+              value={pagination.size}
+              onChange={handleSizeChange}
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       <ConfirmDeleteModal
         isOpen={deleteConfirmModal.isOpen}

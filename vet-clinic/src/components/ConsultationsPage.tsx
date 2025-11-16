@@ -15,13 +15,38 @@ export function ConsultationsPage() {
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalTitle, setErrorModalTitle] = useState('Erro');
   const [errorModalMessage, setErrorModalMessage] = useState('');
+  
+  // Estado de paginação
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  
+  // Estado para manter filtros atuais
+  const [currentFilters, setCurrentFilters] = useState<ConsultationFilters>({});
+  
   const navigate = useNavigate();
 
-  const loadConsultations = async () => {
+  const loadConsultations = async (filters?: ConsultationFilters, pageNum?: number, pageSize?: number) => {
     try {
       setLoading(true);
-      const data = await searchConsultations();
-      setConsultations(data);
+      const filtersToUse = filters || currentFilters;
+      const pageToUse = pageNum !== undefined ? pageNum : page;
+      const sizeToUse = pageSize !== undefined ? pageSize : size;
+      
+      const searchFilters: ConsultationFilters = {
+        ...filtersToUse,
+        page: pageToUse,
+        size: sizeToUse,
+        sort: filtersToUse.sort || 'consultationDate,desc',
+      };
+      
+      const data = await searchConsultations(searchFilters);
+      setConsultations(data.content);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
+      setPage(data.number);
+      setSize(data.size);
     } catch (err) {
       if (err instanceof ApiError) {
         showErrorModal('Erro ao Carregar', err.detail || 'Erro ao carregar consultas. Tente novamente mais tarde.');
@@ -38,35 +63,22 @@ export function ConsultationsPage() {
   }, []);
 
   const handleSearch = async (filters: ConsultationFilters) => {
-    try {
-      setLoading(true);
-      const data = await searchConsultations(filters);
-      setConsultations(data);
-    } catch (err) {
-      if (err instanceof ApiError) {
-        showErrorModal('Erro ao Buscar', err.detail || 'Erro ao buscar consultas. Tente novamente mais tarde.');
-      } else {
-        showErrorModal('Erro', 'Erro ao buscar consultas. Tente novamente mais tarde.');
-      }
-    } finally {
-      setLoading(false);
-    }
+    setCurrentFilters(filters);
+    await loadConsultations(filters, 0, filters.size || size);
   };
 
   const handleClearFilters = async () => {
-    try {
-      setLoading(true);
-      const data = await searchConsultations();
-      setConsultations(data);
-    } catch (err) {
-      if (err instanceof ApiError) {
-        showErrorModal('Erro ao Carregar', err.detail || 'Erro ao carregar consultas. Tente novamente mais tarde.');
-      } else {
-        showErrorModal('Erro', 'Erro ao carregar consultas. Tente novamente mais tarde.');
-      }
-    } finally {
-      setLoading(false);
-    }
+    const emptyFilters: ConsultationFilters = {};
+    setCurrentFilters(emptyFilters);
+    await loadConsultations(emptyFilters, 0, size);
+  };
+
+  const handlePageChange = async (newPage: number) => {
+    await loadConsultations(currentFilters, newPage, size);
+  };
+
+  const handleSizeChange = async (newSize: number) => {
+    await loadConsultations(currentFilters, 0, newSize);
   };
 
   const handleConsultationClick = (consultation: Consultation) => {
@@ -111,7 +123,15 @@ export function ConsultationsPage() {
               consultations={consultations}
               onConsultationClick={handleConsultationClick}
               loading={loading}
-              onConsultationDeleted={loadConsultations}
+              onConsultationDeleted={() => loadConsultations(currentFilters, page, size)}
+              pagination={{
+                page,
+                size,
+                totalPages,
+                totalElements,
+              }}
+              onPageChange={handlePageChange}
+              onSizeChange={handleSizeChange}
             />
           </div>
         </div>

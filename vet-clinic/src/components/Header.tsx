@@ -41,13 +41,12 @@ export function Header() {
 
         <nav className={`header-nav ${isMenuOpen ? 'header-nav-open' : ''}`}>
           <ul className="nav-list">
-            <li><a href="#consultas" onClick={(e) => handleNavClick(e, '#consultas')}>Consultas</a></li>
-            <li><a href="#exames" onClick={(e) => handleNavClick(e, '#exames')}>Exames</a></li>
-            <li><a href="#cirurgias" onClick={(e) => handleNavClick(e, '#cirurgias')}>Cirurgias</a></li>
-            <li><a href="#vacinas" onClick={(e) => handleNavClick(e, '#vacinas')}>Vacinação</a></li>
+            <li><a href="#servicos" onClick={(e) => handleNavClick(e, '#servicos')}>Nossos Serviços</a></li>
+
             <li><a href="#especialidades" onClick={(e) => handleNavClick(e, '#especialidades')}>Especialidades</a></li>
             <li><a href="#sobre" onClick={(e) => handleNavClick(e, '#sobre')}>Sobre</a></li>
-            <li><Link to="/pets" onClick={closeMenu}>Pet</Link></li>
+            <li><Link to="/consultas" onClick={closeMenu}>Gerenciar Consultas</Link></li>
+            <li><Link to="/pets" onClick={closeMenu}>Gerenciar Pets</Link></li>
             <li><a href="#contato" onClick={(e) => handleNavClick(e, '#contato')}>Contato</a></li>
           </ul>
         </nav>

@@ -1,5 +1,5 @@
-import type { Animal, AnimalFilters, AnimalRequest, ApiError as ApiErrorResponse } from '../types/animal';
-import type { Consultation, ConsultationFilters, ConsultationRequest, ApiError as ConsultationApiErrorResponse } from '../types/consultation';
+import type { Animal, AnimalFilters, AnimalRequest, ApiError as ApiErrorResponse, PaginatedResponse as AnimalPaginatedResponse } from '../types/animal';
+import type { Consultation, ConsultationFilters, ConsultationRequest, ApiError as ConsultationApiErrorResponse, PaginatedResponse } from '../types/consultation';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -16,7 +16,7 @@ export class ApiError extends Error {
 
 export async function searchAnimals(
   filters?: AnimalFilters
-): Promise<Animal[]> {
+): Promise<AnimalPaginatedResponse<Animal>> {
   const params = new URLSearchParams();
   
   if (filters?.name) {
@@ -27,6 +27,12 @@ export async function searchAnimals(
   }
   if (filters?.ownerName) {
     params.append('ownerName', filters.ownerName);
+  }
+  if (filters?.page !== undefined) {
+    params.append('page', filters.page.toString());
+  }
+  if (filters?.pageSize !== undefined) {
+    params.append('pageSize', filters.pageSize.toString());
   }
 
   const url = `${API_BASE_URL}/animals${params.toString() ? `?${params.toString()}` : ''}`;
@@ -194,12 +200,44 @@ export async function deleteAnimal(id: number): Promise<void> {
 
 export async function searchConsultations(
   filters?: ConsultationFilters
-): Promise<Consultation[]> {
+): Promise<PaginatedResponse<Consultation>> {
   const params = new URLSearchParams();
   
-  // Backend suporta: GET /api/consultations?animalId={id}
-  if (filters?.animalId) {
-    params.append('animalId', filters.animalId.toString());
+  // Filtros de busca
+  if (filters?.animalName) {
+    params.append('animalName', filters.animalName);
+  }
+  if (filters?.ownerName) {
+    params.append('ownerName', filters.ownerName);
+  }
+  if (filters?.veterinarianName) {
+    params.append('veterinarianName', filters.veterinarianName);
+  }
+  if (filters?.status) {
+    params.append('status', filters.status);
+  }
+  if (filters?.reason) {
+    params.append('reason', filters.reason);
+  }
+  if (filters?.description) {
+    params.append('description', filters.description);
+  }
+  if (filters?.createdAtStart) {
+    params.append('createdAtStart', filters.createdAtStart);
+  }
+  if (filters?.createdAtEnd) {
+    params.append('createdAtEnd', filters.createdAtEnd);
+  }
+  
+  // Parâmetros de paginação
+  if (filters?.page !== undefined) {
+    params.append('page', filters.page.toString());
+  }
+  if (filters?.size !== undefined) {
+    params.append('size', filters.size.toString());
+  }
+  if (filters?.sort) {
+    params.append('sort', filters.sort);
   }
 
   const url = `${API_BASE_URL}/consultations${params.toString() ? `?${params.toString()}` : ''}`;
