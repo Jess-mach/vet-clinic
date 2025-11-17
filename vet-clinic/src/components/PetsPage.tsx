@@ -6,6 +6,8 @@ import { AnimalList } from './AnimalList';
 import { AnimalDetails } from './AnimalDetails';
 import { AnimalFiltersComponent } from './AnimalFilters';
 import { ErrorModal } from './ErrorModal';
+import { PageSizeSelector } from './PageSizeSelector';
+import { PaginationControls } from './PaginationControls';
 import './PetsPage.css';
 
 export function PetsPage() {
@@ -20,13 +22,13 @@ export function PetsPage() {
   const [activeFilters, setActiveFilters] = useState<AnimalFilters>({});
   const navigate = useNavigate();
 
-  const loadAnimals = async (page: number = 0, filters: AnimalFilters = {}) => {
+  const loadAnimals = async (page: number = 0, filters: AnimalFilters = {}, size: number = pageSize) => {
     try {
       setLoading(true);
       const data = await searchAnimals({
         ...filters,
         page,
-        pageSize: 10
+        pageSize: size
       });
       setPaginatedData(data);
       setCurrentPage(page);
@@ -88,6 +90,11 @@ export function PetsPage() {
     setErrorModalOpen(false);
   };
 
+  const handleSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    loadAnimals(0, activeFilters, newSize);
+  };
+
   return (
     <div className="pets-page">
       <div className="pets-page-container">
@@ -100,10 +107,6 @@ export function PetsPage() {
        
         <div className="pets-page-header">
           <div className="pets-page-header-content">
-            <div>
-              <h1>Listagem de Pets</h1>
-              <p className="pets-page-subtitle">Visualize todos os animais cadastrados</p>
-            </div>
             {selectedAnimalId ? (
               <AnimalDetails animalId={selectedAnimalId} onClose={handleCloseDetails} />
             ) : (
@@ -115,27 +118,25 @@ export function PetsPage() {
                   onAnimalDeleted={() => loadAnimals(currentPage, activeFilters)}
                 />
                 {paginatedData && paginatedData.totalElements > 0 && (
-                  <div className="pagination-controls">
-                    <button 
-                      className="btn btn-pagination"
-                      onClick={handlePreviousPage}
-                      disabled={paginatedData.isFirst || loading}
-                    >
-                      ← Anterior
-                    </button>
-                    <span className="pagination-info">
-                      Página {paginatedData.pageNumber + 1} de {paginatedData.totalPages} 
-                      ({paginatedData.totalElements} animais)
-                    </span>
-                    <button 
-                      className="btn btn-pagination"
-                      onClick={handleNextPage}
-                      disabled={paginatedData.isLast || loading}
-                    >
-                      Próxima →
-                    </button>
+                  <div className="pagination-wrapper">
+                    <PaginationControls 
+                      currentPage={paginatedData.pageNumber}
+                      totalPages={paginatedData.totalPages}
+                      totalElements={paginatedData.totalElements}
+                      onPreviousPage={handlePreviousPage}
+                      onNextPage={handleNextPage}
+                      disabled={loading}
+                      showFirstLastButtons={false}
+                    />
+                    <PageSizeSelector 
+                      currentSize={paginatedData.totalElements}
+                      onChange={handleSizeChange}
+                      disabled={loading}
+                    />
                   </div>
                 )}
+
+                
               </>
             )}
           </div>

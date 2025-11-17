@@ -47,8 +47,7 @@
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
   align-items: center;
-  flex-wrap: wrap;
-}
+  border-radius: var(--radius-md);
 
 .consultations-page-create-btn {
   white-space: nowrap;

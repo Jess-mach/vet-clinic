@@ -17,6 +17,12 @@ docker start 9b4
 ```shell
 cd /media/jess/WORKSPACE/win/jessica/workspace/SysCecilia/backend
 mvn spring-boot:run
+
+
+cd /media/jess/WORKSPACE/win/jessica/workspace/SysCecilia/vet-clinic
+npm run dev
+
+
 ```
 
 lsof -i :8080 || netstat -tuln | grep 8080 || ss -tuln | grep 8080

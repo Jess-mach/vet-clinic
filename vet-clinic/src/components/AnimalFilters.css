@@ -7,11 +7,9 @@
 }
 
 .animal-filters-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  border-top: 2px solid var(--color-purple-pale);
+  animation: expandFilters 0.3s ease-out;
 }
 
 .animal-filters-title h3 {
@@ -27,21 +25,47 @@
   color: var(--color-text-secondary);
 }
 
+.consultation-filters {
+  width: 100%;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin-bottom: var(--spacing-lg);
+}
+
+.consultation-filters-toggle {
+  width: 100%;
+  padding: var(--spacing-lg);
+  border: none;
+  background: linear-gradient(135deg, var(--color-purple-bg-light) 0%, var(--color-purple-pale) 100%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  transition: all var(--transition-base);
+  border-bottom: 2px solid transparent;
+}
+
+.consultation-filters-toggle:hover {
+  background: linear-gradient(135deg, var(--color-purple-lighter) 0%, #c084fc 100%);
+}
+
 
 .filters-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-sm);
-  align-items: flex-end;
-  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  min-width: 0;
+  gap: var(--spacing-sm);
 }
 
 .filter-group label {
@@ -78,10 +102,12 @@
 .filters-actions {
   display: flex;
   gap: var(--spacing-md);
-  justify-content: flex-end;
   flex-wrap: wrap;
-  margin-left: auto;
-  align-self: flex-end;
+}
+
+.filters-actions .btn {
+  flex: 1;
+  min-width: 150px;
 }
 
 .btn-primary,
@@ -129,13 +155,22 @@
 }
 
 @media (max-width: 768px) {
+  .consultation-filters-toggle {
+    padding: var(--spacing-md);
+  }
+
   .animal-filters {
     padding: var(--spacing-md);
   }
 
   .animal-filters-header {
-    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
   }
+
+  .consultation-filters-content {
+    padding: var(--spacing-md);
+  }
+
 
   .animal-filters-title h3 {
     font-size: var(--font-size-base);
@@ -146,20 +181,22 @@
   }
 
   .filters-grid {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     gap: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-    align-items: stretch;
   }
 
   .filter-group {
     min-width: auto;
   }
 
+
   .filters-actions {
-    margin-left: 0;
-    justify-content: stretch;
+    flex-direction: column;
+  }
+
+  .filters-actions .btn {
     width: 100%;
+    min-width: unset;
   }
 
   .btn-primary,
@@ -170,6 +207,17 @@
 }
 
 @media (max-width: 640px) {
+  .consultation-filters-toggle {
+    padding: var(--spacing-md);
+    font-size: var(--font-size-sm);
+  }
+
+  .consultation-filters-content {
+    padding: var(--spacing-lg);
+    border-top: 2px solid var(--color-purple-pale);
+    animation: expandFilters 0.3s ease-out;
+  }
+
   .animal-filters {
     padding: var(--spacing-md);
     margin-bottom: var(--spacing-md);
@@ -182,11 +230,6 @@
   .filter-group input {
     padding: var(--spacing-sm);
     font-size: var(--font-size-xs);
-  }
-
-  .filters-actions {
-    flex-direction: column;
-    gap: var(--spacing-sm);
   }
 
   .btn-primary,

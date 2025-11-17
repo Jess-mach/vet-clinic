@@ -18,7 +18,9 @@ import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
 import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -42,6 +44,7 @@ public class ConsultationControllerIntegrationTest {
     private Consultation consultation1;
     private Consultation consultation2;
     private Consultation consultation3;
+    private Consultation consultation4;
 
     @BeforeEach
     public void setUp() {
@@ -99,6 +102,16 @@ public class ConsultationControllerIntegrationTest {
         consultation3.setStatus("COMPLETED");
         consultation3.setCreatedAt(LocalDateTime.of(2025, 11, 16, 10, 0));
         consultation3 = consultationRepository.save(consultation3);
+
+        consultation4 = new Consultation();
+        consultation4.setAnimal(animal1);
+        consultation4.setConsultationDate(LocalDateTime.of(2025, 12, 1, 14, 0));
+        consultation4.setVeterinarianName("Dr. Costa");
+        consultation4.setReason("Scheduled checkup");
+        consultation4.setDescription("Future appointment");
+        consultation4.setStatus("SCHEDULED");
+        consultation4.setCreatedAt(LocalDateTime.of(2025, 11, 20, 10, 0));
+        consultation4 = consultationRepository.save(consultation4);
     }
 
     @Test
@@ -129,8 +142,8 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(3)))
-                .andExpect(jsonPath("$.totalElements", is(3)))
+                .andExpect(jsonPath("$.content", hasSize(4)))
+                .andExpect(jsonPath("$.totalElements", is(4)))
                 .andExpect(jsonPath("$.totalPages", is(1)));
     }
 
@@ -143,9 +156,10 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content", hasSize(3)))
                 .andExpect(jsonPath("$.content[0].animal.name", is("Rex")))
-                .andExpect(jsonPath("$.content[1].animal.name", is("Rex")));
+                .andExpect(jsonPath("$.content[1].animal.name", is("Rex")))
+                .andExpect(jsonPath("$.content[2].animal.name", is("Rex")));
     }
 
     @Test
@@ -157,7 +171,7 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content", hasSize(3)))
                 .andExpect(jsonPath("$.content[0].animal.name", is("Rex")));
     }
 
@@ -183,9 +197,10 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content", hasSize(3)))
                 .andExpect(jsonPath("$.content[0].animal.ownerName", is("John Doe")))
-                .andExpect(jsonPath("$.content[1].animal.ownerName", is("John Doe")));
+                .andExpect(jsonPath("$.content[1].animal.ownerName", is("John Doe")))
+                .andExpect(jsonPath("$.content[2].animal.ownerName", is("John Doe")));
     }
 
     @Test
@@ -253,7 +268,7 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(3)));
+                .andExpect(jsonPath("$.content", hasSize(4)));
     }
 
     @Test
@@ -322,7 +337,7 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "2")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content", hasSize(2)))
                 .andExpect(jsonPath("$.number", is(1)));
     }
 
@@ -335,10 +350,11 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(3)))
-                .andExpect(jsonPath("$.content[0].reason", is("Dental cleaning")))
-                .andExpect(jsonPath("$.content[1].reason", is("Vaccination")))
-                .andExpect(jsonPath("$.content[2].reason", is("Routine checkup")));
+                .andExpect(jsonPath("$.content", hasSize(4)))
+                .andExpect(jsonPath("$.content[0].reason", is("Scheduled checkup")))
+                .andExpect(jsonPath("$.content[1].reason", is("Dental cleaning")))
+                .andExpect(jsonPath("$.content[2].reason", is("Vaccination")))
+                .andExpect(jsonPath("$.content[3].reason", is("Routine checkup")));
     }
 
     @Test
@@ -350,10 +366,11 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(3)))
+                .andExpect(jsonPath("$.content", hasSize(4)))
                 .andExpect(jsonPath("$.content[0].reason", is("Routine checkup")))
                 .andExpect(jsonPath("$.content[1].reason", is("Vaccination")))
-                .andExpect(jsonPath("$.content[2].reason", is("Dental cleaning")));
+                .andExpect(jsonPath("$.content[2].reason", is("Dental cleaning")))
+                .andExpect(jsonPath("$.content[3].reason", is("Scheduled checkup")));
     }
 
     @Test
@@ -370,6 +387,48 @@ public class ConsultationControllerIntegrationTest {
                 .andExpect(jsonPath("$.totalElements", is(2)))
                 .andExpect(jsonPath("$.totalPages", is(2)))
                 .andExpect(jsonPath("$.content[0].reason", is("Dental cleaning")));
+    }
+
+    @Test
+    @DisplayName("Should cancel consultation successfully")
+    public void testCancelConsultation() throws Exception {
+        mockMvc.perform(patch("/api/consultations/{id}/cancel", consultation4.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(consultation4.getId().intValue())))
+                .andExpect(jsonPath("$.status", is("CANCELLED")));
+
+        // Verificar que o status foi realmente alterado no banco
+        Consultation updated = consultationRepository.findById(consultation4.getId()).orElseThrow();
+        assertEquals("CANCELLED", updated.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should return 404 when consultation not found for cancellation")
+    public void testCancelConsultationNotFound() throws Exception {
+        mockMvc.perform(patch("/api/consultations/{id}/cancel", 9999L)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should return 422 when trying to cancel already cancelled consultation")
+    public void testCancelConsultationAlreadyCancelled() throws Exception {
+        // Primeiro cancelar a consulta
+        consultation4.setStatus("CANCELLED");
+        consultationRepository.save(consultation4);
+
+        mockMvc.perform(patch("/api/consultations/{id}/cancel", consultation4.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    @DisplayName("Should return 422 when trying to cancel completed consultation")
+    public void testCancelConsultationCompleted() throws Exception {
+        mockMvc.perform(patch("/api/consultations/{id}/cancel", consultation1.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity());
     }
 }
 

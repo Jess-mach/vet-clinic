@@ -364,16 +364,16 @@ export async function updateConsultation(id: number, consultation: ConsultationR
   }
 }
 
-export async function deleteConsultation(id: number): Promise<void> {
+export async function cancelConsultation(id: number): Promise<Consultation> {
   if (id <= 0) {
     throw new ApiError(400, 'ID must be greater than 0');
   }
 
-  const url = `${API_BASE_URL}/consultations/${id}`;
+  const url = `${API_BASE_URL}/consultations/${id}/cancel`;
   
   try {
     const response = await fetch(url, {
-      method: 'DELETE',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -386,8 +386,14 @@ export async function deleteConsultation(id: number): Promise<void> {
         throw new ApiError(404, 'Consultation not found', error);
       }
       
-      throw new ApiError(response.status, error.detail || 'Failed to delete consultation', error);
+      if (response.status === 422) {
+        throw new ApiError(422, error.detail || 'Business rule violation', error);
+      }
+      
+      throw new ApiError(response.status, error.detail || 'Failed to cancel consultation', error);
     }
+    
+    return await response.json();
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

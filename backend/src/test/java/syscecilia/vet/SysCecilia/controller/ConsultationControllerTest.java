@@ -20,6 +20,7 @@ import syscecilia.vet.SysCecilia.dto.AnimalBasicInfo;
 import syscecilia.vet.SysCecilia.dto.ConsultationResponse;
 import syscecilia.vet.SysCecilia.exception.GlobalExceptionHandler;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
+import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.service.ConsultationService;
 
 import java.time.LocalDateTime;
@@ -31,6 +32,7 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ConsultationController.class)
@@ -279,6 +281,75 @@ public class ConsultationControllerTest {
                 eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
+    }
+
+    @Test
+    @DisplayName("Should cancel consultation successfully")
+    public void testCancelConsultation() throws Exception {
+        ConsultationResponse cancelledConsultation = new ConsultationResponse(
+                2L,
+                testAnimal,
+                LocalDateTime.of(2025, 12, 1, 14, 0),
+                "Dr. Costa",
+                "Scheduled checkup",
+                "Future appointment",
+                null,
+                null,
+                null,
+                null,
+                "CANCELLED",
+                LocalDateTime.of(2025, 11, 20, 10, 0),
+                LocalDateTime.now()
+        );
+
+        when(consultationService.cancelConsultation(2L)).thenReturn(cancelledConsultation);
+
+        mockMvc.perform(patch("/api/consultations/2/cancel")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(2)))
+                .andExpect(jsonPath("$.status", is("CANCELLED")));
+
+        verify(consultationService, times(1)).cancelConsultation(2L);
+    }
+
+    @Test
+    @DisplayName("Should return 404 when consultation not found for cancellation")
+    public void testCancelConsultationNotFound() throws Exception {
+        when(consultationService.cancelConsultation(9999L))
+                .thenThrow(new ResourceNotFoundException("Consultation not found with id: 9999"));
+
+        mockMvc.perform(patch("/api/consultations/9999/cancel")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        verify(consultationService, times(1)).cancelConsultation(9999L);
+    }
+
+    @Test
+    @DisplayName("Should return 422 when trying to cancel already cancelled consultation")
+    public void testCancelConsultationAlreadyCancelled() throws Exception {
+        when(consultationService.cancelConsultation(3L))
+                .thenThrow(new BusinessException("Consultation is already cancelled"));
+
+        mockMvc.perform(patch("/api/consultations/3/cancel")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity());
+
+        verify(consultationService, times(1)).cancelConsultation(3L);
+    }
+
+    @Test
+    @DisplayName("Should return 422 when trying to cancel completed consultation")
+    public void testCancelConsultationCompleted() throws Exception {
+        when(consultationService.cancelConsultation(1L))
+                .thenThrow(new BusinessException("Cannot cancel a completed consultation"));
+
+        mockMvc.perform(patch("/api/consultations/1/cancel")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity());
+
+        verify(consultationService, times(1)).cancelConsultation(1L);
     }
 }
 

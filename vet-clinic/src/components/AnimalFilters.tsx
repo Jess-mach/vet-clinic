@@ -8,6 +8,7 @@ interface AnimalFiltersProps {
 }
 
 export function AnimalFiltersComponent({ onSearch, onClear }: AnimalFiltersProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState<AnimalFilters>({
     name: '',
     species: '',
@@ -47,57 +48,75 @@ export function AnimalFiltersComponent({ onSearch, onClear }: AnimalFiltersProps
     onClear();
   };
 
+  const countActiveFilters = () => {
+    let count = 0;
+    if (filters.name?.trim()) count++;
+    if (filters.species?.trim()) count++;
+    if (filters.ownerName?.trim()) count++;
+    return count;
+  };
+
+  const hasFilters = countActiveFilters() > 0;
+
   return (
-    <form onSubmit={handleSubmit} className="animal-filters">
-      <div className="animal-filters-header">
-        <div className="animal-filters-title">
-          <h3>🔍 Filtros de Busca</h3>
-        </div>
-      </div>
+    <form onSubmit={handleSubmit} className="consultation-filters">
+      <button
+        type="button"
+        className="consultation-filters-toggle"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <span className="filter-icon">🔍</span>
+        <span className="filter-text">Filtros</span>
+        {hasFilters && <span className="filter-badge">{countActiveFilters()}</span>}
+        <span className={`arrow ${isExpanded ? 'expanded' : ''}`}>▼</span>
+      </button>
+      
+      {isExpanded && (
+        <div className="consultation-filters-content">
+          <div className="filters-grid">
+            <div className="filter-group">
+              <label htmlFor="name">Nome do Animal</label>
+              <input
+                id="name"
+                type="text"
+                placeholder="Digite o nome do animal"
+                value={filters.name || ''}
+                onChange={(e) => handleChange('name', e.target.value)}
+              />
+            </div>
 
-      <div className="filters-grid">
-        <div className="filter-group">
-          <label htmlFor="name">Nome do Animal</label>
-          <input
-            id="name"
-            type="text"
-            placeholder="Digite o nome do animal"
-            value={filters.name || ''}
-            onChange={(e) => handleChange('name', e.target.value)}
-          />
-        </div>
+            <div className="filter-group">
+              <label htmlFor="species">Espécie</label>
+              <input
+                id="species"
+                type="text"
+                placeholder="Ex: Cachorro, Gato, Pássaro"
+                value={filters.species || ''}
+                onChange={(e) => handleChange('species', e.target.value)}
+              />
+            </div>
 
-        <div className="filter-group">
-          <label htmlFor="species">Espécie</label>
-          <input
-            id="species"
-            type="text"
-            placeholder="Ex: Cachorro, Gato, Pássaro"
-            value={filters.species || ''}
-            onChange={(e) => handleChange('species', e.target.value)}
-          />
-        </div>
+            <div className="filter-group">
+              <label htmlFor="ownerName">Nome do Dono</label>
+              <input
+                id="ownerName"
+                type="text"
+                placeholder="Digite o nome do dono"
+                value={filters.ownerName || ''}
+                onChange={(e) => handleChange('ownerName', e.target.value)}
+              />
+            </div>
+            <div className="filters-actions">
+              <button type="submit" className="btn btn-primary">
+                🔍 Buscar
+              </button>
+              <button type="button" onClick={handleClear} className="btn btn-secondary">
+                ✕ Limpar Filtros
+              </button>
+            </div>
+          </div>
+      </div>)}
 
-        <div className="filter-group">
-          <label htmlFor="ownerName">Nome do Dono</label>
-          <input
-            id="ownerName"
-            type="text"
-            placeholder="Digite o nome do dono"
-            value={filters.ownerName || ''}
-            onChange={(e) => handleChange('ownerName', e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="filters-actions">
-        <button type="submit" className="btn-primary">
-          🔍 Buscar
-        </button>
-        <button type="button" onClick={handleClear} className="btn-secondary">
-          ✕ Limpar Filtros
-        </button>
-      </div>
     </form>
   );
 }

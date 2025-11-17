@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import type { Consultation } from '../types/consultation';
-import { deleteConsultation, ApiError } from '../services/api';
+import { cancelConsultation, ApiError } from '../services/api';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { ErrorModal } from './ErrorModal';
+import { PageSizeSelector } from './PageSizeSelector';
+import { PaginationControls } from './PaginationControls';
 import './ConsultationList.css';
 
 interface ConsultationListProps {
   consultations: Consultation[];
   onConsultationClick: (consultation: Consultation) => void;
   loading?: boolean;
-  onConsultationDeleted?: () => void;
+  onConsultationCancelled?: () => void;
   pagination?: {
     page: number;
     size: number;
@@ -24,17 +26,17 @@ export function ConsultationList({
   consultations,
   onConsultationClick,
   loading,
-  onConsultationDeleted,
+  onConsultationCancelled,
   pagination,
   onPageChange,
   onSizeChange,
 }: ConsultationListProps) {
-  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
+  const [cancelConfirmModal, setCancelConfirmModal] = useState<{
     isOpen: boolean;
     consultation: Consultation | null;
   }>({ isOpen: false, consultation: null });
 
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [error, setError] = useState<{ isOpen: boolean; message: string; details?: Record<string, string> }>({
     isOpen: false,
     message: '',
@@ -98,21 +100,21 @@ export function ConsultationList({
     onConsultationClick(consultation);
   };
 
-  const handleDelete = (event: React.MouseEvent, consultation: Consultation) => {
+  const handleCancel = (event: React.MouseEvent, consultation: Consultation) => {
     event.stopPropagation();
-    setDeleteConfirmModal({ isOpen: true, consultation });
+    setCancelConfirmModal({ isOpen: true, consultation });
   };
 
-  const handleConfirmDelete = async () => {
-    if (!deleteConfirmModal.consultation) return;
+  const handleConfirmCancel = async () => {
+    if (!cancelConfirmModal.consultation) return;
 
-    setIsDeleting(true);
+    setIsCancelling(true);
     try {
-      await deleteConsultation(deleteConfirmModal.consultation.id);
-      setDeleteConfirmModal({ isOpen: false, consultation: null });
+      await cancelConsultation(cancelConfirmModal.consultation.id);
+      setCancelConfirmModal({ isOpen: false, consultation: null });
 
-      if (onConsultationDeleted) {
-        onConsultationDeleted();
+      if (onConsultationCancelled) {
+        onConsultationCancelled();
       }
     } catch (err) {
       const apiError = err instanceof ApiError ? err : new ApiError(500, 'Erro desconhecido');
@@ -121,14 +123,14 @@ export function ConsultationList({
         message: apiError.detail,
         details: apiError.errorData?.errors,
       });
-      setDeleteConfirmModal({ isOpen: false, consultation: null });
+      setCancelConfirmModal({ isOpen: false, consultation: null });
     } finally {
-      setIsDeleting(false);
+      setIsCancelling(false);
     }
   };
 
-  const handleCancelDelete = () => {
-    setDeleteConfirmModal({ isOpen: false, consultation: null });
+  const handleCloseCancelModal = () => {
+    setCancelConfirmModal({ isOpen: false, consultation: null });
   };
 
   const handleFirstPage = () => {
@@ -155,16 +157,16 @@ export function ConsultationList({
     }
   };
 
-  const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSizeChange = (newSize: number) => {
     if (onSizeChange) {
-      onSizeChange(parseInt(e.target.value));
+      onSizeChange(newSize);
     }
   };
 
   return (
     <div className="consultation-list">
       <div className="consultation-list-header">
-        <h2>Consultas Registradas ({totalElements})</h2>
+        <h2>Consultas Veterinárias ({totalElements})</h2>
       </div>
       <div className="consultation-table-container">
         <table className="consultation-table">
@@ -214,8 +216,9 @@ export function ConsultationList({
                     </button>
                     <button
                       className="btn-action btn-delete"
-                      onClick={(e) => handleDelete(e, consultation)}
-                      title="Deletar"
+                      onClick={(e) => handleCancel(e, consultation)}
+                      title="Cancelar"
+                      disabled={consultation.status === 'CANCELLED' || consultation.status === 'COMPLETED'}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="3 6 5 6 21 6"></polyline>
@@ -234,87 +237,41 @@ export function ConsultationList({
 
       {pagination && pagination.totalPages > 0 && (
         <div className="consultation-pagination">
-          <div className="pagination-info">
-            <span>
-              Página {pagination.page + 1} de {pagination.totalPages}
-            </span>
-            <span className="pagination-separator">•</span>
-            <span>Total: {pagination.totalElements} registros</span>
-          </div>
-          
-          <div className="pagination-controls">
-            <button
-              className="pagination-btn"
-              onClick={handleFirstPage}
-              disabled={pagination.page === 0}
-              title="Primeira página"
-            >
-              ⏮
-            </button>
-            <button
-              className="pagination-btn"
-              onClick={handlePreviousPage}
-              disabled={pagination.page === 0}
-              title="Página anterior"
-            >
-              ◀
-            </button>
-            <span className="pagination-page-info">
-              {pagination.page + 1} / {pagination.totalPages}
-            </span>
-            <button
-              className="pagination-btn"
-              onClick={handleNextPage}
-              disabled={pagination.page >= pagination.totalPages - 1}
-              title="Próxima página"
-            >
-              ▶
-            </button>
-            <button
-              className="pagination-btn"
-              onClick={handleLastPage}
-              disabled={pagination.page >= pagination.totalPages - 1}
-              title="Última página"
-            >
-              ⏭
-            </button>
-          </div>
-
-          <div className="pagination-size">
-            <label htmlFor="page-size-select" className="pagination-size-label">
-              Itens por página:
-            </label>
-            <select
-              id="page-size-select"
-              className="pagination-size-select"
-              value={pagination.size}
-              onChange={handleSizeChange}
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
+          <PaginationControls 
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            totalElements={pagination.totalElements}
+            onFirstPage={handleFirstPage}
+            onPreviousPage={handlePreviousPage}
+            onNextPage={handleNextPage}
+            onLastPage={handleLastPage}
+            disabled={loading}
+            showFirstLastButtons={true}
+          />
+          <PageSizeSelector 
+            currentSize={pagination.size}
+            onChange={handleSizeChange}
+            disabled={loading}
+          />
         </div>
       )}
 
       <ConfirmDeleteModal
-        isOpen={deleteConfirmModal.isOpen}
-        title="Confirmar Exclusão"
+        isOpen={cancelConfirmModal.isOpen}
+        title="Confirmar Cancelamento"
         message={
-          deleteConfirmModal.consultation
-            ? `Tem certeza que deseja deletar a consulta de "${deleteConfirmModal.consultation.animal.name}" em ${formatDate(deleteConfirmModal.consultation.consultationDate)}? Esta ação não pode ser desfeita.`
-            : 'Tem certeza que deseja deletar esta consulta?'
+          cancelConfirmModal.consultation
+            ? `Tem certeza que deseja cancelar a consulta de "${cancelConfirmModal.consultation.animal.name}" em ${formatDate(cancelConfirmModal.consultation.consultationDate)}?`
+            : 'Tem certeza que deseja cancelar esta consulta?'
         }
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-        isLoading={isDeleting}
+        onConfirm={handleConfirmCancel}
+        onCancel={handleCloseCancelModal}
+        isLoading={isCancelling}
       />
 
       <ErrorModal
         isOpen={error.isOpen}
-        title="Erro ao Deletar Consulta"
+        title="Erro ao Cancelar Consulta"
         message={error.message}
         onClose={() => setError({ isOpen: false, message: '' })}
         details={error.details}

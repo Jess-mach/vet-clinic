@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import syscecilia.vet.SysCecilia.dto.ConsultationResponse;
 import syscecilia.vet.SysCecilia.dto.AnimalBasicInfo;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
+import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.model.Consultation;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
@@ -72,6 +73,25 @@ public class ConsultationService {
     public Page<ConsultationResponse> findAllByAnimalId(Long animalId, Pageable pageable) {
         verifyAnimalExists(animalId);
         return findByFilters(null, null, null, null, null, null, null, null, pageable);
+    }
+
+    @Transactional
+    public ConsultationResponse cancelConsultation(Long id) {
+        Consultation consultation = consultationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consultation not found with id: " + id));
+
+        if ("CANCELLED".equals(consultation.getStatus())) {
+            throw new BusinessException("Consultation is already cancelled");
+        }
+
+        if ("COMPLETED".equals(consultation.getStatus())) {
+            throw new BusinessException("Cannot cancel a completed consultation");
+        }
+
+        consultation.setStatus("CANCELLED");
+        consultation = consultationRepository.save(consultation);
+
+        return convertToResponse(consultation);
     }
 
     private void verifyAnimalExists(Long animalId) {

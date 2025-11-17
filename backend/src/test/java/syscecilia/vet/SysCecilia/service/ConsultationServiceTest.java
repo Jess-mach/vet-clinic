@@ -15,6 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import syscecilia.vet.SysCecilia.dto.AnimalBasicInfo;
 import syscecilia.vet.SysCecilia.dto.ConsultationResponse;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
+import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.model.Consultation;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
@@ -195,6 +196,81 @@ public class ConsultationServiceTest {
         });
         
         verify(animalRepository, times(1)).existsById(9999L);
+    }
+
+    @Test
+    @DisplayName("Should cancel consultation successfully")
+    public void testCancelConsultation() {
+        Consultation scheduledConsultation = new Consultation();
+        scheduledConsultation.setId(2L);
+        scheduledConsultation.setAnimal(testAnimal);
+        scheduledConsultation.setConsultationDate(LocalDateTime.of(2025, 11, 20, 10, 0));
+        scheduledConsultation.setVeterinarianName("Dr. Silva");
+        scheduledConsultation.setReason("Checkup");
+        scheduledConsultation.setStatus("SCHEDULED");
+        scheduledConsultation.setCreatedAt(LocalDateTime.now());
+        scheduledConsultation.setUpdatedAt(LocalDateTime.now());
+
+        when(consultationRepository.findById(2L)).thenReturn(Optional.of(scheduledConsultation));
+        when(consultationRepository.save(any(Consultation.class))).thenAnswer(invocation -> {
+            Consultation saved = invocation.getArgument(0);
+            saved.setStatus("CANCELLED");
+            return saved;
+        });
+
+        ConsultationResponse result = consultationService.cancelConsultation(2L);
+
+        assertNotNull(result);
+        assertEquals("CANCELLED", result.getStatus());
+        verify(consultationRepository, times(1)).findById(2L);
+        verify(consultationRepository, times(1)).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when consultation not found for cancellation")
+    public void testCancelConsultationNotFound() {
+        when(consultationRepository.findById(9999L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            consultationService.cancelConsultation(9999L);
+        });
+
+        verify(consultationRepository, times(1)).findById(9999L);
+        verify(consultationRepository, never()).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when trying to cancel already cancelled consultation")
+    public void testCancelConsultationAlreadyCancelled() {
+        Consultation cancelledConsultation = new Consultation();
+        cancelledConsultation.setId(3L);
+        cancelledConsultation.setAnimal(testAnimal);
+        cancelledConsultation.setConsultationDate(LocalDateTime.of(2025, 11, 20, 10, 0));
+        cancelledConsultation.setVeterinarianName("Dr. Silva");
+        cancelledConsultation.setReason("Checkup");
+        cancelledConsultation.setStatus("CANCELLED");
+
+        when(consultationRepository.findById(3L)).thenReturn(Optional.of(cancelledConsultation));
+
+        assertThrows(BusinessException.class, () -> {
+            consultationService.cancelConsultation(3L);
+        });
+
+        verify(consultationRepository, times(1)).findById(3L);
+        verify(consultationRepository, never()).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when trying to cancel completed consultation")
+    public void testCancelConsultationCompleted() {
+        when(consultationRepository.findById(1L)).thenReturn(Optional.of(testConsultation));
+
+        assertThrows(BusinessException.class, () -> {
+            consultationService.cancelConsultation(1L);
+        });
+
+        verify(consultationRepository, times(1)).findById(1L);
+        verify(consultationRepository, never()).save(any(Consultation.class));
     }
 }
 

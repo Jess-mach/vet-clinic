@@ -164,7 +164,7 @@ public class AnimalService {
     public PageResponse<AnimalResponse> searchPaginated(Integer page, Integer pageSize, String name, String species, String ownerName) {
         // Use default values if not provided
         int pageNumber = page != null ? page : 0;
-        int size = pageSize != null ? pageSize : 20;
+        int size = pageSize != null ? pageSize : 10;
 
         // Get all matching animals without pagination first, then apply pagination manually
         List<Animal> allAnimals = getFilteredAnimals(name, species, ownerName);

@@ -17,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import syscecilia.vet.SysCecilia.dto.ConsultationResponse;
 import syscecilia.vet.SysCecilia.service.ConsultationService;
+import jakarta.validation.constraints.Min;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -155,6 +156,40 @@ public class ConsultationController {
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid filter or pagination parameters: " + e.getMessage(), e);
         }
+    }
+
+    @PatchMapping("/{id}/cancel")
+    @Operation(
+            summary = "Cancel consultation",
+            description = "Cancels a consultation by setting its status to CANCELLED. " +
+                    "Cannot cancel consultations that are already cancelled or completed."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Consultation successfully cancelled",
+                    content = @Content(schema = @Schema(implementation = ConsultationResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Consultation not found",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "Business rule violation - consultation cannot be cancelled",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error"
+            )
+    })
+    public ResponseEntity<ConsultationResponse> cancelConsultation(
+            @Parameter(description = "Consultation ID", required = true, example = "1")
+            @PathVariable @Min(value = 1, message = "ID must be greater than 0") Long id) {
+        ConsultationResponse consultation = consultationService.cancelConsultation(id);
+        return ResponseEntity.ok(consultation);
     }
 }
 
