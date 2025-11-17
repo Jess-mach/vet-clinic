@@ -12,7 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import syscecilia.vet.SysCecilia.dto.AnimalBasicInfo;
+import syscecilia.vet.SysCecilia.dto.ConsultationRequest;
 import syscecilia.vet.SysCecilia.dto.ConsultationResponse;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
 import syscecilia.vet.SysCecilia.exception.BusinessException;
@@ -20,12 +20,10 @@ import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.model.Consultation;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
-import syscecilia.vet.SysCecilia.repository.ConsultationSpecification;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -271,6 +269,147 @@ public class ConsultationServiceTest {
 
         verify(consultationRepository, times(1)).findById(1L);
         verify(consultationRepository, never()).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should create consultation successfully when all data is valid")
+    public void testCreateConsultationSuccessfully() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianName("Dr. Silva");
+        request.setReason("Routine checkup");
+        request.setDescription("General health examination");
+        request.setStatus("SCHEDULED");
+
+        Consultation savedConsultation = new Consultation();
+        savedConsultation.setId(1L);
+        savedConsultation.setAnimal(testAnimal);
+        savedConsultation.setConsultationDate(request.getConsultationDate());
+        savedConsultation.setVeterinarianName(request.getVeterinarianName());
+        savedConsultation.setReason(request.getReason());
+        savedConsultation.setDescription(request.getDescription());
+        savedConsultation.setStatus("SCHEDULED");
+        savedConsultation.setCreatedAt(LocalDateTime.now());
+        savedConsultation.setUpdatedAt(LocalDateTime.now());
+
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(consultationRepository.save(any(Consultation.class))).thenReturn(savedConsultation);
+
+        ConsultationResponse result = consultationService.create(request);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("Dr. Silva", result.getVeterinarianName());
+        assertEquals("Routine checkup", result.getReason());
+        assertEquals("SCHEDULED", result.getStatus());
+        assertEquals("Luna", result.getAnimal().getName());
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(consultationRepository, times(1)).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should create consultation with default SCHEDULED status when status not provided")
+    public void testCreateConsultationWithDefaultStatus() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianName("Dr. Silva");
+        request.setReason("Routine checkup");
+        request.setStatus(null);
+
+        Consultation savedConsultation = new Consultation();
+        savedConsultation.setId(1L);
+        savedConsultation.setAnimal(testAnimal);
+        savedConsultation.setConsultationDate(request.getConsultationDate());
+        savedConsultation.setVeterinarianName(request.getVeterinarianName());
+        savedConsultation.setReason(request.getReason());
+        savedConsultation.setStatus("SCHEDULED");
+        savedConsultation.setCreatedAt(LocalDateTime.now());
+        savedConsultation.setUpdatedAt(LocalDateTime.now());
+
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(consultationRepository.save(any(Consultation.class))).thenAnswer(invocation -> {
+            Consultation consultation = invocation.getArgument(0);
+            consultation.setId(1L);
+            consultation.setCreatedAt(LocalDateTime.now());
+            consultation.setUpdatedAt(LocalDateTime.now());
+            return consultation;
+        });
+
+        ConsultationResponse result = consultationService.create(request);
+
+        assertNotNull(result);
+        assertEquals("SCHEDULED", result.getStatus());
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(consultationRepository, times(1)).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should throw ResourceNotFoundException when animal not found")
+    public void testCreateConsultationAnimalNotFound() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(999L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianName("Dr. Silva");
+        request.setReason("Routine checkup");
+
+        when(animalRepository.findByIdAndIsActiveTrue(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            consultationService.create(request);
+        });
+
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(999L);
+        verify(consultationRepository, never()).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should create consultation with all optional fields")
+    public void testCreateConsultationWithAllFields() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianName("Dr. Silva");
+        request.setReason("Routine checkup");
+        request.setDescription("General health examination performed");
+        request.setDiagnosis("Healthy");
+        request.setTreatmentPrescribed("Continue with regular diet");
+        request.setObservations("Schedule next checkup in 6 months");
+        request.setNextAppointmentDate(LocalDateTime.of(2026, 6, 15, 14, 30));
+        request.setStatus("COMPLETED");
+
+        Consultation savedConsultation = new Consultation();
+        savedConsultation.setId(1L);
+        savedConsultation.setAnimal(testAnimal);
+        savedConsultation.setConsultationDate(request.getConsultationDate());
+        savedConsultation.setVeterinarianName(request.getVeterinarianName());
+        savedConsultation.setReason(request.getReason());
+        savedConsultation.setDescription(request.getDescription());
+        savedConsultation.setDiagnosis(request.getDiagnosis());
+        savedConsultation.setTreatmentPrescribed(request.getTreatmentPrescribed());
+        savedConsultation.setObservations(request.getObservations());
+        savedConsultation.setNextAppointmentDate(request.getNextAppointmentDate());
+        savedConsultation.setStatus("COMPLETED");
+        savedConsultation.setCreatedAt(LocalDateTime.now());
+        savedConsultation.setUpdatedAt(LocalDateTime.now());
+
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(consultationRepository.save(any(Consultation.class))).thenReturn(savedConsultation);
+
+        ConsultationResponse result = consultationService.create(request);
+
+        assertNotNull(result);
+        assertEquals("Dr. Silva", result.getVeterinarianName());
+        assertEquals("Routine checkup", result.getReason());
+        assertEquals("General health examination performed", result.getDescription());
+        assertEquals("Healthy", result.getDiagnosis());
+        assertEquals("Continue with regular diet", result.getTreatmentPrescribed());
+        assertEquals("Schedule next checkup in 6 months", result.getObservations());
+        assertEquals(LocalDateTime.of(2026, 6, 15, 14, 30), result.getNextAppointmentDate());
+        assertEquals("COMPLETED", result.getStatus());
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(consultationRepository, times(1)).save(any(Consultation.class));
     }
 }
 

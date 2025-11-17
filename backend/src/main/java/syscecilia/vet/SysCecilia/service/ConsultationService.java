@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import syscecilia.vet.SysCecilia.dto.ConsultationRequest;
 import syscecilia.vet.SysCecilia.dto.ConsultationResponse;
 import syscecilia.vet.SysCecilia.dto.AnimalBasicInfo;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
@@ -76,6 +77,17 @@ public class ConsultationService {
     }
 
     @Transactional
+    public ConsultationResponse create(ConsultationRequest request) {
+        Animal animal = animalRepository.findByIdAndIsActiveTrue(request.getAnimalId())
+                .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + request.getAnimalId()));
+
+        Consultation consultation = convertToEntity(request, animal);
+        Consultation savedConsultation = consultationRepository.save(consultation);
+
+        return convertToResponse(savedConsultation);
+    }
+
+    @Transactional
     public ConsultationResponse cancelConsultation(Long id) {
         Consultation consultation = consultationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consultation not found with id: " + id));
@@ -98,6 +110,28 @@ public class ConsultationService {
         if (!animalRepository.existsById(animalId)) {
             throw new ResourceNotFoundException("Animal not found with id: " + animalId);
         }
+    }
+
+    private Consultation convertToEntity(ConsultationRequest request, Animal animal) {
+        Consultation consultation = new Consultation();
+        consultation.setAnimal(animal);
+        consultation.setConsultationDate(request.getConsultationDate());
+        consultation.setVeterinarianName(request.getVeterinarianName());
+        consultation.setReason(request.getReason());
+        consultation.setDescription(request.getDescription());
+        consultation.setDiagnosis(request.getDiagnosis());
+        consultation.setTreatmentPrescribed(request.getTreatmentPrescribed());
+        consultation.setObservations(request.getObservations());
+        consultation.setNextAppointmentDate(request.getNextAppointmentDate());
+        
+        // Se o status não for fornecido, usar SCHEDULED para agendamentos
+        if (request.getStatus() != null && !request.getStatus().trim().isEmpty()) {
+            consultation.setStatus(request.getStatus());
+        } else {
+            consultation.setStatus("SCHEDULED");
+        }
+        
+        return consultation;
     }
 
     private ConsultationResponse convertToResponse(Consultation consultation) {

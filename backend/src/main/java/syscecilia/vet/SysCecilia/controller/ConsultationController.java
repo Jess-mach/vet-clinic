@@ -15,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import syscecilia.vet.SysCecilia.dto.ConsultationRequest;
 import syscecilia.vet.SysCecilia.dto.ConsultationResponse;
 import syscecilia.vet.SysCecilia.service.ConsultationService;
 import jakarta.validation.constraints.Min;
@@ -24,9 +25,6 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import syscecilia.vet.SysCecilia.dto.AppointmentRequest;
-import syscecilia.vet.SysCecilia.dto.AppointmentResponse;
-import syscecilia.vet.SysCecilia.service.AppointmentService;
 
 import java.net.URI;
 
@@ -41,12 +39,9 @@ public class ConsultationController {
 
     private final ConsultationService consultationService;
 
-    private final AppointmentService appointmentService;
-
     @Autowired
-    public ConsultationController(ConsultationService consultationService, AppointmentService appointmentService) {
+    public ConsultationController(ConsultationService consultationService) {
         this.consultationService = consultationService;
-        this.appointmentService = appointmentService;
     }
 
     @GetMapping("/{id}")
@@ -208,17 +203,18 @@ public class ConsultationController {
 
     @PostMapping
     @Operation(
-            summary = "Create a new appointment",
-            description = "Creates a new appointment for an animal. " +
+            summary = "Create a new consultation",
+            description = "Creates a new consultation (appointment) for an animal. " +
                     "All required fields must be provided. " +
-                    "The appointment date must be in the future. " +
-                    "The animal must exist and be active."
+                    "The consultation date must be provided. " +
+                    "The animal must exist and be active. " +
+                    "If status is not provided, it will default to SCHEDULED."
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "201",
-                    description = "Appointment successfully created",
-                    content = @Content(schema = @Schema(implementation = AppointmentResponse.class))
+                    description = "Consultation successfully created",
+                    content = @Content(schema = @Schema(implementation = ConsultationResponse.class))
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -235,18 +231,18 @@ public class ConsultationController {
                     description = "Internal server error"
             )
     })
-    public ResponseEntity<AppointmentResponse> createAppointment(
+    public ResponseEntity<ConsultationResponse> createConsultation(
             @RequestBody(
-                    description = "Appointment data to be created",
+                    description = "Consultation data to be created",
                     required = true,
-                    content = @Content(schema = @Schema(implementation = AppointmentRequest.class))
+                    content = @Content(schema = @Schema(implementation = ConsultationRequest.class))
             )
-            @Valid @org.springframework.web.bind.annotation.RequestBody AppointmentRequest request) {
-        AppointmentResponse createdAppointment = appointmentService.create(request);
+            @Valid @org.springframework.web.bind.annotation.RequestBody ConsultationRequest request) {
+        ConsultationResponse createdConsultation = consultationService.create(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .location(URI.create("/api/appointments/" + createdAppointment.getId()))
-                .body(createdAppointment);
+                .location(URI.create("/api/consultations/" + createdConsultation.getId()))
+                .body(createdConsultation);
     }
 }
 
