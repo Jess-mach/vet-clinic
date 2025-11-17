@@ -19,6 +19,17 @@ import syscecilia.vet.SysCecilia.dto.ConsultationResponse;
 import syscecilia.vet.SysCecilia.service.ConsultationService;
 import jakarta.validation.constraints.Min;
 
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
+
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import syscecilia.vet.SysCecilia.dto.AppointmentRequest;
+import syscecilia.vet.SysCecilia.dto.AppointmentResponse;
+import syscecilia.vet.SysCecilia.service.AppointmentService;
+
+import java.net.URI;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -30,9 +41,12 @@ public class ConsultationController {
 
     private final ConsultationService consultationService;
 
+    private final AppointmentService appointmentService;
+
     @Autowired
-    public ConsultationController(ConsultationService consultationService) {
+    public ConsultationController(ConsultationService consultationService, AppointmentService appointmentService) {
         this.consultationService = consultationService;
+        this.appointmentService = appointmentService;
     }
 
     @GetMapping("/{id}")
@@ -191,5 +205,50 @@ public class ConsultationController {
         ConsultationResponse consultation = consultationService.cancelConsultation(id);
         return ResponseEntity.ok(consultation);
     }
+
+    @PostMapping
+    @Operation(
+            summary = "Create a new appointment",
+            description = "Creates a new appointment for an animal. " +
+                    "All required fields must be provided. " +
+                    "The appointment date must be in the future. " +
+                    "The animal must exist and be active."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Appointment successfully created",
+                    content = @Content(schema = @Schema(implementation = AppointmentResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validation error - one or more fields are invalid",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Animal not found or inactive",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error"
+            )
+    })
+    public ResponseEntity<AppointmentResponse> createAppointment(
+            @RequestBody(
+                    description = "Appointment data to be created",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = AppointmentRequest.class))
+            )
+            @Valid @org.springframework.web.bind.annotation.RequestBody AppointmentRequest request) {
+        AppointmentResponse createdAppointment = appointmentService.create(request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .location(URI.create("/api/appointments/" + createdAppointment.getId()))
+                .body(createdAppointment);
+    }
 }
+
+
 
