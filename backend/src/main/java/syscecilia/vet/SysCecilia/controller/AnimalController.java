@@ -16,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import syscecilia.vet.SysCecilia.dto.AnimalRequest;
 import syscecilia.vet.SysCecilia.dto.AnimalResponse;
+import syscecilia.vet.SysCecilia.dto.PageResponse;
 import syscecilia.vet.SysCecilia.service.AnimalService;
 
 import java.net.URI;
@@ -78,30 +79,36 @@ public class AnimalController {
 
     @GetMapping
     @Operation(
-            summary = "Search animals",
-            description = "Retrieves a list of animals with optional filters. " +
+            summary = "Search animals with pagination",
+            description = "Retrieves a paginated list of animals with optional filters. " +
                     "You can filter by name, species, and/or ownerName. " +
-                    "All parameters are optional. If no parameters are provided, returns all animals ordered by name."
+                    "All filter parameters are optional. " +
+                    "Pagination defaults to page 0 with 20 items per page if not specified. " +
+                    "If no filter parameters are provided, returns all animals ordered by name."
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Successfully retrieved list of animals",
-                    content = @Content(schema = @Schema(implementation = AnimalResponse.class))
+                    description = "Successfully retrieved paginated list of animals",
+                    content = @Content(schema = @Schema(implementation = PageResponse.class))
             ),
             @ApiResponse(
                     responseCode = "500",
                     description = "Internal server error"
             )
     })
-    public ResponseEntity<List<AnimalResponse>> searchAnimals(
+    public ResponseEntity<PageResponse<AnimalResponse>> searchAnimals(
+            @Parameter(description = "Page number (0-indexed)", required = false, example = "0")
+            @RequestParam(required = false) Integer page,
+            @Parameter(description = "Number of items per page", required = false, example = "10")
+            @RequestParam(required = false) Integer pageSize,
             @Parameter(description = "Animal name (partial match, case-insensitive)", required = false, example = "Rex")
             @RequestParam(required = false) String name,
             @Parameter(description = "Animal species (e.g., Dog, Cat, Bird)", required = false, example = "Dog")
             @RequestParam(required = false) String species,
             @Parameter(description = "Owner name (partial match, case-insensitive)", required = false, example = "John")
             @RequestParam(required = false) String ownerName) {
-        List<AnimalResponse> animals = animalService.search(name, species, ownerName);
+        PageResponse<AnimalResponse> animals = animalService.searchPaginated(page, pageSize, name, species, ownerName);
         return ResponseEntity.ok(animals);
     }
 
@@ -176,5 +183,38 @@ public class AnimalController {
             @Valid @RequestBody AnimalRequest request) {
         AnimalResponse updatedAnimal = animalService.update(id, request);
         return ResponseEntity.ok(updatedAnimal);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(
+            summary = "Delete an animal",
+            description = "Deletes an existing animal record from the system. " +
+                    "Once deleted, all associated data will be permanently removed."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "Animal successfully deleted"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid ID parameter",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Animal not found",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error"
+            )
+    })
+    public ResponseEntity<Void> deleteAnimal(
+            @Parameter(description = "Animal ID", required = true, example = "1")
+            @PathVariable @Min(value = 1, message = "ID must be greater than 0") Long id) {
+        animalService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

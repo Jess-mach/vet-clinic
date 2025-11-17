@@ -16,11 +16,9 @@ export function Footer() {
           <div className="footer-section">
             <h4 className="footer-heading">Serviços</h4>
             <ul className="footer-links">
-              <li><a href="#consultas">Agendamento</a></li>
+             
               <li><a href="#consultas">Consultas</a></li>
-              <li><a href="#cirurgias">Cirurgias</a></li>
-              <li><a href="#exames">Exames</a></li>
-              <li><a href="#vacinas">Vacinação</a></li>
+
             </ul>
           </div>
 
@@ -29,6 +27,7 @@ export function Footer() {
             <ul className="footer-links">
               <li><a href="#sobre">Sobre a Vet Clínica Cecília</a></li>
               <li><a href="#especialidades">Especialidades</a></li>
+              <li><a href="#servicos">Nossos Serviços</a></li>
               <li><a href="#contato">Fale conosco</a></li>
               <li><a href="#trabalhe">Trabalhe Conosco</a></li>
             </ul>

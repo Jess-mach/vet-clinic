@@ -1,15 +1,21 @@
 package syscecilia.vet.SysCecilia.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import syscecilia.vet.SysCecilia.dto.AnimalRequest;
 import syscecilia.vet.SysCecilia.dto.AnimalResponse;
+import syscecilia.vet.SysCecilia.dto.PageResponse;
 import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
 import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,7 +33,7 @@ public class AnimalService {
 
     @Transactional(readOnly = true)
     public AnimalResponse findById(Long id) {
-        Animal animal = animalRepository.findById(id)
+        Animal animal = animalRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + id));
         return convertToResponse(animal);
     }
@@ -55,9 +61,18 @@ public class AnimalService {
         return convertToResponse(updatedAnimal);
     }
 
+    @Transactional
+    public void delete(Long id) {
+        Animal animal = animalRepository.findByIdAndIsActiveTrue(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + id));
+        animal.setIsActive(false);
+        animal.setInactivatedAt(LocalDateTime.now());
+        animalRepository.save(animal);
+    }
+
     private void validateBusinessRules(AnimalRequest request) {
         if (request.getMicrochipNumber() != null && !request.getMicrochipNumber().isBlank()) {
-            Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumber(request.getMicrochipNumber());
+            Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumberAndIsActiveTrue(request.getMicrochipNumber());
             if (existingAnimal.isPresent()) {
                 throw new BusinessException(
                     "Microchip number already exists: " + request.getMicrochipNumber(),
@@ -71,7 +86,7 @@ public class AnimalService {
         if (request.getMicrochipNumber() != null && !request.getMicrochipNumber().isBlank()) {
             // Only validate if microchip is changing
             if (!request.getMicrochipNumber().equals(animal.getMicrochipNumber())) {
-                Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumber(request.getMicrochipNumber());
+                Optional<Animal> existingAnimal = animalRepository.findByMicrochipNumberAndIsActiveTrue(request.getMicrochipNumber());
                 if (existingAnimal.isPresent()) {
                     throw new BusinessException(
                         "Microchip number already exists: " + request.getMicrochipNumber(),
@@ -117,31 +132,109 @@ public class AnimalService {
         Stream<Animal> animalStream;
 
         if (name != null && !name.isBlank() && species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
-            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream()
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
                     .filter(animal -> animal.getSpecies().equalsIgnoreCase(species))
                     .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
         } else if (name != null && !name.isBlank() && species != null && !species.isBlank()) {
-            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream()
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
                     .filter(animal -> animal.getSpecies().equalsIgnoreCase(species));
         } else if (name != null && !name.isBlank() && ownerName != null && !ownerName.isBlank()) {
-            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream()
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
                     .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
         } else if (species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
-            animalStream = animalRepository.findBySpecies(species).stream()
+            animalStream = animalRepository.findBySpeciesAndIsActiveTrue(species).stream()
                     .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
         } else if (name != null && !name.isBlank()) {
-            animalStream = animalRepository.findByNameContainingIgnoreCase(name).stream();
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream();
         } else if (species != null && !species.isBlank()) {
-            animalStream = animalRepository.findBySpecies(species).stream();
+            animalStream = animalRepository.findBySpeciesAndIsActiveTrue(species).stream();
         } else if (ownerName != null && !ownerName.isBlank()) {
-            animalStream = animalRepository.findByOwnerNameContainingIgnoreCase(ownerName).stream();
+            animalStream = animalRepository.findByOwnerNameContainingIgnoreCaseAndIsActiveTrue(ownerName).stream();
         } else {
-            animalStream = animalRepository.findAllByOrderByNameAsc().stream();
+            animalStream = animalRepository.findAllByIsActiveTrueOrderByNameAsc().stream();
         }
 
         return animalStream
                 .sorted((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName()))
                 .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<AnimalResponse> searchPaginated(Integer page, Integer pageSize, String name, String species, String ownerName) {
+        // Use default values if not provided
+        int pageNumber = page != null ? page : 0;
+        int size = pageSize != null ? pageSize : 20;
+
+        // Get all matching animals without pagination first, then apply pagination manually
+        List<Animal> allAnimals = getFilteredAnimals(name, species, ownerName);
+        
+        // Calculate total elements and pages
+        long totalElements = allAnimals.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        if (totalPages == 0) {
+            totalPages = 1;
+        }
+        
+        // Validate page number
+        if (pageNumber < 0) {
+            pageNumber = 0;
+        }
+        if (pageNumber >= totalPages && totalElements > 0) {
+            pageNumber = Math.max(0, totalPages - 1);
+        }
+        
+        // Apply pagination
+        int startIndex = pageNumber * size;
+        int endIndex = Math.min(startIndex + size, (int) totalElements);
+        List<Animal> pageContent = allAnimals.isEmpty() ? Collections.emptyList() : allAnimals.subList(startIndex, endIndex);
+        
+        List<AnimalResponse> content = pageContent
+                .stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+
+        return new PageResponse<>(
+                content,
+                pageNumber,
+                size,
+                totalElements,
+                totalPages,
+                pageNumber == 0,
+                pageNumber == totalPages - 1 || totalElements == 0,
+                pageNumber < totalPages - 1,
+                pageNumber > 0
+        );
+    }
+
+    private List<Animal> getFilteredAnimals(String name, String species, String ownerName) {
+        Stream<Animal> animalStream;
+
+        if (name != null && !name.isBlank() && species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
+                    .filter(animal -> animal.getSpecies().equalsIgnoreCase(species))
+                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (name != null && !name.isBlank() && species != null && !species.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
+                    .filter(animal -> animal.getSpecies().equalsIgnoreCase(species));
+        } else if (name != null && !name.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
+                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (species != null && !species.isBlank() && ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findBySpeciesAndIsActiveTrue(species).stream()
+                    .filter(animal -> animal.getOwnerName().toLowerCase().contains(ownerName.toLowerCase()));
+        } else if (name != null && !name.isBlank()) {
+            animalStream = animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream();
+        } else if (species != null && !species.isBlank()) {
+            animalStream = animalRepository.findBySpeciesAndIsActiveTrue(species).stream();
+        } else if (ownerName != null && !ownerName.isBlank()) {
+            animalStream = animalRepository.findByOwnerNameContainingIgnoreCaseAndIsActiveTrue(ownerName).stream();
+        } else {
+            animalStream = animalRepository.findAllByIsActiveTrueOrderByNameAsc().stream();
+        }
+
+        return animalStream
+                .sorted((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName()))
                 .collect(Collectors.toList());
     }
 

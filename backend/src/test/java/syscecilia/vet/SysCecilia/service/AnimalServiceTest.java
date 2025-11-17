@@ -80,7 +80,7 @@ class AnimalServiceTest {
     void shouldReturnAllAnimalsOrderedByNameWhenNoFiltersProvided() {
         // Given
         List<Animal> animals = Arrays.asList(animal1, animal2);
-        when(animalRepository.findAllByOrderByNameAsc()).thenReturn(animals);
+        when(animalRepository.findAllByIsActiveTrueOrderByNameAsc()).thenReturn(animals);
 
         // When
         List<AnimalResponse> result = animalService.search(null, null, null);
@@ -90,14 +90,14 @@ class AnimalServiceTest {
         assertThat(result).hasSize(2);
         assertThat(result.get(0).getName()).isEqualTo("Fluffy");
         assertThat(result.get(1).getName()).isEqualTo("Rex");
-        verify(animalRepository, times(1)).findAllByOrderByNameAsc();
+        verify(animalRepository, times(1)).findAllByIsActiveTrueOrderByNameAsc();
     }
 
     @Test
     @DisplayName("Should return empty list when no animals exist")
     void shouldReturnEmptyListWhenNoAnimalsExist() {
         // Given
-        when(animalRepository.findAllByOrderByNameAsc()).thenReturn(Collections.emptyList());
+        when(animalRepository.findAllByIsActiveTrueOrderByNameAsc()).thenReturn(Collections.emptyList());
 
         // When
         List<AnimalResponse> result = animalService.search(null, null, null);
@@ -105,14 +105,14 @@ class AnimalServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result).isEmpty();
-        verify(animalRepository, times(1)).findAllByOrderByNameAsc();
+        verify(animalRepository, times(1)).findAllByIsActiveTrueOrderByNameAsc();
     }
 
     @Test
     @DisplayName("Should return animal by ID when exists")
     void shouldReturnAnimalByIdWhenExists() {
         // Given
-        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(animal1));
 
         // When
         AnimalResponse result = animalService.findById(1L);
@@ -123,20 +123,20 @@ class AnimalServiceTest {
         assertThat(result.getName()).isEqualTo("Rex");
         assertThat(result.getSpecies()).isEqualTo("Dog");
         assertThat(result.getOwnerName()).isEqualTo("John Doe");
-        verify(animalRepository, times(1)).findById(1L);
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
     }
 
     @Test
     @DisplayName("Should throw ResourceNotFoundException when animal not found")
     void shouldThrowResourceNotFoundExceptionWhenAnimalNotFound() {
         // Given
-        when(animalRepository.findById(999L)).thenReturn(Optional.empty());
+        when(animalRepository.findByIdAndIsActiveTrue(999L)).thenReturn(Optional.empty());
 
         // When/Then
         assertThatThrownBy(() -> animalService.findById(999L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Animal not found with id: 999");
-        verify(animalRepository, times(1)).findById(999L);
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(999L);
     }
 
     @Test
@@ -144,7 +144,7 @@ class AnimalServiceTest {
     void shouldReturnAnimalsBySpeciesFilter() {
         // Given
         List<Animal> dogs = Collections.singletonList(animal1);
-        when(animalRepository.findBySpecies("Dog")).thenReturn(dogs);
+        when(animalRepository.findBySpeciesAndIsActiveTrue("Dog")).thenReturn(dogs);
 
         // When
         List<AnimalResponse> result = animalService.search(null, "Dog", null);
@@ -153,14 +153,14 @@ class AnimalServiceTest {
         assertThat(result).isNotNull();
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getSpecies()).isEqualTo("Dog");
-        verify(animalRepository, times(1)).findBySpecies("Dog");
+        verify(animalRepository, times(1)).findBySpeciesAndIsActiveTrue("Dog");
     }
 
     @Test
     @DisplayName("Should return empty list when no animals found by species")
     void shouldReturnEmptyListWhenNoAnimalsFoundBySpecies() {
         // Given
-        when(animalRepository.findBySpecies("Bird")).thenReturn(Collections.emptyList());
+        when(animalRepository.findBySpeciesAndIsActiveTrue("Bird")).thenReturn(Collections.emptyList());
 
         // When
         List<AnimalResponse> result = animalService.search(null, "Bird", null);
@@ -168,7 +168,7 @@ class AnimalServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result).isEmpty();
-        verify(animalRepository, times(1)).findBySpecies("Bird");
+        verify(animalRepository, times(1)).findBySpeciesAndIsActiveTrue("Bird");
     }
 
     @Test
@@ -176,7 +176,7 @@ class AnimalServiceTest {
     void shouldReturnAnimalsByOwnerNameFilter() {
         // Given
         List<Animal> animals = Collections.singletonList(animal1);
-        when(animalRepository.findByOwnerNameContainingIgnoreCase("John")).thenReturn(animals);
+        when(animalRepository.findByOwnerNameContainingIgnoreCaseAndIsActiveTrue("John")).thenReturn(animals);
 
         // When
         List<AnimalResponse> result = animalService.search(null, null, "John");
@@ -185,7 +185,7 @@ class AnimalServiceTest {
         assertThat(result).isNotNull();
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getOwnerName()).isEqualTo("John Doe");
-        verify(animalRepository, times(1)).findByOwnerNameContainingIgnoreCase("John");
+        verify(animalRepository, times(1)).findByOwnerNameContainingIgnoreCaseAndIsActiveTrue("John");
     }
 
     @Test
@@ -193,7 +193,7 @@ class AnimalServiceTest {
     void shouldReturnAnimalsByNameFilter() {
         // Given
         List<Animal> animals = Collections.singletonList(animal1);
-        when(animalRepository.findByNameContainingIgnoreCase("Rex")).thenReturn(animals);
+        when(animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue("Rex")).thenReturn(animals);
 
         // When
         List<AnimalResponse> result = animalService.search("Rex", null, null);
@@ -202,7 +202,7 @@ class AnimalServiceTest {
         assertThat(result).isNotNull();
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo("Rex");
-        verify(animalRepository, times(1)).findByNameContainingIgnoreCase("Rex");
+        verify(animalRepository, times(1)).findByNameContainingIgnoreCaseAndIsActiveTrue("Rex");
     }
 
     @Test
@@ -210,7 +210,7 @@ class AnimalServiceTest {
     void shouldReturnAnimalsFilteredByNameAndSpecies() {
         // Given
         List<Animal> animals = Collections.singletonList(animal1);
-        when(animalRepository.findByNameContainingIgnoreCase("Rex")).thenReturn(animals);
+        when(animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue("Rex")).thenReturn(animals);
 
         // When
         List<AnimalResponse> result = animalService.search("Rex", "Dog", null);
@@ -220,7 +220,7 @@ class AnimalServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo("Rex");
         assertThat(result.get(0).getSpecies()).isEqualTo("Dog");
-        verify(animalRepository, times(1)).findByNameContainingIgnoreCase("Rex");
+        verify(animalRepository, times(1)).findByNameContainingIgnoreCaseAndIsActiveTrue("Rex");
     }
 
     @Test
@@ -228,7 +228,7 @@ class AnimalServiceTest {
     void shouldReturnAnimalsFilteredByAllParameters() {
         // Given
         List<Animal> animals = Collections.singletonList(animal1);
-        when(animalRepository.findByNameContainingIgnoreCase("Rex")).thenReturn(animals);
+        when(animalRepository.findByNameContainingIgnoreCaseAndIsActiveTrue("Rex")).thenReturn(animals);
 
         // When
         List<AnimalResponse> result = animalService.search("Rex", "Dog", "John");
@@ -239,14 +239,14 @@ class AnimalServiceTest {
         assertThat(result.get(0).getName()).isEqualTo("Rex");
         assertThat(result.get(0).getSpecies()).isEqualTo("Dog");
         assertThat(result.get(0).getOwnerName()).isEqualTo("John Doe");
-        verify(animalRepository, times(1)).findByNameContainingIgnoreCase("Rex");
+        verify(animalRepository, times(1)).findByNameContainingIgnoreCaseAndIsActiveTrue("Rex");
     }
 
     @Test
     @DisplayName("Should convert entity to response DTO correctly")
     void shouldConvertEntityToResponseDTOCorrectly() {
         // Given
-        when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(animal1));
 
         // When
         AnimalResponse result = animalService.findById(1L);
@@ -301,7 +301,7 @@ class AnimalServiceTest {
         savedAnimal.setCreatedAt(LocalDateTime.now());
         savedAnimal.setUpdatedAt(LocalDateTime.now());
 
-        when(animalRepository.findByMicrochipNumber("CHIP003")).thenReturn(Optional.empty());
+        when(animalRepository.findByMicrochipNumberAndIsActiveTrue("CHIP003")).thenReturn(Optional.empty());
         when(animalRepository.save(any(Animal.class))).thenReturn(savedAnimal);
 
         // When
@@ -316,7 +316,7 @@ class AnimalServiceTest {
         assertThat(result.getGender()).isEqualTo("Male");
         assertThat(result.getOwnerName()).isEqualTo("Alice Johnson");
         assertThat(result.getMicrochipNumber()).isEqualTo("CHIP003");
-        verify(animalRepository, times(1)).findByMicrochipNumber("CHIP003");
+        verify(animalRepository, times(1)).findByMicrochipNumberAndIsActiveTrue("CHIP003");
         verify(animalRepository, times(1)).save(any(Animal.class));
     }
 
@@ -350,7 +350,7 @@ class AnimalServiceTest {
         assertThat(result.getName()).isEqualTo("Bella");
         assertThat(result.getSpecies()).isEqualTo("Cat");
         assertThat(result.getMicrochipNumber()).isNull();
-        verify(animalRepository, never()).findByMicrochipNumber(anyString());
+        verify(animalRepository, never()).findByMicrochipNumberAndIsActiveTrue(anyString());
         verify(animalRepository, times(1)).save(any(Animal.class));
     }
 
@@ -365,13 +365,13 @@ class AnimalServiceTest {
         request.setMicrochipNumber("CHIP001");
         request.setOwnerName("John Doe");
 
-        when(animalRepository.findByMicrochipNumber("CHIP001")).thenReturn(Optional.of(animal1));
+        when(animalRepository.findByMicrochipNumberAndIsActiveTrue("CHIP001")).thenReturn(Optional.of(animal1));
 
         // When/Then
         assertThatThrownBy(() -> animalService.create(request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("Microchip number already exists: CHIP001");
-        verify(animalRepository, times(1)).findByMicrochipNumber("CHIP001");
+        verify(animalRepository, times(1)).findByMicrochipNumberAndIsActiveTrue("CHIP001");
         verify(animalRepository, never()).save(any(Animal.class));
     }
 
@@ -404,7 +404,7 @@ class AnimalServiceTest {
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(5L);
-        verify(animalRepository, never()).findByMicrochipNumber(anyString());
+        verify(animalRepository, never()).findByMicrochipNumberAndIsActiveTrue(anyString());
         verify(animalRepository, times(1)).save(any(Animal.class));
     }
 
@@ -441,7 +441,7 @@ class AnimalServiceTest {
         savedAnimal.setCreatedAt(LocalDateTime.now());
         savedAnimal.setUpdatedAt(LocalDateTime.now());
 
-        when(animalRepository.findByMicrochipNumber("CHIP004")).thenReturn(Optional.empty());
+        when(animalRepository.findByMicrochipNumberAndIsActiveTrue("CHIP004")).thenReturn(Optional.empty());
         when(animalRepository.save(any(Animal.class))).thenAnswer(invocation -> {
             Animal animal = invocation.getArgument(0);
             animal.setId(6L);
@@ -532,14 +532,14 @@ class AnimalServiceTest {
         request.setOwnerName("John Doe");
 
         when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
-        when(animalRepository.findByMicrochipNumber("CHIP002")).thenReturn(Optional.of(animal2));
+        when(animalRepository.findByMicrochipNumberAndIsActiveTrue("CHIP002")).thenReturn(Optional.of(animal2));
 
         // When/Then
         assertThatThrownBy(() -> animalService.update(1L, request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("Microchip number already exists: CHIP002");
         verify(animalRepository, times(1)).findById(1L);
-        verify(animalRepository, times(1)).findByMicrochipNumber("CHIP002");
+        verify(animalRepository, times(1)).findByMicrochipNumberAndIsActiveTrue("CHIP002");
         verify(animalRepository, never()).save(any(Animal.class));
     }
 
@@ -565,7 +565,7 @@ class AnimalServiceTest {
         assertThat(result.getId()).isEqualTo(1L);
         // Verify that findByMicrochipNumber was never called since microchip didn't change
         verify(animalRepository, times(1)).findById(1L);
-        verify(animalRepository, never()).findByMicrochipNumber(anyString());
+        verify(animalRepository, never()).findByMicrochipNumberAndIsActiveTrue(anyString());
         verify(animalRepository, times(1)).save(any(Animal.class));
     }
 
@@ -581,7 +581,7 @@ class AnimalServiceTest {
         request.setOwnerName("John Doe");
 
         when(animalRepository.findById(1L)).thenReturn(Optional.of(animal1));
-        when(animalRepository.findByMicrochipNumber("CHIP999")).thenReturn(Optional.empty());
+        when(animalRepository.findByMicrochipNumberAndIsActiveTrue("CHIP999")).thenReturn(Optional.empty());
         when(animalRepository.save(any(Animal.class))).thenReturn(animal1);
 
         // When
@@ -591,7 +591,7 @@ class AnimalServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
         verify(animalRepository, times(1)).findById(1L);
-        verify(animalRepository, times(1)).findByMicrochipNumber("CHIP999");
+        verify(animalRepository, times(1)).findByMicrochipNumberAndIsActiveTrue("CHIP999");
         verify(animalRepository, times(1)).save(any(Animal.class));
     }
 
@@ -615,7 +615,7 @@ class AnimalServiceTest {
         // Then
         assertThat(result).isNotNull();
         verify(animalRepository, times(1)).findById(1L);
-        verify(animalRepository, never()).findByMicrochipNumber(anyString());
+        verify(animalRepository, never()).findByMicrochipNumberAndIsActiveTrue(anyString());
         verify(animalRepository, times(1)).save(any(Animal.class));
     }
 
@@ -670,6 +670,37 @@ class AnimalServiceTest {
         assertThat(result.getWeight()).isEqualTo(new BigDecimal("25.5"));
         verify(animalRepository, times(1)).findById(1L);
         verify(animalRepository, times(1)).save(any(Animal.class));
+    }
+
+    @Test
+    @DisplayName("Should inactivate animal successfully when exists")
+    void shouldInactivateAnimalSuccessfullyWhenExists() {
+        // Given
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(animal1));
+        when(animalRepository.save(any(Animal.class))).thenReturn(animal1);
+
+        // When
+        animalService.delete(1L);
+
+        // Then
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(animalRepository, times(1)).save(any(Animal.class));
+        assert(!animal1.getIsActive());
+        assert(animal1.getInactivatedAt() != null);
+    }
+
+    @Test
+    @DisplayName("Should throw ResourceNotFoundException when deleting non-existent active animal")
+    void shouldThrowResourceNotFoundExceptionWhenDeletingNonExistentAnimal() {
+        // Given
+        when(animalRepository.findByIdAndIsActiveTrue(999L)).thenReturn(Optional.empty());
+
+        // When/Then
+        assertThatThrownBy(() -> animalService.delete(999L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Animal not found with id: 999");
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(999L);
+        verify(animalRepository, never()).save(any(Animal.class));
     }
 }
 

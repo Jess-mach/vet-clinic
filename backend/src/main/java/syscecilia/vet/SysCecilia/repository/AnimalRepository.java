@@ -1,5 +1,7 @@
 package syscecilia.vet.SysCecilia.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import syscecilia.vet.SysCecilia.model.Animal;
@@ -10,15 +12,25 @@ import java.util.Optional;
 @Repository
 public interface AnimalRepository extends JpaRepository<Animal, Long> {
 
-    List<Animal> findAllByOrderByNameAsc();
+    List<Animal> findAllByIsActiveTrueOrderByNameAsc();
 
-    Optional<Animal> findByMicrochipNumber(String microchipNumber);
+    Page<Animal> findAllByIsActiveTrueOrderByNameAsc(Pageable pageable);
 
-    List<Animal> findBySpecies(String species);
+    Optional<Animal> findByIdAndIsActiveTrue(Long id);
 
-    List<Animal> findByOwnerNameContainingIgnoreCase(String ownerName);
+    Optional<Animal> findByMicrochipNumberAndIsActiveTrue(String microchipNumber);
 
-    List<Animal> findByNameContainingIgnoreCase(String name);
+    List<Animal> findBySpeciesAndIsActiveTrue(String species);
+
+    List<Animal> findByOwnerNameContainingIgnoreCaseAndIsActiveTrue(String ownerName);
+
+    List<Animal> findByNameContainingIgnoreCaseAndIsActiveTrue(String name);
+
+    Page<Animal> findByNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(String name, Pageable pageable);
+
+    Page<Animal> findBySpeciesAndIsActiveTrueOrderByNameAsc(String species, Pageable pageable);
+
+    Page<Animal> findByOwnerNameContainingIgnoreCaseAndIsActiveTrueOrderByNameAsc(String ownerName, Pageable pageable);
 }
 
 

@@ -15,10 +15,24 @@ export interface Animal {
   updatedAt: string;
 }
 
+export interface PaginatedResponse<T> {
+  content: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+  isFirst: boolean;
+  isLast: boolean;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 export interface AnimalFilters {
   name?: string;
   species?: string;
   ownerName?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface AnimalRequest {

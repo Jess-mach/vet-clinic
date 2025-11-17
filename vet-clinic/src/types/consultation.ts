@@ -1,0 +1,73 @@
+// ✅ Compatível com Backend Contract V0003
+export interface AnimalBasicInfo {
+  id: number;
+  name: string;
+  species: string;
+  breed: string;
+  ownerName: string;
+}
+
+export interface Consultation {
+  id: number;
+  animal: AnimalBasicInfo;
+  consultationDate: string;
+  veterinarianName: string;
+  reason: string;
+  description?: string;
+  diagnosis?: string;
+  treatmentPrescribed?: string;
+  observations?: string;
+  nextAppointmentDate?: string;
+  status: 'COMPLETED' | 'SCHEDULED' | 'CANCELLED';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
+export interface ConsultationFilters {
+  animalName?: string;
+  ownerName?: string;
+  veterinarianName?: string;
+  status?: 'COMPLETED' | 'SCHEDULED' | 'CANCELLED';
+  reason?: string;
+  description?: string;
+  createdAtStart?: string;
+  createdAtEnd?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
+export interface ConsultationRequest {
+  animalId: number;
+  consultationDate: string;
+  veterinarianName: string;
+  reason: string;
+  description?: string;
+  diagnosis?: string;
+  treatmentPrescribed?: string;
+  observations?: string;
+  nextAppointmentDate?: string;
+  status?: 'COMPLETED' | 'SCHEDULED' | 'CANCELLED';
+}
+
+export interface ApiError {
+  type: string;
+  title: string;
+  status: number;
+  detail: string;
+  timestamp?: string;
+  path?: string;
+  errors?: Record<string, string>;
+}
+

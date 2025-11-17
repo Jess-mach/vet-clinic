@@ -15,6 +15,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import syscecilia.vet.SysCecilia.dto.AnimalRequest;
 import syscecilia.vet.SysCecilia.dto.AnimalResponse;
+import syscecilia.vet.SysCecilia.dto.PageResponse;
 import syscecilia.vet.SysCecilia.config.TestConfig;
 import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.exception.GlobalExceptionHandler;
@@ -34,6 +35,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -97,7 +99,10 @@ class AnimalControllerIntegrationTest {
     void shouldReturnAllAnimalsSuccessfullyWhenNoFilters() throws Exception {
         // Given
         List<AnimalResponse> animals = Arrays.asList(animalResponse1, animalResponse2);
-        when(animalService.search(null, null, null)).thenReturn(animals);
+        PageResponse<AnimalResponse> pageResponse = new PageResponse<>(
+                animals, 0, 20, 2L, 1, true, true, false, false
+        );
+        when(animalService.searchPaginated(null, null, null, null, null)).thenReturn(pageResponse);
 
         // When/Then
         mockMvc.perform(get("/api/animals")
@@ -105,20 +110,27 @@ class AnimalControllerIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].name").value("Rex"))
-                .andExpect(jsonPath("$[1].id").value(2L))
-                .andExpect(jsonPath("$[1].name").value("Fluffy"));
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].id").value(1L))
+                .andExpect(jsonPath("$.content[0].name").value("Rex"))
+                .andExpect(jsonPath("$.content[1].id").value(2L))
+                .andExpect(jsonPath("$.content[1].name").value("Fluffy"))
+                .andExpect(jsonPath("$.pageNumber").value(0))
+                .andExpect(jsonPath("$.pageSize").value(20))
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.totalPages").value(1));
 
-        verify(animalService, times(1)).search(null, null, null);
+        verify(animalService, times(1)).searchPaginated(null, null, null, null, null);
     }
 
     @Test
     @DisplayName("GET /api/animals - Should return empty list when no animals exist")
     void shouldReturnEmptyListWhenNoAnimalsExist() throws Exception {
         // Given
-        when(animalService.search(null, null, null)).thenReturn(Collections.emptyList());
+        PageResponse<AnimalResponse> pageResponse = new PageResponse<>(
+                Collections.emptyList(), 0, 20, 0L, 0, true, true, false, false
+        );
+        when(animalService.searchPaginated(null, null, null, null, null)).thenReturn(pageResponse);
 
         // When/Then
         mockMvc.perform(get("/api/animals")
@@ -126,9 +138,10 @@ class AnimalControllerIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(jsonPath("$.content", hasSize(0)))
+                .andExpect(jsonPath("$.totalElements").value(0));
 
-        verify(animalService, times(1)).search(null, null, null);
+        verify(animalService, times(1)).searchPaginated(null, null, null, null, null);
     }
 
     @Test
@@ -190,7 +203,10 @@ class AnimalControllerIntegrationTest {
     void shouldReturnAnimalsBySpeciesFilter() throws Exception {
         // Given
         List<AnimalResponse> dogs = Collections.singletonList(animalResponse1);
-        when(animalService.search(null, "Dog", null)).thenReturn(dogs);
+        PageResponse<AnimalResponse> pageResponse = new PageResponse<>(
+                dogs, 0, 20, 1L, 1, true, true, false, false
+        );
+        when(animalService.searchPaginated(null, null, null, "Dog", null)).thenReturn(pageResponse);
 
         // When/Then
         mockMvc.perform(get("/api/animals")
@@ -199,10 +215,10 @@ class AnimalControllerIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].species").value("Dog"));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].species").value("Dog"));
 
-        verify(animalService, times(1)).search(null, "Dog", null);
+        verify(animalService, times(1)).searchPaginated(null, null, null, "Dog", null);
     }
 
     @Test
@@ -210,7 +226,10 @@ class AnimalControllerIntegrationTest {
     void shouldReturnAnimalsByOwnerNameFilter() throws Exception {
         // Given
         List<AnimalResponse> animals = Collections.singletonList(animalResponse1);
-        when(animalService.search(null, null, "John")).thenReturn(animals);
+        PageResponse<AnimalResponse> pageResponse = new PageResponse<>(
+                animals, 0, 20, 1L, 1, true, true, false, false
+        );
+        when(animalService.searchPaginated(null, null, null, null, "John")).thenReturn(pageResponse);
 
         // When/Then
         mockMvc.perform(get("/api/animals")
@@ -219,10 +238,10 @@ class AnimalControllerIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].ownerName").value("John Doe"));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].ownerName").value("John Doe"));
 
-        verify(animalService, times(1)).search(null, null, "John");
+        verify(animalService, times(1)).searchPaginated(null, null, null, null, "John");
     }
 
     @Test
@@ -230,7 +249,10 @@ class AnimalControllerIntegrationTest {
     void shouldReturnAnimalsByNameFilter() throws Exception {
         // Given
         List<AnimalResponse> animals = Collections.singletonList(animalResponse1);
-        when(animalService.search("Rex", null, null)).thenReturn(animals);
+        PageResponse<AnimalResponse> pageResponse = new PageResponse<>(
+                animals, 0, 20, 1L, 1, true, true, false, false
+        );
+        when(animalService.searchPaginated(null, null, "Rex", null, null)).thenReturn(pageResponse);
 
         // When/Then
         mockMvc.perform(get("/api/animals")
@@ -239,10 +261,10 @@ class AnimalControllerIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].name").value("Rex"));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].name").value("Rex"));
 
-        verify(animalService, times(1)).search("Rex", null, null);
+        verify(animalService, times(1)).searchPaginated(null, null, "Rex", null, null);
     }
 
     @Test
@@ -250,7 +272,10 @@ class AnimalControllerIntegrationTest {
     void shouldReturnAnimalsWithMultipleFilters() throws Exception {
         // Given
         List<AnimalResponse> animals = Collections.singletonList(animalResponse1);
-        when(animalService.search("Rex", "Dog", null)).thenReturn(animals);
+        PageResponse<AnimalResponse> pageResponse = new PageResponse<>(
+                animals, 0, 20, 1L, 1, true, true, false, false
+        );
+        when(animalService.searchPaginated(null, null, "Rex", "Dog", null)).thenReturn(pageResponse);
 
         // When/Then
         mockMvc.perform(get("/api/animals")
@@ -260,11 +285,11 @@ class AnimalControllerIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].name").value("Rex"))
-                .andExpect(jsonPath("$[0].species").value("Dog"));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].name").value("Rex"))
+                .andExpect(jsonPath("$.content[0].species").value("Dog"));
 
-        verify(animalService, times(1)).search("Rex", "Dog", null);
+        verify(animalService, times(1)).searchPaginated(null, null, "Rex", "Dog", null);
     }
 
     @Test
@@ -272,7 +297,10 @@ class AnimalControllerIntegrationTest {
     void shouldReturnAnimalsWithAllFilters() throws Exception {
         // Given
         List<AnimalResponse> animals = Collections.singletonList(animalResponse1);
-        when(animalService.search("Rex", "Dog", "John")).thenReturn(animals);
+        PageResponse<AnimalResponse> pageResponse = new PageResponse<>(
+                animals, 0, 20, 1L, 1, true, true, false, false
+        );
+        when(animalService.searchPaginated(null, null, "Rex", "Dog", "John")).thenReturn(pageResponse);
 
         // When/Then
         mockMvc.perform(get("/api/animals")
@@ -283,12 +311,12 @@ class AnimalControllerIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].name").value("Rex"))
-                .andExpect(jsonPath("$[0].species").value("Dog"))
-                .andExpect(jsonPath("$[0].ownerName").value("John Doe"));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].name").value("Rex"))
+                .andExpect(jsonPath("$.content[0].species").value("Dog"))
+                .andExpect(jsonPath("$.content[0].ownerName").value("John Doe"));
 
-        verify(animalService, times(1)).search("Rex", "Dog", "John");
+        verify(animalService, times(1)).searchPaginated(null, null, "Rex", "Dog", "John");
     }
 
     @Test
@@ -875,6 +903,64 @@ class AnimalControllerIntegrationTest {
                 .andExpect(jsonPath("$.errors.birthDate").exists());
 
         verify(animalService, never()).create(any(AnimalRequest.class));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/animals/{id} - Should delete animal successfully")
+    void shouldDeleteAnimalSuccessfully() throws Exception {
+        // Given
+        doNothing().when(animalService).delete(1L);
+
+        // When/Then
+        mockMvc.perform(delete("/api/animals/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+
+        verify(animalService, times(1)).delete(1L);
+    }
+
+    @Test
+    @DisplayName("DELETE /api/animals/{id} - Should return 404 when animal not found")
+    void shouldReturn404WhenDeletingNonExistentAnimal() throws Exception {
+        // Given
+        doThrow(new ResourceNotFoundException("Animal not found with id: 999"))
+                .when(animalService).delete(999L);
+
+        // When/Then
+        mockMvc.perform(delete("/api/animals/999")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Resource Not Found"))
+                .andExpect(jsonPath("$.detail").value("Animal not found with id: 999"));
+
+        verify(animalService, times(1)).delete(999L);
+    }
+
+    @Test
+    @DisplayName("DELETE /api/animals/{id} - Should return 400 when ID is invalid")
+    void shouldReturn400WhenDeletingWithInvalidId() throws Exception {
+        // When/Then
+        mockMvc.perform(delete("/api/animals/0")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+        verify(animalService, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("DELETE /api/animals/{id} - Should return 400 when ID is negative")
+    void shouldReturn400WhenDeletingWithNegativeId() throws Exception {
+        // When/Then
+        mockMvc.perform(delete("/api/animals/-1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+        verify(animalService, never()).delete(any());
     }
 }
 

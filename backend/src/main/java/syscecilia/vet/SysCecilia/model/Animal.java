@@ -52,10 +52,19 @@ public class Animal {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
+    @Column(name = "inactivated_at")
+    private LocalDateTime inactivatedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (isActive == null) {
+            isActive = true;
+        }
     }
 
     @PreUpdate
@@ -176,6 +185,22 @@ public class Animal {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public LocalDateTime getInactivatedAt() {
+        return inactivatedAt;
+    }
+
+    public void setInactivatedAt(LocalDateTime inactivatedAt) {
+        this.inactivatedAt = inactivatedAt;
     }
 }
 
