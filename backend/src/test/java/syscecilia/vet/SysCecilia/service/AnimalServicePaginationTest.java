@@ -84,7 +84,7 @@ public class AnimalServicePaginationTest {
     }
 
     @Test
-    @DisplayName("Should return paginated animals with default values (page=0, pageSize=20)")
+    @DisplayName("Should return paginated animals with default values (page=0, pageSize=10)")
     void testSearchPaginatedWithDefaults() {
         // Given
         when(animalRepository.findAllByIsActiveTrueOrderByNameAsc()).thenReturn(Arrays.asList(animal1, animal2, animal3));
@@ -95,7 +95,7 @@ public class AnimalServicePaginationTest {
         // Then
         assertNotNull(result);
         assertEquals(0, result.getPageNumber());
-        assertEquals(20, result.getPageSize());
+        assertEquals(10, result.getPageSize());
         assertEquals(3, result.getTotalElements());
         assertEquals(1, result.getTotalPages());
         assertTrue(result.getIsFirst());
