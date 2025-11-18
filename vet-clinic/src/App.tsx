@@ -10,6 +10,7 @@ import { Footer } from './components/Footer';
 import { CreateAnimal } from './components/CreateAnimal';
 import { PetsPage } from './components/PetsPage';
 import { ConsultationsPage } from './components/ConsultationsPage';
+import { CreateConsultation } from './components/CreateConsultation';
 import './App.css';
 
 function ScrollToHash() {
@@ -57,6 +58,7 @@ function AppContent() {
             <Route path="/cadastrar-animal" element={<CreateAnimal />} />
             <Route path="/pets" element={<PetsPage />} />
             <Route path="/consultas" element={<ConsultationsPage />} />
+            <Route path="/cadastrar-consulta" element={<CreateConsultation />} />
           </Routes>
         </main>
         <Footer />

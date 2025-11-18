@@ -48,7 +48,7 @@ export function ConsultationFiltersComponent({
     // Resetar para página 0 ao aplicar filtros
     filters.page = 0;
     filters.size = 10;
-    filters.sort = 'consultationDate,desc';
+    filters.sort = 'consultationDate,asc';
     
     onSearch(filters);
   };

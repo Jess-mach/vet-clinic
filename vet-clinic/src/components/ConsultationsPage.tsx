@@ -38,7 +38,7 @@ export function ConsultationsPage() {
         ...filtersToUse,
         page: pageToUse,
         size: sizeToUse,
-        sort: filtersToUse.sort || 'consultationDate,desc',
+        sort: filtersToUse.sort || 'consultationDate,asc',
       };
       
       const data = await searchConsultations(searchFilters);
