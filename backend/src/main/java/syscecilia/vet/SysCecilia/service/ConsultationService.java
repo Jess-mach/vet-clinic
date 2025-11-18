@@ -16,7 +16,10 @@ import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationSpecification;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
 @Service
 public class ConsultationService {
@@ -81,6 +84,12 @@ public class ConsultationService {
         Animal animal = animalRepository.findByIdAndIsActiveTrue(request.getAnimalId())
                 .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + request.getAnimalId()));
 
+        LocalDateTime consultationDate = request.getConsultationDate();
+        String veterinarianName = request.getVeterinarianName();
+
+        // Validar regras de negócio
+        validateBusinessRules(consultationDate, veterinarianName, request.getAnimalId());
+
         Consultation consultation = convertToEntity(request, animal);
         Consultation savedConsultation = consultationRepository.save(consultation);
 
@@ -109,6 +118,91 @@ public class ConsultationService {
     private void verifyAnimalExists(Long animalId) {
         if (!animalRepository.existsById(animalId)) {
             throw new ResourceNotFoundException("Animal not found with id: " + animalId);
+        }
+    }
+
+    private void validateBusinessRules(LocalDateTime consultationDate, String veterinarianName, Long animalId) {
+        // Validar horário de funcionamento
+        validateClinicHours(consultationDate);
+
+        // Validar se já existe consulta no mesmo horário para o mesmo veterinário
+        validateVeterinarianAvailability(consultationDate, veterinarianName);
+
+        // Validar se já existe consulta no mesmo horário para o mesmo animal
+        validateAnimalAvailability(consultationDate, animalId);
+    }
+
+    private void validateClinicHours(LocalDateTime consultationDate) {
+        DayOfWeek dayOfWeek = consultationDate.getDayOfWeek();
+        LocalTime time = consultationDate.toLocalTime();
+        LocalTime openingTime = LocalTime.of(7, 0);
+        LocalTime closingTime;
+        LocalTime lastAppointmentTime;
+
+        if (dayOfWeek == DayOfWeek.SATURDAY) {
+            // Sábado: 7:00 às 14:00, último agendamento às 13:00
+            closingTime = LocalTime.of(14, 0);
+            lastAppointmentTime = LocalTime.of(13, 0);
+        } else {
+            // Segunda a Sexta: 7:00 às 19:00, último agendamento às 18:00
+            closingTime = LocalTime.of(19, 0);
+            lastAppointmentTime = LocalTime.of(18, 0);
+        }
+
+        if (time.isBefore(openingTime)) {
+            throw new BusinessException(
+                    "Consultation cannot be scheduled before clinic opening time (07:00)",
+                    "The clinic opens at 07:00. Please schedule the consultation after this time."
+            );
+        }
+
+        if (time.isAfter(lastAppointmentTime)) {
+            String dayName = dayOfWeek == DayOfWeek.SATURDAY ? "Saturday" : "weekday";
+            String lastTime = dayOfWeek == DayOfWeek.SATURDAY ? "13:00" : "18:00";
+            throw new BusinessException(
+                    String.format("Consultation cannot be scheduled after last appointment time (%s) on %s", lastTime, dayName),
+                    String.format("The last appointment time is %s. Please schedule the consultation before this time.", lastTime)
+            );
+        }
+
+        if (time.isAfter(closingTime) || time.equals(closingTime)) {
+            String dayName = dayOfWeek == DayOfWeek.SATURDAY ? "Saturday" : "weekday";
+            String closingTimeStr = dayOfWeek == DayOfWeek.SATURDAY ? "14:00" : "19:00";
+            throw new BusinessException(
+                    String.format("Consultation cannot be scheduled at or after clinic closing time (%s) on %s", closingTimeStr, dayName),
+                    String.format("The clinic closes at %s. Please schedule the consultation before this time.", closingTimeStr)
+            );
+        }
+    }
+
+    private void validateVeterinarianAvailability(LocalDateTime consultationDate, String veterinarianName) {
+        // Buscar consultas no mesmo horário para o mesmo veterinário que não estejam canceladas
+        List<Consultation> existingConsultations = consultationRepository
+                .findByConsultationDateAndVeterinarianNameAndStatusNot(
+                        consultationDate, veterinarianName, "CANCELLED");
+
+        if (!existingConsultations.isEmpty()) {
+            throw new BusinessException(
+                    String.format("Veterinarian %s already has a consultation scheduled at %s", 
+                            veterinarianName, consultationDate),
+                    String.format("The veterinarian %s already has a consultation scheduled at this date and time. " +
+                            "Please choose a different time or veterinarian.", veterinarianName)
+            );
+        }
+    }
+
+    private void validateAnimalAvailability(LocalDateTime consultationDate, Long animalId) {
+        // Buscar consultas no mesmo horário para o mesmo animal que não estejam canceladas
+        List<Consultation> existingConsultations = consultationRepository
+                .findByConsultationDateAndAnimalIdAndStatusNot(
+                        consultationDate, animalId, "CANCELLED");
+
+        if (!existingConsultations.isEmpty()) {
+            throw new BusinessException(
+                    String.format("Animal already has a consultation scheduled at %s", consultationDate),
+                    "This animal already has a consultation scheduled at this date and time. " +
+                            "Please choose a different time."
+            );
         }
     }
 

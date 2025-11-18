@@ -294,6 +294,10 @@ public class ConsultationServiceTest {
         savedConsultation.setUpdatedAt(LocalDateTime.now());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
+                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.save(any(Consultation.class))).thenReturn(savedConsultation);
 
         ConsultationResponse result = consultationService.create(request);
@@ -329,6 +333,10 @@ public class ConsultationServiceTest {
         savedConsultation.setUpdatedAt(LocalDateTime.now());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
+                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.save(any(Consultation.class))).thenAnswer(invocation -> {
             Consultation consultation = invocation.getArgument(0);
             consultation.setId(1L);
@@ -395,6 +403,10 @@ public class ConsultationServiceTest {
         savedConsultation.setUpdatedAt(LocalDateTime.now());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
+                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.save(any(Consultation.class))).thenReturn(savedConsultation);
 
         ConsultationResponse result = consultationService.create(request);
@@ -409,6 +421,189 @@ public class ConsultationServiceTest {
         assertEquals(LocalDateTime.of(2026, 6, 15, 14, 30), result.getNextAppointmentDate());
         assertEquals("COMPLETED", result.getStatus());
         verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(consultationRepository, times(1)).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should throw BusinessException when veterinarian already has consultation at same time")
+    public void testCreateConsultationVeterinarianConflict() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianName("Dr. Silva");
+        request.setReason("Routine checkup");
+
+        Consultation existingConsultation = new Consultation();
+        existingConsultation.setId(2L);
+        existingConsultation.setVeterinarianName("Dr. Silva");
+        existingConsultation.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        existingConsultation.setStatus("SCHEDULED");
+
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
+                eq(LocalDateTime.of(2025, 12, 15, 14, 30)), eq("Dr. Silva"), eq("CANCELLED")))
+                .thenReturn(Arrays.asList(existingConsultation));
+
+        assertThrows(BusinessException.class, () -> {
+            consultationService.create(request);
+        });
+
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(consultationRepository, never()).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should throw BusinessException when animal already has consultation at same time")
+    public void testCreateConsultationAnimalConflict() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianName("Dr. Silva");
+        request.setReason("Routine checkup");
+
+        Consultation existingConsultation = new Consultation();
+        existingConsultation.setId(2L);
+        existingConsultation.setAnimal(testAnimal);
+        existingConsultation.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        existingConsultation.setStatus("SCHEDULED");
+
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
+                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
+                eq(LocalDateTime.of(2025, 12, 15, 14, 30)), eq(1L), eq("CANCELLED")))
+                .thenReturn(Arrays.asList(existingConsultation));
+
+        assertThrows(BusinessException.class, () -> {
+            consultationService.create(request);
+        });
+
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(consultationRepository, never()).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should throw BusinessException when consultation time is before clinic opening")
+    public void testCreateConsultationBeforeOpeningTime() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 6, 30)); // 6:30 AM
+        request.setVeterinarianName("Dr. Silva");
+        request.setReason("Routine checkup");
+
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+
+        assertThrows(BusinessException.class, () -> {
+            consultationService.create(request);
+        });
+
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(consultationRepository, never()).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should throw BusinessException when consultation time is after last appointment time on weekday")
+    public void testCreateConsultationAfterLastAppointmentTimeWeekday() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 18, 30)); // Monday 18:30
+        request.setVeterinarianName("Dr. Silva");
+        request.setReason("Routine checkup");
+
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+
+        assertThrows(BusinessException.class, () -> {
+            consultationService.create(request);
+        });
+
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(consultationRepository, never()).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should throw BusinessException when consultation time is after last appointment time on Saturday")
+    public void testCreateConsultationAfterLastAppointmentTimeSaturday() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        // Saturday, December 20, 2025
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 20, 13, 30)); // Saturday 13:30
+        request.setVeterinarianName("Dr. Silva");
+        request.setReason("Routine checkup");
+
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+
+        assertThrows(BusinessException.class, () -> {
+            consultationService.create(request);
+        });
+
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(consultationRepository, never()).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should allow consultation at last appointment time on weekday")
+    public void testCreateConsultationAtLastAppointmentTimeWeekday() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 18, 0)); // Monday 18:00
+        request.setVeterinarianName("Dr. Silva");
+        request.setReason("Routine checkup");
+
+        Consultation savedConsultation = new Consultation();
+        savedConsultation.setId(1L);
+        savedConsultation.setAnimal(testAnimal);
+        savedConsultation.setConsultationDate(request.getConsultationDate());
+        savedConsultation.setVeterinarianName(request.getVeterinarianName());
+        savedConsultation.setReason(request.getReason());
+        savedConsultation.setStatus("SCHEDULED");
+        savedConsultation.setCreatedAt(LocalDateTime.now());
+        savedConsultation.setUpdatedAt(LocalDateTime.now());
+
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
+                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(consultationRepository.save(any(Consultation.class))).thenReturn(savedConsultation);
+
+        ConsultationResponse result = consultationService.create(request);
+
+        assertNotNull(result);
+        assertEquals("SCHEDULED", result.getStatus());
+        verify(consultationRepository, times(1)).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should allow consultation at last appointment time on Saturday")
+    public void testCreateConsultationAtLastAppointmentTimeSaturday() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        // Saturday, December 20, 2025
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 20, 13, 0)); // Saturday 13:00
+        request.setVeterinarianName("Dr. Silva");
+        request.setReason("Routine checkup");
+
+        Consultation savedConsultation = new Consultation();
+        savedConsultation.setId(1L);
+        savedConsultation.setAnimal(testAnimal);
+        savedConsultation.setConsultationDate(request.getConsultationDate());
+        savedConsultation.setVeterinarianName(request.getVeterinarianName());
+        savedConsultation.setReason(request.getReason());
+        savedConsultation.setStatus("SCHEDULED");
+        savedConsultation.setCreatedAt(LocalDateTime.now());
+        savedConsultation.setUpdatedAt(LocalDateTime.now());
+
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
+                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(consultationRepository.save(any(Consultation.class))).thenReturn(savedConsultation);
+
+        ConsultationResponse result = consultationService.create(request);
+
+        assertNotNull(result);
+        assertEquals("SCHEDULED", result.getStatus());
         verify(consultationRepository, times(1)).save(any(Consultation.class));
     }
 }

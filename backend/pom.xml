@@ -141,6 +141,7 @@
 									<excludes>
 										<exclude>*Test</exclude>
 										<exclude>syscecilia.vet.SysCecilia.config</exclude>
+										<exclude>syscecilia.vet.SysCecilia.exception</exclude>
 										<exclude>syscecilia.vet.SysCecilia.SysCeciliaApplication</exclude>
 									</excludes>
 									<limits>
