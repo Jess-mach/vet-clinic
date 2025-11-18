@@ -23,7 +23,7 @@ const differentials: Differential[] = [
   {
     id: 'localizacao',
     title: 'Localização acessível',
-    description: 'Estamos localizados na Mooca, um bairro histórico de São Paulo.',
+    description: 'Estamos localizados na Centro, com estacionamento próprio, e facil acesso.',
     icon: '📍',
   },
   {

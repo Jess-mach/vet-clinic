@@ -1,36 +1,43 @@
+import { Link } from 'react-router-dom';
 import './Specialties.css';
 
 interface Specialty {
   id: string;
   title: string;
   image: string;
+  veterinarian: string;
 }
 
 const specialties: Specialty[] = [
   {
     id: 'clinico-geral',
     title: 'Clínico Geral',
-    image: 'https://via.placeholder.com/400x300?text=Clinico+Geral',
+    image: '/Clinico-geral.png',
+    veterinarian: 'Luna Lovegood',
   },
   {
     id: 'cardiologia',
     title: 'Cardiologia',
-    image: 'https://via.placeholder.com/400x300?text=Cardiologia',
+    image: '/cardiologista.png',
+    veterinarian: 'Dr. Minerva McGonagall',
   },
   {
     id: 'neurologia',
     title: 'Neurologia',
-    image: 'https://via.placeholder.com/400x300?text=Neurologia',
+    image: '/Neurologista.png',
+    veterinarian: 'Dra. Albus Dumbledore',
   },
   {
     id: 'ortopedia',
     title: 'Ortopedia',
-    image: 'https://via.placeholder.com/400x300?text=Ortopedia',
+    image: '/Ortopedista.png',
+    veterinarian: 'Dr. Remus Lupin',
   },
   {
     id: 'oftalmologia',
     title: 'Oftalmologia',
-    image: 'https://via.placeholder.com/400x300?text=Oftalmologia',
+    image: '/oftamologista.png',
+    veterinarian: 'Dra. Hermione Granger',
   },
 ];
 
@@ -39,7 +46,7 @@ export function Specialties() {
     <section id="especialidades" className="section specialties">
       <div className="container">
         <div className="section-title">
-          <h2>Nossas Especialidades</h2>
+          <h2>Especialidades</h2>
           <p>Contamos com profissionais especializados em diversas áreas</p>
         </div>
         <div className="specialties-grid">
@@ -53,9 +60,12 @@ export function Specialties() {
               </div>
               <div className="specialty-content">
                 <h3 className="specialty-title">{specialty.title}</h3>
-                <a href={`#${specialty.id}`} className="btn btn-gradient specialty-btn">
+                <Link 
+                  to={`/cadastrar-consulta?veterinarian=${encodeURIComponent(`${specialty.title} - ${specialty.veterinarian}`)}`}
+                  className="btn btn-gradient specialty-btn"
+                >
                   Agendar
-                </a>
+                </Link>
               </div>
             </div>
           ))}
@@ -64,4 +74,3 @@ export function Specialties() {
     </section>
   );
 }
-

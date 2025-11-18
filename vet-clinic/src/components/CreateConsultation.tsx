@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { createConsultation, ApiError } from '../services/api';
 import type { ConsultationRequest } from '../types/consultation';
 import type { Animal } from '../types/animal';
@@ -8,8 +8,12 @@ import { ErrorModal } from './ErrorModal';
 import { AnimalSearchModal } from './AnimalSearchModal';
 import './CreateConsultation.css';
 
+
 export function CreateConsultation() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const veterinarianFromUrl = searchParams.get('veterinarian') || '';
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -24,7 +28,7 @@ export function CreateConsultation() {
   const [formData, setFormData] = useState<ConsultationRequest>({
     animalId: 0,
     consultationDate: '',
-    veterinarianName: '',
+    veterinarianName: veterinarianFromUrl, // Pré-preenche com o valor da URL
     reason: '',
     description: '',
     diagnosis: '',
@@ -33,6 +37,8 @@ export function CreateConsultation() {
     nextAppointmentDate: '',
     status: 'SCHEDULED',
   });
+
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
