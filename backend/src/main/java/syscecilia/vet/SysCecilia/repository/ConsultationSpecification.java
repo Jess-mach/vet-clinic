@@ -2,6 +2,7 @@ package syscecilia.vet.SysCecilia.repository;
 
 import org.springframework.data.jpa.domain.Specification;
 import syscecilia.vet.SysCecilia.model.Consultation;
+import syscecilia.vet.SysCecilia.model.ConsultationReasonType;
 
 import java.time.LocalDateTime;
 
@@ -69,17 +70,21 @@ public class ConsultationSpecification {
     }
 
     /**
-     * Filter by reason (partial match, case-insensitive)
+     * Filter by reason using enum code derived from description.
+     * Expects the full description used by ConsultationReasonType.
      */
     public static Specification<Consultation> hasReason(String reason) {
         return (root, query, criteriaBuilder) -> {
             if (reason == null || reason.trim().isEmpty()) {
                 return criteriaBuilder.conjunction();
             }
-            return criteriaBuilder.like(
-                    criteriaBuilder.lower(root.get("reason")),
-                    "%" + reason.toLowerCase() + "%"
-            );
+            try {
+                ConsultationReasonType reasonType = ConsultationReasonType.fromDescription(reason);
+                return criteriaBuilder.equal(root.get("reasonCode"), reasonType.getId());
+            } catch (IllegalArgumentException ex) {
+                // If the description does not match any enum, return no results
+                return criteriaBuilder.disjunction();
+            }
         };
     }
 

@@ -12,6 +12,7 @@ import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
 import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.model.Consultation;
+import syscecilia.vet.SysCecilia.model.ConsultationReasonType;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationSpecification;
@@ -211,7 +212,10 @@ public class ConsultationService {
         consultation.setAnimal(animal);
         consultation.setConsultationDate(request.getConsultationDate());
         consultation.setVeterinarianName(request.getVeterinarianName());
-        consultation.setReason(request.getReason());
+
+        // Map numeric reason code from request to enum and store its id in database
+        ConsultationReasonType reasonType = ConsultationReasonType.fromId(request.getReasonCode());
+        consultation.setReasonCode(reasonType.getId());
         consultation.setDescription(request.getDescription());
         consultation.setDiagnosis(request.getDiagnosis());
         consultation.setTreatmentPrescribed(request.getTreatmentPrescribed());
@@ -238,12 +242,15 @@ public class ConsultationService {
                 animal.getOwnerName()
         );
 
+        ConsultationReasonType reasonType = ConsultationReasonType.fromId(consultation.getReasonCode());
+
         return new ConsultationResponse(
                 consultation.getId(),
                 animalBasicInfo,
                 consultation.getConsultationDate(),
                 consultation.getVeterinarianName(),
-                consultation.getReason(),
+                reasonType.getId(),
+                reasonType.getDescription(),
                 consultation.getDescription(),
                 consultation.getDiagnosis(),
                 consultation.getTreatmentPrescribed(),

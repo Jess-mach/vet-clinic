@@ -23,6 +23,7 @@ import syscecilia.vet.SysCecilia.exception.GlobalExceptionHandler;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
 import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.service.ConsultationService;
+import syscecilia.vet.SysCecilia.model.ConsultationReasonType;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -63,7 +64,7 @@ public class ConsultationControllerTest {
                 testAnimal,
                 LocalDateTime.of(2025, 11, 15, 14, 30),
                 "Dr. Silva",
-                "Routine checkup",
+                ConsultationReasonType.GENERAL_CHECKUP.getDescription(),
                 "General health examination performed",
                 "Healthy",
                 "Continue with regular diet",
@@ -85,7 +86,7 @@ public class ConsultationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.veterinarianName", is("Dr. Silva")))
-                .andExpect(jsonPath("$.reason", is("Routine checkup")))
+                .andExpect(jsonPath("$.reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())))
                 .andExpect(jsonPath("$.animal.name", is("Rex")))
                 .andExpect(jsonPath("$.animal.species", is("Dog")));
 
@@ -363,7 +364,7 @@ public class ConsultationControllerTest {
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
         request.setDescription("General health examination");
         request.setStatus("SCHEDULED");
 
@@ -391,7 +392,7 @@ public class ConsultationControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.veterinarianName", is("Dr. Silva")))
-                .andExpect(jsonPath("$.reason", is("Routine checkup")))
+                .andExpect(jsonPath("$.reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())))
                 .andExpect(jsonPath("$.status", is("SCHEDULED")))
                 .andExpect(jsonPath("$.animal.name", is("Rex")))
                 .andExpect(header().string("Location", "/api/consultations/1"));
@@ -420,7 +421,7 @@ public class ConsultationControllerTest {
         request.setAnimalId(999L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
 
         when(consultationService.create(any()))
                 .thenThrow(new ResourceNotFoundException("Animal not found with id: 999"));

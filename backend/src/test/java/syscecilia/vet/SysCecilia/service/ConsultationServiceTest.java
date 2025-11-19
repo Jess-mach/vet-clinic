@@ -20,6 +20,7 @@ import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.model.Consultation;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
+import syscecilia.vet.SysCecilia.model.ConsultationReasonType;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -61,7 +62,7 @@ public class ConsultationServiceTest {
         testConsultation.setAnimal(testAnimal);
         testConsultation.setConsultationDate(LocalDateTime.of(2025, 10, 20, 10, 0));
         testConsultation.setVeterinarianName("Dr. Santos");
-        testConsultation.setReason("Vaccination");
+        testConsultation.setReasonCode(ConsultationReasonType.VACCINATION.getId());
         testConsultation.setDescription("Annual vaccination applied");
         testConsultation.setDiagnosis("Vaccinated successfully");
         testConsultation.setStatus("COMPLETED");
@@ -109,7 +110,7 @@ public class ConsultationServiceTest {
         
         assertNotNull(consultations);
         assertEquals(1, consultations.getTotalElements());
-        assertEquals("Vaccination", consultations.getContent().get(0).getReason());
+        assertEquals(ConsultationReasonType.VACCINATION.getDescription(), consultations.getContent().get(0).getReason());
         
         verify(consultationRepository, times(1)).findAll((org.springframework.data.domain.Pageable) any());
     }
@@ -179,7 +180,7 @@ public class ConsultationServiceTest {
         
         assertNotNull(consultations);
         assertEquals(1, consultations.getTotalElements());
-        assertEquals("Vaccination", consultations.getContent().get(0).getReason());
+        assertEquals(ConsultationReasonType.VACCINATION.getDescription(), consultations.getContent().get(0).getReason());
         
         verify(animalRepository, times(1)).existsById(1L);
     }
@@ -204,7 +205,7 @@ public class ConsultationServiceTest {
         scheduledConsultation.setAnimal(testAnimal);
         scheduledConsultation.setConsultationDate(LocalDateTime.of(2025, 11, 20, 10, 0));
         scheduledConsultation.setVeterinarianName("Dr. Silva");
-        scheduledConsultation.setReason("Checkup");
+        scheduledConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         scheduledConsultation.setStatus("SCHEDULED");
         scheduledConsultation.setCreatedAt(LocalDateTime.now());
         scheduledConsultation.setUpdatedAt(LocalDateTime.now());
@@ -245,7 +246,7 @@ public class ConsultationServiceTest {
         cancelledConsultation.setAnimal(testAnimal);
         cancelledConsultation.setConsultationDate(LocalDateTime.of(2025, 11, 20, 10, 0));
         cancelledConsultation.setVeterinarianName("Dr. Silva");
-        cancelledConsultation.setReason("Checkup");
+        cancelledConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         cancelledConsultation.setStatus("CANCELLED");
 
         when(consultationRepository.findById(3L)).thenReturn(Optional.of(cancelledConsultation));
@@ -278,7 +279,7 @@ public class ConsultationServiceTest {
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
         request.setDescription("General health examination");
         request.setStatus("SCHEDULED");
 
@@ -287,7 +288,7 @@ public class ConsultationServiceTest {
         savedConsultation.setAnimal(testAnimal);
         savedConsultation.setConsultationDate(request.getConsultationDate());
         savedConsultation.setVeterinarianName(request.getVeterinarianName());
-        savedConsultation.setReason(request.getReason());
+        savedConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         savedConsultation.setDescription(request.getDescription());
         savedConsultation.setStatus("SCHEDULED");
         savedConsultation.setCreatedAt(LocalDateTime.now());
@@ -305,7 +306,7 @@ public class ConsultationServiceTest {
         assertNotNull(result);
         assertEquals(1L, result.getId());
         assertEquals("Dr. Silva", result.getVeterinarianName());
-        assertEquals("Routine checkup", result.getReason());
+        assertEquals(ConsultationReasonType.GENERAL_CHECKUP.getDescription(), result.getReason());
         assertEquals("SCHEDULED", result.getStatus());
         assertEquals("Luna", result.getAnimal().getName());
         verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
@@ -319,7 +320,7 @@ public class ConsultationServiceTest {
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
         request.setStatus(null);
 
         Consultation savedConsultation = new Consultation();
@@ -327,7 +328,7 @@ public class ConsultationServiceTest {
         savedConsultation.setAnimal(testAnimal);
         savedConsultation.setConsultationDate(request.getConsultationDate());
         savedConsultation.setVeterinarianName(request.getVeterinarianName());
-        savedConsultation.setReason(request.getReason());
+        savedConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         savedConsultation.setStatus("SCHEDULED");
         savedConsultation.setCreatedAt(LocalDateTime.now());
         savedConsultation.setUpdatedAt(LocalDateTime.now());
@@ -360,7 +361,7 @@ public class ConsultationServiceTest {
         request.setAnimalId(999L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
 
         when(animalRepository.findByIdAndIsActiveTrue(999L)).thenReturn(Optional.empty());
 
@@ -379,7 +380,7 @@ public class ConsultationServiceTest {
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
         request.setDescription("General health examination performed");
         request.setDiagnosis("Healthy");
         request.setTreatmentPrescribed("Continue with regular diet");
@@ -392,7 +393,7 @@ public class ConsultationServiceTest {
         savedConsultation.setAnimal(testAnimal);
         savedConsultation.setConsultationDate(request.getConsultationDate());
         savedConsultation.setVeterinarianName(request.getVeterinarianName());
-        savedConsultation.setReason(request.getReason());
+        savedConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         savedConsultation.setDescription(request.getDescription());
         savedConsultation.setDiagnosis(request.getDiagnosis());
         savedConsultation.setTreatmentPrescribed(request.getTreatmentPrescribed());
@@ -431,7 +432,7 @@ public class ConsultationServiceTest {
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
 
         Consultation existingConsultation = new Consultation();
         existingConsultation.setId(2L);
@@ -489,7 +490,7 @@ public class ConsultationServiceTest {
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 6, 30)); // 6:30 AM
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
 
@@ -508,7 +509,7 @@ public class ConsultationServiceTest {
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 18, 30)); // Monday 18:30
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
 
@@ -528,7 +529,7 @@ public class ConsultationServiceTest {
         // Saturday, December 20, 2025
         request.setConsultationDate(LocalDateTime.of(2025, 12, 20, 13, 30)); // Saturday 13:30
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
 
@@ -547,14 +548,14 @@ public class ConsultationServiceTest {
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 18, 0)); // Monday 18:00
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
 
         Consultation savedConsultation = new Consultation();
         savedConsultation.setId(1L);
         savedConsultation.setAnimal(testAnimal);
         savedConsultation.setConsultationDate(request.getConsultationDate());
         savedConsultation.setVeterinarianName(request.getVeterinarianName());
-        savedConsultation.setReason(request.getReason());
+        savedConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         savedConsultation.setStatus("SCHEDULED");
         savedConsultation.setCreatedAt(LocalDateTime.now());
         savedConsultation.setUpdatedAt(LocalDateTime.now());
@@ -581,14 +582,14 @@ public class ConsultationServiceTest {
         // Saturday, December 20, 2025
         request.setConsultationDate(LocalDateTime.of(2025, 12, 20, 13, 0)); // Saturday 13:00
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
 
         Consultation savedConsultation = new Consultation();
         savedConsultation.setId(1L);
         savedConsultation.setAnimal(testAnimal);
         savedConsultation.setConsultationDate(request.getConsultationDate());
         savedConsultation.setVeterinarianName(request.getVeterinarianName());
-        savedConsultation.setReason(request.getReason());
+        savedConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         savedConsultation.setStatus("SCHEDULED");
         savedConsultation.setCreatedAt(LocalDateTime.now());
         savedConsultation.setUpdatedAt(LocalDateTime.now());

@@ -18,7 +18,13 @@ public class ConsultationResponse {
     @Schema(description = "Name of the veterinarian")
     private String veterinarianName;
 
-    @Schema(description = "Reason for the consultation")
+    @Schema(
+            description = "Reason code for the consultation (numeric id from ConsultationReasonType enum)",
+            example = "1"
+    )
+    private Integer reasonCode;
+
+    @Schema(description = "Reason description for the consultation")
     private String reason;
 
     @Schema(description = "Detailed description of the consultation")
@@ -48,14 +54,25 @@ public class ConsultationResponse {
     public ConsultationResponse() {
     }
 
-    public ConsultationResponse(Long id, AnimalBasicInfo animal, LocalDateTime consultationDate,
-                               String veterinarianName, String reason, String description, String diagnosis,
-                               String treatmentPrescribed, String observations, LocalDateTime nextAppointmentDate,
-                               String status, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public ConsultationResponse(Long id,
+                                AnimalBasicInfo animal,
+                                LocalDateTime consultationDate,
+                                String veterinarianName,
+                                Integer reasonCode,
+                                String reason,
+                                String description,
+                                String diagnosis,
+                                String treatmentPrescribed,
+                                String observations,
+                                LocalDateTime nextAppointmentDate,
+                                String status,
+                                LocalDateTime createdAt,
+                                LocalDateTime updatedAt) {
         this.id = id;
         this.animal = animal;
         this.consultationDate = consultationDate;
         this.veterinarianName = veterinarianName;
+        this.reasonCode = reasonCode;
         this.reason = reason;
         this.description = description;
         this.diagnosis = diagnosis;
@@ -98,6 +115,14 @@ public class ConsultationResponse {
 
     public void setVeterinarianName(String veterinarianName) {
         this.veterinarianName = veterinarianName;
+    }
+
+    public Integer getReasonCode() {
+        return reasonCode;
+    }
+
+    public void setReasonCode(Integer reasonCode) {
+        this.reasonCode = reasonCode;
     }
 
     public String getReason() {

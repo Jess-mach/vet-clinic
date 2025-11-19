@@ -21,10 +21,14 @@ public class ConsultationRequest {
     @Schema(description = "Name of the veterinarian", example = "Dr. Silva", required = true, maxLength = 100)
     private String veterinarianName;
 
-    @NotBlank(message = "Reason is required")
-    @Size(max = 255, message = "Reason must not exceed 255 characters")
-    @Schema(description = "Reason for the consultation", example = "Routine checkup", required = true, maxLength = 255)
-    private String reason;
+    @NotNull(message = "Reason code is required")
+    @Min(value = 1, message = "Reason code must be greater than or equal to 1")
+    @Schema(
+            description = "Reason code for the consultation (numeric id from ConsultationReasonType enum)",
+            example = "1",
+            required = true
+    )
+    private Integer reasonCode;
 
     @Size(max = 5000, message = "Description must not exceed 5000 characters")
     @Schema(description = "Detailed description of the consultation", example = "General health examination performed", maxLength = 5000)
@@ -77,12 +81,12 @@ public class ConsultationRequest {
         this.veterinarianName = veterinarianName;
     }
 
-    public String getReason() {
-        return reason;
+    public Integer getReasonCode() {
+        return reasonCode;
     }
 
-    public void setReason(String reason) {
-        this.reason = reason;
+    public void setReasonCode(Integer reasonCode) {
+        this.reasonCode = reasonCode;
     }
 
     public String getDescription() {
