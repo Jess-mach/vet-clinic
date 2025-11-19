@@ -199,6 +199,18 @@
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
 }
 
+.btn-print {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: var(--color-white);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+}
+
+.btn-print:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+}
+
 .btn-delete {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: var(--color-white);

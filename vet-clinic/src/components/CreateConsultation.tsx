@@ -29,7 +29,7 @@ export function CreateConsultation() {
     animalId: 0,
     consultationDate: '',
     veterinarianName: veterinarianFromUrl, // Pré-preenche com o valor da URL
-    reason: '',
+    reasonCode: 0,
     description: '',
     diagnosis: '',
     treatmentPrescribed: '',
@@ -37,6 +37,20 @@ export function CreateConsultation() {
     nextAppointmentDate: '',
     status: 'SCHEDULED',
   });
+
+  const CONSULTATION_REASON_OPTIONS = [
+    { value: 1, label: 'Consulta com clinico geral' },
+    { value: 2, label: 'Consulta com oftalmologista' },
+    { value: 3, label: 'Consulta com cardiologista' },
+    { value: 4, label: 'Consulta com ortopedista' },
+    { value: 5, label: 'Consulta com neurologista' },
+    { value: 6, label: 'Exames' },
+    { value: 7, label: 'Exame de imagem (raio-x, ultrassom, etc.)' },
+    { value: 8, label: 'Vacinação' },
+    { value: 9, label: 'Cirurgia' },
+    { value: 10, label: 'Retorno' },
+    { value: 11, label: 'Emergência' },
+  ];
 
 
 
@@ -97,11 +111,9 @@ export function CreateConsultation() {
       errors.veterinarianName = 'Nome do veterinário deve ter no máximo 100 caracteres';
     }
 
-    if (!formData.reason || formData.reason.trim() === '') {
+    if (!formData.reasonCode || formData.reasonCode === 0) {
       errors.reason = 'Motivo da consulta é obrigatório';
-    } else if (formData.reason.length > 255) {
-      errors.reason = 'Motivo deve ter no máximo 255 caracteres';
-    }
+    } 
 
     // Optional field validations
     if (formData.description && formData.description.length > 5000) {
@@ -155,7 +167,7 @@ export function CreateConsultation() {
         animalId: formData.animalId,
         consultationDate: formatDateTimeForBackend(formData.consultationDate),
         veterinarianName: formData.veterinarianName.trim(),
-        reason: formData.reason.trim(),
+        reasonCode: formData.reasonCode,
         description: formData.description?.trim() || undefined,
         diagnosis: formData.diagnosis?.trim() || undefined,
         treatmentPrescribed: formData.treatmentPrescribed?.trim() || undefined,
@@ -245,6 +257,7 @@ export function CreateConsultation() {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
+
 
   return (
     <div className="create-consultation-container">
@@ -364,22 +377,26 @@ export function CreateConsultation() {
               </div>
 
               <div className="form-group form-group-full">
-                <label htmlFor="reason">
-                  Motivo da Consulta <span className="required">*</span>
+                <label htmlFor="reasonCode">
+                  Tipo de Consulta <span className="required">*</span>
                 </label>
-                <input
-                  type="text"
-                  id="reason"
-                  name="reason"
-                  value={formData.reason}
+                <select
+                  id="reasonCode"
+                  name="reasonCode"
+                  value={formData.reasonCode}
                   onChange={handleChange}
-                  maxLength={255}
-                  placeholder="Ex: Checkup de rotina, Vacinação, Consulta de emergência"
                   required
                   disabled={loading}
-                />
-                {fieldErrors.reason && (
-                  <span className="field-error">{fieldErrors.reason}</span>
+                >
+
+                <option value="">Selecione um tipo</option>
+                {CONSULTATION_REASON_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+                </select>
+
+                {fieldErrors.reasonCode && (
+                  <span className="field-error">{fieldErrors.reasonCode}</span>
                 )}
               </div>
 
@@ -416,7 +433,7 @@ export function CreateConsultation() {
                   onChange={handleChange}
                   maxLength={255}
                   placeholder="Diagnóstico (se aplicável)"
-                  disabled={loading}
+                  disabled
                 />
                 {fieldErrors.diagnosis && (
                   <span className="field-error">{fieldErrors.diagnosis}</span>
@@ -430,7 +447,7 @@ export function CreateConsultation() {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  disabled={loading}
+                  disabled
                 >
                   <option value="SCHEDULED">Agendada</option>
                   <option value="COMPLETED">Concluída</option>
@@ -451,7 +468,7 @@ export function CreateConsultation() {
                   maxLength={5000}
                   rows={4}
                   placeholder="Descreva o tratamento prescrito, medicações, dosagens..."
-                  disabled={loading}
+                  disabled
                 />
                 {fieldErrors.treatmentPrescribed && (
                   <span className="field-error">{fieldErrors.treatmentPrescribed}</span>
@@ -468,7 +485,7 @@ export function CreateConsultation() {
                   maxLength={5000}
                   rows={4}
                   placeholder="Observações adicionais sobre a consulta..."
-                  disabled={loading}
+                  disabled
                 />
                 {fieldErrors.observations && (
                   <span className="field-error">{fieldErrors.observations}</span>
@@ -484,7 +501,7 @@ export function CreateConsultation() {
                   value={formData.nextAppointmentDate}
                   onChange={handleChange}
                   min={getCurrentDateTime()}
-                  disabled={loading}
+                  disabled
                 />
                 {fieldErrors.nextAppointmentDate && (
                   <span className="field-error">{fieldErrors.nextAppointmentDate}</span>

@@ -52,7 +52,8 @@ export interface ConsultationRequest {
   animalId: number;
   consultationDate: string;
   veterinarianName: string;
-  reason: string;
+  reason?: string;
+  reasonCode: number;
   description?: string;
   diagnosis?: string;
   treatmentPrescribed?: string;
