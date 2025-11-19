@@ -13,32 +13,32 @@ const specialties: Specialty[] = [
     id: 'clinico-geral',
     title: 'Clínico Geral',
     image: '/Clinico-geral.png',
-    veterinarian: 'Luna Lovegood',
+    veterinarian: '1',
   },
   {
     id: 'cardiologia',
     title: 'Cardiologia',
     image: '/cardiologista.png',
-    veterinarian: 'Dr. Minerva McGonagall',
+    veterinarian: '3',
   },
   {
     id: 'neurologia',
     title: 'Neurologia',
     image: '/Neurologista.png',
-    veterinarian: 'Dra. Albus Dumbledore',
+    veterinarian: '5',
   },
   {
     id: 'ortopedia',
     title: 'Ortopedia',
     image: '/Ortopedista.png',
-    veterinarian: 'Dr. Remus Lupin',
+    veterinarian: '4',
   },
   {
     id: 'oftalmologia',
     title: 'Oftalmologia',
     image: '/oftamologista.png',
-    veterinarian: 'Dra. Hermione Granger',
-  },
+      veterinarian: '2',
+    },
 ];
 
 export function Specialties() {

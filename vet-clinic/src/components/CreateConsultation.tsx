@@ -57,15 +57,21 @@ export function CreateConsultation() {
 
   const VETERINARIAN_OPTIONS = [
     // General practitioner
-    { value: 'Luna Lovegood', label: 'Luna Lovegood' },
-    // Cardiologist
-    { value: 'Dr. Minerva McGonagall', label: 'Dr. Minerva McGonagall' },
-    // Neurologist
-    { value: 'Dra. Albus Dumbledore', label: 'Dra. Albus Dumbledore' },
-    // Orthopedist
-    { value: 'Dr. Remus Lupin', label: 'Dr. Remus Lupin' },
-    // Ophthalmologist
-    { value: 'Dra. Hermione Granger', label: 'Dra. Hermione Granger' },
+    { value: 1, label: 'Dr. Amelia Rivers' },
+    { value: 2, label: 'Dr. Noah Bennett' },
+    { value: 3, label: 'Dr. Olivia Carter' },
+    { value: 4, label: 'Dr. Ethan Walker' },
+    { value: 5, label: 'Dr. Sophia Hayes' },
+    { value: 6, label: 'Dr. Lucas Griffin' },
+    { value: 7, label: 'Dr. Harper Collins' },
+    { value: 8, label: 'Dr. Mason Clarke' },
+    { value: 9, label: 'Dr. Isla Morgan' },
+    { value: 10, label: 'Dr. Leo Harrison' },
+    { value: 11, label: 'Dr. Aria Mitchell' },
+    { value: 12, label: 'Dr. Daniel Brooks' },
+    { value: 13, label: 'Dr. Chloe Parker' },
+    { value: 14, label: 'Dr. Henry Coleman' },
+    { value: 15, label: 'Dr. Avery Scott' },
   ];
 
   const getAutoVeterinarianByReason = (reasonCode: number): string | undefined => {
@@ -108,7 +114,7 @@ export function CreateConsultation() {
         setFormData({
           animalId: state.consultation.animal.id,
           consultationDate: toInputDateTime(state.consultation.consultationDate),
-          veterinarianName: state.consultation.veterinarianName,
+          veterinarianName: state.consultation.veterinarianId,
           reasonCode: (state.consultation.reasonCode ?? 0) as number,
           description: state.consultation.description || '',
           diagnosis: state.consultation.diagnosis || '',

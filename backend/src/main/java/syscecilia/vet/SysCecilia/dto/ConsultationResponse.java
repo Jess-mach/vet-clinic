@@ -16,6 +16,9 @@ public class ConsultationResponse {
     private LocalDateTime consultationDate;
 
     @Schema(description = "Name of the veterinarian")
+    private String veterinarianId;
+
+    @Schema(description = "Name of the veterinarian")
     private String veterinarianName;
 
     @Schema(
@@ -71,7 +74,8 @@ public class ConsultationResponse {
         this.id = id;
         this.animal = animal;
         this.consultationDate = consultationDate;
-        this.veterinarianName = veterinarianName;
+        this.veterinarianName = getVeterinarianSelect(veterinarianName);
+        this.veterinarianId = veterinarianName;
         this.reasonCode = reasonCode;
         this.reason = reason;
         this.description = description;
@@ -82,6 +86,28 @@ public class ConsultationResponse {
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    private String getVeterinarianSelect(String veterinarianId) {
+        switch (veterinarianId) {
+            case "1":  return "Dr. Amelia Rivers";
+            case "2":  return "Dr. Noah Bennett";
+            case "3":  return "Dr. Olivia Carter";
+            case "4":  return "Dr. Ethan Walker";
+            case "5":  return "Dr. Sophia Hayes";
+            case "6":  return "Dr. Lucas Griffin";
+            case "7":  return "Dr. Harper Collins";
+            case "8":  return "Dr. Mason Clarke";
+            case "9":  return "Dr. Isla Morgan";
+            case "10": return "Dr. Leo Harrison";
+            case "11": return "Dr. Aria Mitchell";
+            case "12": return "Dr. Daniel Brooks";
+            case "13": return "Dr. Chloe Parker";
+            case "14": return "Dr. Henry Coleman";
+            case "15": return "Dr. Avery Scott";
+            default:
+                throw new IllegalArgumentException("Unknown veterinarian id: " + id);
+        }
     }
 
     // Getters and Setters
@@ -195,6 +221,14 @@ public class ConsultationResponse {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getVeterinarianId() {
+        return veterinarianId;
+    }
+
+    public void setVeterinarianId(String veterinarianId) {
+        this.veterinarianId = veterinarianId;
     }
 }
 

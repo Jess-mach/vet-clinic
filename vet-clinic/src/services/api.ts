@@ -3,6 +3,7 @@ import type { Consultation, ConsultationFilters, ConsultationRequest, ApiError a
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -195,6 +196,8 @@ export async function deleteAnimal(id: number): Promise<void> {
     throw new ApiError(500, 'Network error or server unavailable');
   }
 }
+
+
 
 // ==================== CONSULTATION FUNCTIONS ====================
 

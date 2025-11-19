@@ -12,6 +12,7 @@ export interface Consultation {
   animal: AnimalBasicInfo;
   consultationDate: string;
   veterinarianName: string;
+  veterinarianId: string;
   reason: string;
   reasonCode: number;
   description?: string;
