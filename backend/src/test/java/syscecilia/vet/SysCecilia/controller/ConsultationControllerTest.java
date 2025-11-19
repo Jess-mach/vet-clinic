@@ -361,6 +361,101 @@ public class ConsultationControllerTest {
     }
 
     @Test
+    @DisplayName("Should update consultation successfully")
+    public void testUpdateConsultation() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 11, 15, 14, 30));
+        request.setVeterinarianName("Dr. Silva");
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+        request.setDescription("Updated description");
+        request.setDiagnosis("Updated diagnosis");
+
+        ConsultationResponse updatedConsultation = new ConsultationResponse(
+                1L,
+                testAnimal,
+                testConsultation.getConsultationDate(),
+                testConsultation.getVeterinarianName(),
+                testConsultation.getReasonCode(),
+                testConsultation.getReason(),
+                "Updated description",
+                "Updated diagnosis",
+                testConsultation.getTreatmentPrescribed(),
+                testConsultation.getObservations(),
+                testConsultation.getNextAppointmentDate(),
+                testConsultation.getStatus(),
+                testConsultation.getCreatedAt(),
+                LocalDateTime.now()
+        );
+
+        when(consultationService.update(eq(1L), any())).thenReturn(updatedConsultation);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/consultations/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.description", is("Updated description")))
+                .andExpect(jsonPath("$.diagnosis", is("Updated diagnosis")));
+
+        verify(consultationService, times(1)).update(eq(1L), any());
+    }
+
+    @Test
+    @DisplayName("Should return 400 when updating consultation with invalid data")
+    public void testUpdateConsultationWithInvalidData() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        // Missing required fields like animalId and consultationDate triggers validation
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/consultations/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(consultationService, never()).update(anyLong(), any());
+    }
+
+    @Test
+    @DisplayName("Should return 404 when consultation not found for update")
+    public void testUpdateConsultationNotFound() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(999L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianName("Dr. Silva");
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
+        when(consultationService.update(eq(999L), any()))
+                .thenThrow(new ResourceNotFoundException("Consultation not found with id: 999"));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/consultations/999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+
+        verify(consultationService, times(1)).update(eq(999L), any());
+    }
+
+    @Test
+    @DisplayName("Should return 422 when business rule violation occurs on update")
+    public void testUpdateConsultationBusinessRuleViolation() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianName("Dr. Silva");
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
+        when(consultationService.update(eq(1L), any()))
+                .thenThrow(new BusinessException("Business rule violation"));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/consultations/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnprocessableEntity());
+
+        verify(consultationService, times(1)).update(eq(1L), any());
+    }
+
+    @Test
     @DisplayName("Should create consultation successfully")
     public void testCreateConsultation() throws Exception {
         ConsultationRequest request = new ConsultationRequest();

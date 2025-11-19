@@ -13,6 +13,7 @@ export interface Consultation {
   consultationDate: string;
   veterinarianName: string;
   reason: string;
+  reasonCode: number;
   description?: string;
   diagnosis?: string;
   treatmentPrescribed?: string;

@@ -376,6 +376,83 @@ public class ConsultationServiceTest {
     }
 
     @Test
+    @DisplayName("Should update consultation clinical information and next appointment when COMPLETED without changing date")
+    public void testUpdateCompletedConsultationClinicalInfo() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setDescription("Updated description");
+        request.setDiagnosis("Updated diagnosis");
+        request.setTreatmentPrescribed("Updated treatment");
+        request.setObservations("Updated observations");
+        request.setNextAppointmentDate(LocalDateTime.of(2026, 1, 10, 10, 0));
+
+        when(consultationRepository.findById(1L)).thenReturn(Optional.of(testConsultation));
+        when(consultationRepository.save(any(Consultation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ConsultationResponse result = consultationService.update(1L, request);
+
+        assertNotNull(result);
+        assertEquals("Updated description", result.getDescription());
+        assertEquals("Updated diagnosis", result.getDiagnosis());
+        assertEquals("Updated treatment", result.getTreatmentPrescribed());
+        assertEquals("Updated observations", result.getObservations());
+        assertEquals(LocalDateTime.of(2026, 1, 10, 10, 0), result.getNextAppointmentDate());
+
+        // Data da consulta permanece inalterada
+        assertEquals(testConsultation.getConsultationDate(), result.getConsultationDate());
+
+        verify(consultationRepository, times(1)).findById(1L);
+        verify(consultationRepository, times(1)).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should throw BusinessException when trying to change date of COMPLETED consultation")
+    public void testUpdateCompletedConsultationChangeDateNotAllowed() {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 1, 10, 0)); // different date
+
+        when(consultationRepository.findById(1L)).thenReturn(Optional.of(testConsultation));
+
+        assertThrows(BusinessException.class, () -> consultationService.update(1L, request));
+
+        verify(consultationRepository, times(1)).findById(1L);
+        verify(consultationRepository, never()).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should update scheduled consultation date and veterinarian when available")
+    public void testUpdateScheduledConsultationChangeDateAndVeterinarian() {
+        Consultation scheduledConsultation = new Consultation();
+        scheduledConsultation.setId(5L);
+        scheduledConsultation.setAnimal(testAnimal);
+        scheduledConsultation.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        scheduledConsultation.setVeterinarianName("Dr. Silva");
+        scheduledConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+        scheduledConsultation.setStatus("SCHEDULED");
+
+        ConsultationRequest request = new ConsultationRequest();
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 16, 10, 0));
+        request.setVeterinarianName("Dr. Costa");
+        request.setReasonCode(ConsultationReasonType.VACCINATION.getId());
+
+        when(consultationRepository.findById(5L)).thenReturn(Optional.of(scheduledConsultation));
+        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
+                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(consultationRepository.save(any(Consultation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ConsultationResponse result = consultationService.update(5L, request);
+
+        assertNotNull(result);
+        assertEquals(LocalDateTime.of(2025, 12, 16, 10, 0), result.getConsultationDate());
+        assertEquals("Dr. Costa", result.getVeterinarianName());
+        assertEquals(ConsultationReasonType.VACCINATION.getId(), result.getReasonCode());
+
+        verify(consultationRepository, times(1)).findById(5L);
+        verify(consultationRepository, times(1)).save(any(Consultation.class));
+    }
+
+    @Test
     @DisplayName("Should create consultation with all optional fields")
     public void testCreateConsultationWithAllFields() {
         ConsultationRequest request = new ConsultationRequest();

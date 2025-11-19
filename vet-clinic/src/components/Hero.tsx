@@ -14,7 +14,7 @@ export function Hero() {
             Consultas, exames e vacinas para cuidar do seu pet em todas as fases da vida.
           </p>
           <div className="hero-actions">
-            <a href="#agendar" className="btn btn-primary btn-large">
+            <a href="/cadastrar-consulta" className="btn btn-primary btn-large">
               🐾 Agendar consulta
             </a>
             <button 

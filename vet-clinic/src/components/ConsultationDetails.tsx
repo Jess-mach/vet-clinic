@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Consultation } from '../types/consultation';
 import { getConsultationById, ApiError } from '../services/api';
 import './ConsultationDetails.css';
@@ -12,6 +13,8 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
   const [consultation, setConsultation] = useState<Consultation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadConsultation = async () => {
@@ -55,6 +58,12 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
     if (statusLower === 'scheduled') return 'status-scheduled';
     if (statusLower === 'cancelled') return 'status-cancelled';
     return 'status-default';
+  };
+
+  const handleEdit = () => {
+    if (consultation) {
+      navigate(`/consultas/${consultation.id}/editar`, { state: { consultation: consultation } });
+    }
   };
 
   if (loading) {
@@ -200,6 +209,16 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Botão para ir para a página de agendamento/edição da consulta */}
+        <div className="consultation-details-footer">
+          <button
+            className="btn btn-primary"
+            onClick={handleEdit}
+          >
+            Editar consulta
+          </button>
         </div>
       </div>
     </div>

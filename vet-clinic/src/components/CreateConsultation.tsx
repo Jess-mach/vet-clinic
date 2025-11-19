@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createConsultation, ApiError } from '../services/api';
-import type { ConsultationRequest } from '../types/consultation';
+import { createConsultation,  updateConsultation, ApiError} from '../services/api';
+import type { Consultation, ConsultationRequest } from '../types/consultation';
 import type { Animal } from '../types/animal';
 import { ErrorModal } from './ErrorModal';
 import { AnimalSearchModal } from './AnimalSearchModal';
@@ -24,6 +24,9 @@ export function CreateConsultation() {
   const [errorModalDetails, setErrorModalDetails] = useState<Record<string, string>>({});
   const [animalSearchModalOpen, setAnimalSearchModalOpen] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingConsultationId, setEditingConsultationId] = useState<number | null>(null);
+  const [consultation, setConsultation] = useState<Consultation | null>(null);
 
   const [formData, setFormData] = useState<ConsultationRequest>({
     animalId: 0,
@@ -52,18 +55,122 @@ export function CreateConsultation() {
     { value: 11, label: 'Emergência' },
   ];
 
+  const VETERINARIAN_OPTIONS = [
+    // General practitioner
+    { value: 'Luna Lovegood', label: 'Luna Lovegood' },
+    // Cardiologist
+    { value: 'Dr. Minerva McGonagall', label: 'Dr. Minerva McGonagall' },
+    // Neurologist
+    { value: 'Dra. Albus Dumbledore', label: 'Dra. Albus Dumbledore' },
+    // Orthopedist
+    { value: 'Dr. Remus Lupin', label: 'Dr. Remus Lupin' },
+    // Ophthalmologist
+    { value: 'Dra. Hermione Granger', label: 'Dra. Hermione Granger' },
+  ];
+
+  const getAutoVeterinarianByReason = (reasonCode: number): string | undefined => {
+    switch (reasonCode) {
+      // General practitioner and generic exams
+      case 1: // Consulta com clinico geral
+      case 6: // Exames
+      case 7: // Exame de imagem
+      case 8: // Vacinação
+      case 10: // Retorno
+        return 'Luna Lovegood';
+      case 2: // Oftalmologista
+        return 'Dra. Hermione Granger';
+      case 3: // Cardiologista
+        return 'Dr. Minerva McGonagall';
+      case 4: // Ortopedista
+        return 'Dr. Remus Lupin';
+      case 5: // Neurologista
+        return 'Dra. Albus Dumbledore';
+      // Cirurgia (9) e Emergência (11) -> usuário escolhe manualmente
+      case 9:
+      case 11:
+      default:
+        return undefined;
+    }
+  };
+
+
+  useEffect(() => {
+    
+
+    const state = location.state as { consultation?: Consultation } | null;
+
+
+    if (state?.consultation) {
+        setConsultation(state?.consultation);
+        setIsEditMode(true);
+        setEditingConsultationId(state.consultation.id);
+        setSelectedAnimal(state.consultation.animal as Animal);
+        setFormData({
+          animalId: state.consultation.animal.id,
+          consultationDate: toInputDateTime(state.consultation.consultationDate),
+          veterinarianName: state.consultation.veterinarianName,
+          reasonCode: (state.consultation.reasonCode ?? 0) as number,
+          description: state.consultation.description || '',
+          diagnosis: state.consultation.diagnosis || '',
+          treatmentPrescribed: state.consultation.treatmentPrescribed || '',
+          observations: state.consultation.observations || '',
+          nextAppointmentDate: toInputDateTime(state.consultation.nextAppointmentDate ?? ''),
+          status: state.consultation.status,
+        });
+      }
+    }, [location.state]);
+  
+  const toInputDateTime = (isoDateTime: string | null | undefined): string => {
+    if (!isoDateTime) return '';
+    // Backend envia com segundos; input datetime-local espera até minutos
+    return isoDateTime.substring(0, 16);
+  };
+
+  const formatDateTimeForBackend = (dateTime: string): string => {
+    if (!dateTime) return '';
+    if (dateTime.length === 16) {
+      return `${dateTime}:00`;
+    }
+    return dateTime;
+  };
+
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
+
+    if (name === 'reasonCode') {
+      const numericReasonCode = value === '' ? 0 : Number(value);
+
+      setFormData(prev => {
+        const updated = { ...prev, reasonCode: numericReasonCode };
+        const autoVet = getAutoVeterinarianByReason(numericReasonCode);
+
+        if (autoVet) {
+          updated.veterinarianName = autoVet;
+        }
+
+        return updated;
+      });
+
+      if (fieldErrors.reasonCode) {
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.reasonCode;
+          return newErrors;
+        });
+      }
+
+      setGeneralError(null);
+      return;
+    }
+
     if (value === '') {
       setFormData(prev => ({ ...prev, [name]: undefined }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
-    
-    // Clear field error when user starts typing
+
     if (fieldErrors[name]) {
       setFieldErrors(prev => {
         const newErrors = { ...prev };
@@ -112,7 +219,7 @@ export function CreateConsultation() {
     }
 
     if (!formData.reasonCode || formData.reasonCode === 0) {
-      errors.reason = 'Motivo da consulta é obrigatório';
+      errors.reasonCode = 'Motivo da consulta é obrigatório';
     } 
 
     // Optional field validations
@@ -178,13 +285,29 @@ export function CreateConsultation() {
         status: formData.status as 'COMPLETED' | 'SCHEDULED' | 'CANCELLED' || undefined,
       };
 
-      await createConsultation(requestData);
-      setSuccess(true);
-      
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        navigate('/consultas');
-      }, 2000);
+      if (isEditMode && editingConsultationId) {
+        // Update existing animal
+
+        await updateConsultation(editingConsultationId, requestData);
+        setSuccess(true);
+        
+        // Redirect after 2 seconds
+        setTimeout(() => {
+          navigate('/pets');
+        }, 2000);
+      } else {
+        // Create new animal
+        
+          await createConsultation(requestData);
+          setSuccess(true);
+          
+          // Redirect after 2 seconds
+          setTimeout(() => {
+            navigate('/consultas');
+          }, 2000);
+
+      }
+
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 400 && error.errorData?.errors) {
@@ -263,7 +386,7 @@ export function CreateConsultation() {
     <div className="create-consultation-container">
       <div className="create-consultation-content">
         <div className="create-consultation-header">
-          <h1>📅 Agendar Consulta</h1>
+          <h1>{isEditMode ? '✏️ Editar Consulta' : '📅 Agendar Consulta'} </h1>
           <p>Preencha os dados abaixo para agendar uma nova consulta</p>
         </div>
 
@@ -316,15 +439,15 @@ export function CreateConsultation() {
                     </p>
                     <p className="selected-animal-owner">👤 {selectedAnimal.ownerName}</p>
                   </div>
-                  <button
+                 {!isEditMode && <button
                     type="button"
                     className="remove-animal-btn"
                     onClick={handleRemoveAnimal}
-                    disabled={loading}
+                    disabled={loading || (isEditMode)}
                     title="Remover animal selecionado"
                   >
                     ×
-                  </button>
+                  </button>}
                 </div>
               )}
               {fieldErrors.animalId && (
@@ -349,7 +472,10 @@ export function CreateConsultation() {
                   onChange={handleChange}
                   min={getCurrentDateTime()}
                   required
-                  disabled={loading}
+                  disabled={
+                    consultation?.status === 'CANCELLED' ||
+                    consultation?.status === 'COMPLETED'
+                  }
                 />
                 {fieldErrors.consultationDate && (
                   <span className="field-error">{fieldErrors.consultationDate}</span>
@@ -360,17 +486,21 @@ export function CreateConsultation() {
                 <label htmlFor="veterinarianName">
                   Nome do Veterinário <span className="required">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   id="veterinarianName"
                   name="veterinarianName"
                   value={formData.veterinarianName}
                   onChange={handleChange}
-                  maxLength={100}
-                  placeholder="Ex: Dr. Silva"
                   required
                   disabled={loading}
-                />
+                >
+                  <option value="">Selecione o veterinário</option>
+                  {VETERINARIAN_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
                 {fieldErrors.veterinarianName && (
                   <span className="field-error">{fieldErrors.veterinarianName}</span>
                 )}
@@ -433,7 +563,7 @@ export function CreateConsultation() {
                   onChange={handleChange}
                   maxLength={255}
                   placeholder="Diagnóstico (se aplicável)"
-                  disabled
+                  disabled={!isEditMode}
                 />
                 {fieldErrors.diagnosis && (
                   <span className="field-error">{fieldErrors.diagnosis}</span>
@@ -447,7 +577,10 @@ export function CreateConsultation() {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  disabled
+                  disabled={!isEditMode ||
+                    (consultation?.status === 'CANCELLED' ||
+                    consultation?.status === 'COMPLETED')
+                  }
                 >
                   <option value="SCHEDULED">Agendada</option>
                   <option value="COMPLETED">Concluída</option>
@@ -468,7 +601,7 @@ export function CreateConsultation() {
                   maxLength={5000}
                   rows={4}
                   placeholder="Descreva o tratamento prescrito, medicações, dosagens..."
-                  disabled
+                  disabled={!isEditMode}
                 />
                 {fieldErrors.treatmentPrescribed && (
                   <span className="field-error">{fieldErrors.treatmentPrescribed}</span>
@@ -485,7 +618,7 @@ export function CreateConsultation() {
                   maxLength={5000}
                   rows={4}
                   placeholder="Observações adicionais sobre a consulta..."
-                  disabled
+                  disabled={!isEditMode}
                 />
                 {fieldErrors.observations && (
                   <span className="field-error">{fieldErrors.observations}</span>
@@ -501,7 +634,7 @@ export function CreateConsultation() {
                   value={formData.nextAppointmentDate}
                   onChange={handleChange}
                   min={getCurrentDateTime()}
-                  disabled
+                  disabled={!isEditMode}
                 />
                 {fieldErrors.nextAppointmentDate && (
                   <span className="field-error">{fieldErrors.nextAppointmentDate}</span>
@@ -524,7 +657,7 @@ export function CreateConsultation() {
               className="btn btn-primary"
               disabled={loading}
             >
-              {loading ? 'Agendando...' : 'Agendar Consulta'}
+              {isEditMode ? 'Salvar' : 'Agendar'}
             </button>
           </div>
         </form>

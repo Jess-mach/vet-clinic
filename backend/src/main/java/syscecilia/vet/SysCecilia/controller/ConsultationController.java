@@ -201,6 +201,52 @@ public class ConsultationController {
         return ResponseEntity.ok(consultation);
     }
 
+    @PutMapping("/{id}")
+    @Operation(
+            summary = "Update consultation",
+            description = "Updates an existing consultation. " +
+                    "If the consultation is COMPLETED, the consultationDate cannot be changed, " +
+                    "but clinical information and nextAppointmentDate can be updated."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Consultation successfully updated",
+                    content = @Content(schema = @Schema(implementation = ConsultationResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validation error - one or more fields are invalid",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Consultation not found",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "Business rule violation",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error"
+            )
+    })
+    public ResponseEntity<ConsultationResponse> updateConsultation(
+            @Parameter(description = "Consultation ID", required = true, example = "1")
+            @PathVariable @Min(value = 1, message = "ID must be greater than 0") Long id,
+            @RequestBody(
+                    description = "Consultation data to be updated",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = ConsultationRequest.class))
+            )
+            @Valid @org.springframework.web.bind.annotation.RequestBody ConsultationRequest request) {
+        ConsultationResponse updatedConsultation = consultationService.update(id, request);
+        return ResponseEntity.ok(updatedConsultation);
+    }
+
     @PostMapping
     @Operation(
             summary = "Create a new consultation",

@@ -59,6 +59,7 @@ function AppContent() {
             <Route path="/pets" element={<PetsPage />} />
             <Route path="/consultas" element={<ConsultationsPage />} />
             <Route path="/cadastrar-consulta" element={<CreateConsultation />} />
+            <Route path="/consultas/:id/editar" element={<CreateConsultation />} />
           </Routes>
         </main>
         <Footer />

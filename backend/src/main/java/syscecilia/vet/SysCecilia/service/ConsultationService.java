@@ -88,12 +88,70 @@ public class ConsultationService {
         LocalDateTime consultationDate = request.getConsultationDate();
         String veterinarianName = request.getVeterinarianName();
 
-        // Validar regras de negócio
-        validateBusinessRules(consultationDate, veterinarianName, request.getAnimalId());
+        // Validar regras de negócio para nova consulta
+        validateBusinessRules(consultationDate, veterinarianName, request.getAnimalId(), null);
 
         Consultation consultation = convertToEntity(request, animal);
         Consultation savedConsultation = consultationRepository.save(consultation);
 
+        return convertToResponse(savedConsultation);
+    }
+
+    @Transactional
+    public ConsultationResponse update(Long id, ConsultationRequest request) {
+        Consultation existingConsultation = consultationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consultation not found with id: " + id));
+
+        boolean isCompleted = "COMPLETED".equalsIgnoreCase(existingConsultation.getStatus());
+
+        // Regra: se a consulta estiver COMPLETED, não pode alterar a data da consulta
+        if (isCompleted
+                && request.getConsultationDate() != null
+                && !request.getConsultationDate().isEqual(existingConsultation.getConsultationDate())) {
+            throw new BusinessException(
+                    "Cannot change consultation date of a COMPLETED consultation",
+                    "This consultation is already completed and its date cannot be changed. " +
+                            "You can only update clinical information and schedule a next appointment.");
+        }
+
+        // Se a consulta não estiver COMPLETED e a data/veterinário forem alterados, validar regras de negócio
+        if (!isCompleted) {
+            LocalDateTime newDate = request.getConsultationDate() != null
+                    ? request.getConsultationDate()
+                    : existingConsultation.getConsultationDate();
+            String newVeterinarian = request.getVeterinarianName() != null && !request.getVeterinarianName().isBlank()
+                    ? request.getVeterinarianName()
+                    : existingConsultation.getVeterinarianName();
+
+            if (!newDate.isEqual(existingConsultation.getConsultationDate())
+                    || !newVeterinarian.equals(existingConsultation.getVeterinarianName())) {
+                Long animalId = existingConsultation.getAnimal() != null
+                        ? existingConsultation.getAnimal().getId()
+                        : request.getAnimalId();
+                validateBusinessRules(newDate, newVeterinarian, animalId, existingConsultation.getId());
+                existingConsultation.setConsultationDate(newDate);
+                existingConsultation.setVeterinarianName(newVeterinarian);
+            }
+        }
+
+        // Atualizar motivo, descrição e campos clínicos
+        if (request.getReasonCode() != null) {
+            ConsultationReasonType reasonType = ConsultationReasonType.fromId(request.getReasonCode());
+            existingConsultation.setReasonCode(reasonType.getId());
+        }
+
+        existingConsultation.setDescription(request.getDescription());
+        existingConsultation.setDiagnosis(request.getDiagnosis());
+        existingConsultation.setTreatmentPrescribed(request.getTreatmentPrescribed());
+        existingConsultation.setObservations(request.getObservations());
+        existingConsultation.setNextAppointmentDate(request.getNextAppointmentDate());
+
+        // Atualizar status se fornecido
+        if (request.getStatus() != null && !request.getStatus().trim().isEmpty()) {
+            existingConsultation.setStatus(request.getStatus());
+        }
+
+        Consultation savedConsultation = consultationRepository.save(existingConsultation);
         return convertToResponse(savedConsultation);
     }
 
@@ -122,15 +180,18 @@ public class ConsultationService {
         }
     }
 
-    private void validateBusinessRules(LocalDateTime consultationDate, String veterinarianName, Long animalId) {
+    private void validateBusinessRules(LocalDateTime consultationDate,
+                                       String veterinarianName,
+                                       Long animalId,
+                                       Long currentConsultationId) {
         // Validar horário de funcionamento
         validateClinicHours(consultationDate);
 
         // Validar se já existe consulta no mesmo horário para o mesmo veterinário
-        validateVeterinarianAvailability(consultationDate, veterinarianName);
+        validateVeterinarianAvailability(consultationDate, veterinarianName, currentConsultationId);
 
         // Validar se já existe consulta no mesmo horário para o mesmo animal
-        validateAnimalAvailability(consultationDate, animalId);
+        validateAnimalAvailability(consultationDate, animalId, currentConsultationId);
     }
 
     private void validateClinicHours(LocalDateTime consultationDate) {
@@ -176,13 +237,22 @@ public class ConsultationService {
         }
     }
 
-    private void validateVeterinarianAvailability(LocalDateTime consultationDate, String veterinarianName) {
+    private void validateVeterinarianAvailability(LocalDateTime consultationDate,
+                                                  String veterinarianName,
+                                                  Long currentConsultationId) {
         // Buscar consultas no mesmo horário para o mesmo veterinário que não estejam canceladas
         List<Consultation> existingConsultations = consultationRepository
                 .findByConsultationDateAndVeterinarianNameAndStatusNot(
                         consultationDate, veterinarianName, "CANCELLED");
 
         if (!existingConsultations.isEmpty()) {
+            boolean hasConflict = existingConsultations.stream()
+                    .anyMatch(c -> currentConsultationId == null || !c.getId().equals(currentConsultationId));
+
+            if (!hasConflict) {
+                return;
+            }
+
             throw new BusinessException(
                     String.format("Veterinarian %s already has a consultation scheduled at %s", 
                             veterinarianName, consultationDate),
@@ -192,13 +262,22 @@ public class ConsultationService {
         }
     }
 
-    private void validateAnimalAvailability(LocalDateTime consultationDate, Long animalId) {
+    private void validateAnimalAvailability(LocalDateTime consultationDate,
+                                            Long animalId,
+                                            Long currentConsultationId) {
         // Buscar consultas no mesmo horário para o mesmo animal que não estejam canceladas
         List<Consultation> existingConsultations = consultationRepository
                 .findByConsultationDateAndAnimalIdAndStatusNot(
                         consultationDate, animalId, "CANCELLED");
 
         if (!existingConsultations.isEmpty()) {
+            boolean hasConflict = existingConsultations.stream()
+                    .anyMatch(c -> currentConsultationId == null || !c.getId().equals(currentConsultationId));
+
+            if (!hasConflict) {
+                return;
+            }
+
             throw new BusinessException(
                     String.format("Animal already has a consultation scheduled at %s", consultationDate),
                     "This animal already has a consultation scheduled at this date and time. " +
