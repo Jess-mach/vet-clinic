@@ -64,6 +64,7 @@ public class ConsultationControllerTest {
                 testAnimal,
                 LocalDateTime.of(2025, 11, 15, 14, 30),
                 "Dr. Silva",
+                ConsultationReasonType.GENERAL_CHECKUP.getId(),
                 ConsultationReasonType.GENERAL_CHECKUP.getDescription(),
                 "General health examination performed",
                 "Healthy",
@@ -87,6 +88,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.veterinarianName", is("Dr. Silva")))
                 .andExpect(jsonPath("$.reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())))
+                .andExpect(jsonPath("$.reasonCode", is(ConsultationReasonType.GENERAL_CHECKUP.getId())))
                 .andExpect(jsonPath("$.animal.name", is("Rex")))
                 .andExpect(jsonPath("$.animal.species", is("Dog")));
 
@@ -296,6 +298,7 @@ public class ConsultationControllerTest {
                 testAnimal,
                 LocalDateTime.of(2025, 12, 1, 14, 0),
                 "Dr. Costa",
+                null,
                 "Scheduled checkup",
                 "Future appointment",
                 null,
@@ -364,7 +367,7 @@ public class ConsultationControllerTest {
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         request.setVeterinarianName("Dr. Silva");
-        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         request.setDescription("General health examination");
         request.setStatus("SCHEDULED");
 
@@ -373,7 +376,8 @@ public class ConsultationControllerTest {
                 testAnimal,
                 request.getConsultationDate(),
                 request.getVeterinarianName(),
-                request.getReason(),
+                request.getReasonCode(),
+                ConsultationReasonType.GENERAL_CHECKUP.getDescription(),
                 request.getDescription(),
                 null,
                 null,
@@ -421,7 +425,7 @@ public class ConsultationControllerTest {
         request.setAnimalId(999L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         request.setVeterinarianName("Dr. Silva");
-        request.setReason(ConsultationReasonType.GENERAL_CHECKUP.getDescription());
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         when(consultationService.create(any()))
                 .thenThrow(new ResourceNotFoundException("Animal not found with id: 999"));
@@ -441,7 +445,7 @@ public class ConsultationControllerTest {
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         request.setVeterinarianName("Dr. Silva");
-        request.setReason("Routine checkup");
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         request.setStatus(null);
 
         ConsultationResponse createdConsultation = new ConsultationResponse(
@@ -449,7 +453,8 @@ public class ConsultationControllerTest {
                 testAnimal,
                 request.getConsultationDate(),
                 request.getVeterinarianName(),
-                request.getReason(),
+                request.getReasonCode(),
+                null,
                 null,
                 null,
                 null,

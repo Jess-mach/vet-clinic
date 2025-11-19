@@ -124,7 +124,8 @@ public class ConsultationControllerIntegrationTest {
                 .andExpect(jsonPath("$.id", is(consultation1.getId().intValue())))
                 .andExpect(jsonPath("$.animal.name", is("Rex")))
                 .andExpect(jsonPath("$.veterinarianName", is("Dr. Silva")))
-                .andExpect(jsonPath("$.reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())));
+                .andExpect(jsonPath("$.reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())))
+                .andExpect(jsonPath("$.reasonCode", is(ConsultationReasonType.GENERAL_CHECKUP.getId())));
     }
 
     @Test
@@ -243,7 +244,8 @@ public class ConsultationControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].reason", is(ConsultationReasonType.VACCINATION.getDescription())));
+                .andExpect(jsonPath("$.content[0].reason", is(ConsultationReasonType.VACCINATION.getDescription())))
+                .andExpect(jsonPath("$.content[0].reasonCode", is(ConsultationReasonType.VACCINATION.getId())));
     }
 
     @Test
@@ -286,7 +288,8 @@ public class ConsultationControllerIntegrationTest {
                 .andExpect(jsonPath("$.content", hasSize(1)))
                 .andExpect(jsonPath("$.content[0].animal.name", is("Rex")))
                 .andExpect(jsonPath("$.content[0].veterinarianName", is("Dr. Silva")))
-                .andExpect(jsonPath("$.content[0].reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())));
+                .andExpect(jsonPath("$.content[0].reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())))
+                .andExpect(jsonPath("$.content[0].reasonCode", is(ConsultationReasonType.GENERAL_CHECKUP.getId())));
     }
 
     @Test
@@ -303,7 +306,8 @@ public class ConsultationControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].animal.name", is("Rex")));
+                .andExpect(jsonPath("$.content[0].animal.name", is("Rex")))
+                .andExpect(jsonPath("$.content[0].reasonCode", is(ConsultationReasonType.GENERAL_CHECKUP.getId())));
     }
 
     @Test

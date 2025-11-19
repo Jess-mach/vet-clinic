@@ -41,6 +41,7 @@ class ConsultationResponseTest {
         AnimalBasicInfo animal = new AnimalBasicInfo(1L, "Rex", "Dog", "Golden Retriever", "John Doe");
         LocalDateTime consultationDate = LocalDateTime.of(2024, 1, 15, 10, 30);
         String veterinarianName = "Dr. Silva";
+        Integer reasonCode = 1;
         String reason = "Routine checkup";
         String description = "Regular health examination";
         String diagnosis = "Healthy";
@@ -53,9 +54,9 @@ class ConsultationResponseTest {
         
         // When
         ConsultationResponse response = new ConsultationResponse(
-            id, animal, consultationDate, veterinarianName, reason, description,
-            diagnosis, treatmentPrescribed, observations, nextAppointmentDate,
-            status, createdAt, updatedAt
+            id, animal, consultationDate, veterinarianName, reasonCode, reason,
+            description, diagnosis, treatmentPrescribed, observations,
+            nextAppointmentDate, status, createdAt, updatedAt
         );
         
         // Then
@@ -262,7 +263,7 @@ class ConsultationResponseTest {
     void shouldHandleNullValues() {
         // Given & When
         ConsultationResponse response = new ConsultationResponse(
-            null, null, null, null, null, null, null, null, null, null, null, null, null
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null
         );
         
         // Then
@@ -270,6 +271,7 @@ class ConsultationResponseTest {
         assertNull(response.getAnimal());
         assertNull(response.getConsultationDate());
         assertNull(response.getVeterinarianName());
+        assertNull(response.getReasonCode());
         assertNull(response.getReason());
         assertNull(response.getDescription());
         assertNull(response.getDiagnosis());
