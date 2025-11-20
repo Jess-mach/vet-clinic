@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createConsultation,  updateConsultation, ApiError} from '../services/api';
+import { createConsultation,  updateConsultation, ApiError, getVeterinarians} from '../services/api';
 import type { Consultation, ConsultationRequest } from '../types/consultation';
 import type { Animal } from '../types/animal';
+import type { Veterinarian } from '../types/veterinarian';
 import { ErrorModal } from './ErrorModal';
 import { AnimalSearchModal } from './AnimalSearchModal';
 import './CreateConsultation.css';
@@ -14,6 +15,7 @@ export function CreateConsultation() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const veterinarianFromUrl = searchParams.get('veterinarian') || '';
+  const specialtyCodeFromUrl = searchParams.get('specialtyCode');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -27,12 +29,14 @@ export function CreateConsultation() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingConsultationId, setEditingConsultationId] = useState<number | null>(null);
   const [consultation, setConsultation] = useState<Consultation | null>(null);
+  const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([]);
+  const [loadingVeterinarians, setLoadingVeterinarians] = useState(false);
 
   const [formData, setFormData] = useState<ConsultationRequest>({
     animalId: 0,
     consultationDate: '',
-    veterinarianName: veterinarianFromUrl, // Pré-preenche com o valor da URL
-    reasonCode: 0,
+    veterinarianName: '',
+    reasonCode: specialtyCodeFromUrl ? parseInt(specialtyCodeFromUrl, 10) : 0,
     description: '',
     diagnosis: '',
     treatmentPrescribed: '',
@@ -55,48 +59,70 @@ export function CreateConsultation() {
     { value: 11, label: 'Emergência' },
   ];
 
-  const VETERINARIAN_OPTIONS = [
-    // General practitioner
-    { value: 1, label: 'Dr. Amelia Rivers' },
-    { value: 2, label: 'Dr. Noah Bennett' },
-    { value: 3, label: 'Dr. Olivia Carter' },
-    { value: 4, label: 'Dr. Ethan Walker' },
-    { value: 5, label: 'Dr. Sophia Hayes' },
-    { value: 6, label: 'Dr. Lucas Griffin' },
-    { value: 7, label: 'Dr. Harper Collins' },
-    { value: 8, label: 'Dr. Mason Clarke' },
-    { value: 9, label: 'Dr. Isla Morgan' },
-    { value: 10, label: 'Dr. Leo Harrison' },
-    { value: 11, label: 'Dr. Aria Mitchell' },
-    { value: 12, label: 'Dr. Daniel Brooks' },
-    { value: 13, label: 'Dr. Chloe Parker' },
-    { value: 14, label: 'Dr. Henry Coleman' },
-    { value: 15, label: 'Dr. Avery Scott' },
-  ];
+  // Fetch veterinarians from API
+  useEffect(() => {
+    // Don't fetch if in edit mode - we'll load all veterinarians for edit
+    if (isEditMode) {
+      return;
+    }
+    
+    const fetchVeterinarians = async () => {
+      setLoadingVeterinarians(true);
+      try {
+        const filters: { specialtyCode?: number } = {};
+        
+        // If specialtyCode comes from URL (from Specialties page), filter by it
+        if (specialtyCodeFromUrl) {
+          const specialtyCode = parseInt(specialtyCodeFromUrl, 10);
+          if (!isNaN(specialtyCode)) {
+            filters.specialtyCode = specialtyCode;
+          }
+        }
+        
+        const data = await getVeterinarians(filters);
+        setVeterinarians(data);
+        
+        // If veterinarian comes from URL and we have veterinarians, try to set it
+        if (veterinarianFromUrl && data.length > 0) {
+          const vetFromUrl = data.find(vet => vet.id.toString() === veterinarianFromUrl);
+          if (vetFromUrl) {
+            setFormData(prev => ({ ...prev, veterinarianName: vetFromUrl.name }));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching veterinarians:', error);
+        setGeneralError('Erro ao carregar lista de veterinários. Tente novamente.');
+      } finally {
+        setLoadingVeterinarians(false);
+      }
+    };
+    
+    fetchVeterinarians();
+  }, [specialtyCodeFromUrl, veterinarianFromUrl, isEditMode]);
+
+  // Load all veterinarians when in edit mode
+  useEffect(() => {
+    if (isEditMode) {
+      const fetchAllVeterinarians = async () => {
+        setLoadingVeterinarians(true);
+        try {
+          const data = await getVeterinarians();
+          setVeterinarians(data);
+        } catch (error) {
+          console.error('Error fetching veterinarians:', error);
+        } finally {
+          setLoadingVeterinarians(false);
+        }
+      };
+      
+      fetchAllVeterinarians();
+    }
+  }, [isEditMode]);
 
   const getAutoVeterinarianByReason = (reasonCode: number): string | undefined => {
-    switch (reasonCode) {
-      // General practitioner and generic exams
-      case 1: // Consulta com clinico geral
-      case 6: // Exames
-      case 7: // Exame de imagem
-      case 8: // Vacinação
-      case 10: // Retorno
-        return 'Luna Lovegood';
-      case 2: // Oftalmologista
-        return 'Dra. Hermione Granger';
-      case 3: // Cardiologista
-        return 'Dr. Minerva McGonagall';
-      case 4: // Ortopedista
-        return 'Dr. Remus Lupin';
-      case 5: // Neurologista
-        return 'Dra. Albus Dumbledore';
-      // Cirurgia (9) e Emergência (11) -> usuário escolhe manualmente
-      case 9:
-      case 11:
-      default:
-        return undefined;
-    }
+    // Find first veterinarian with matching specialty code
+    const matchingVet = veterinarians.find(vet => vet.specialtyCode === reasonCode);
+    return matchingVet?.name;
   };
 
 
@@ -114,7 +140,7 @@ export function CreateConsultation() {
         setFormData({
           animalId: state.consultation.animal.id,
           consultationDate: toInputDateTime(state.consultation.consultationDate),
-          veterinarianName: state.consultation.veterinarianId,
+          veterinarianName: state.consultation.veterinarianName,
           reasonCode: (state.consultation.reasonCode ?? 0) as number,
           description: state.consultation.description || '',
           diagnosis: state.consultation.diagnosis || '',
@@ -148,16 +174,47 @@ export function CreateConsultation() {
     if (name === 'reasonCode') {
       const numericReasonCode = value === '' ? 0 : Number(value);
 
-      setFormData(prev => {
-        const updated = { ...prev, reasonCode: numericReasonCode };
-        const autoVet = getAutoVeterinarianByReason(numericReasonCode);
+      // If reasonCode changed and we're not in edit mode, reload veterinarians filtered by specialty
+      if (!isEditMode && numericReasonCode > 0) {
+        const fetchFilteredVeterinarians = async () => {
+          try {
+            const data = await getVeterinarians({ specialtyCode: numericReasonCode });
+            setVeterinarians(data);
+            
+            // Auto-select first veterinarian with matching specialty
+            if (data.length > 0) {
+              setFormData(prev => ({
+                ...prev,
+                reasonCode: numericReasonCode,
+                veterinarianName: data[0].name
+              }));
+            } else {
+              setFormData(prev => ({
+                ...prev,
+                reasonCode: numericReasonCode,
+                veterinarianName: ''
+              }));
+            }
+          } catch (error) {
+            console.error('Error fetching filtered veterinarians:', error);
+            setFormData(prev => ({ ...prev, reasonCode: numericReasonCode }));
+          }
+        };
+        
+        fetchFilteredVeterinarians();
+      } else {
+        // In edit mode or no reason code, just update the form
+        setFormData(prev => {
+          const updated = { ...prev, reasonCode: numericReasonCode };
+          const autoVet = getAutoVeterinarianByReason(numericReasonCode);
 
-        if (autoVet) {
-          updated.veterinarianName = autoVet;
-        }
+          if (autoVet) {
+            updated.veterinarianName = autoVet;
+          }
 
-        return updated;
-      });
+          return updated;
+        });
+      }
 
       if (fieldErrors.reasonCode) {
         setFieldErrors(prev => {
@@ -498,12 +555,14 @@ export function CreateConsultation() {
                   value={formData.veterinarianName}
                   onChange={handleChange}
                   required
-                  disabled={loading}
+                  disabled={loading || loadingVeterinarians}
                 >
-                  <option value="">Selecione o veterinário</option>
-                  {VETERINARIAN_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
+                  <option value="">
+                    {loadingVeterinarians ? 'Carregando veterinários...' : 'Selecione o veterinário'}
+                  </option>
+                  {veterinarians.map((vet) => (
+                    <option key={vet.id} value={vet.name}>
+                      {vet.name} - {vet.specialty}
                     </option>
                   ))}
                 </select>

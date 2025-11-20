@@ -1,5 +1,6 @@
 import type { Animal, AnimalFilters, AnimalRequest, ApiError as ApiErrorResponse, PaginatedResponse as AnimalPaginatedResponse } from '../types/animal';
 import type { Consultation, ConsultationFilters, ConsultationRequest, ApiError as ConsultationApiErrorResponse, PaginatedResponse } from '../types/consultation';
+import type { Veterinarian, VeterinarianFilters } from '../types/veterinarian';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -394,6 +395,40 @@ export async function cancelConsultation(id: number): Promise<Consultation> {
       }
       
       throw new ApiError(response.status, error.detail || 'Failed to cancel consultation', error);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Network error or server unavailable');
+  }
+}
+
+// ==================== VETERINARIAN FUNCTIONS ====================
+
+export async function getVeterinarians(
+  filters?: VeterinarianFilters
+): Promise<Veterinarian[]> {
+  const params = new URLSearchParams();
+  
+  if (filters?.name) {
+    params.append('name', filters.name);
+  }
+  
+  if (filters?.specialtyCode !== undefined) {
+    params.append('specialtyCode', filters.specialtyCode.toString());
+  }
+
+  const url = `${API_BASE_URL}/veterinarians${params.toString() ? `?${params.toString()}` : ''}`;
+  
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      const error: ApiErrorResponse = await response.json();
+      throw new ApiError(response.status, error.detail || 'Failed to get veterinarians', error);
     }
     
     return await response.json();

@@ -61,7 +61,7 @@ export function Specialties() {
               <div className="specialty-content">
                 <h3 className="specialty-title">{specialty.title}</h3>
                 <Link 
-                  to={`/cadastrar-consulta?veterinarian=${encodeURIComponent(specialty.veterinarian)}`}
+                  to={`/cadastrar-consulta?specialtyCode=${encodeURIComponent(specialty.veterinarian)}`}
                   className="btn btn-gradient specialty-btn"
                 >
                   Agendar
