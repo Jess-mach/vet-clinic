@@ -217,6 +217,9 @@ export async function searchConsultations(
   if (filters?.veterinarianName) {
     params.append('veterinarianName', filters.veterinarianName);
   }
+  if (filters?.veterinarianId !== undefined) {
+    params.append('veterinarianId', filters.veterinarianId.toString());
+  }
   if (filters?.status) {
     params.append('status', filters.status);
   }
@@ -309,6 +312,10 @@ export async function createConsultation(consultation: ConsultationRequest): Pro
         throw new ApiError(response.status, error.detail || 'Validation failed', error);
       }
       
+      if (response.status === 404) {
+        throw new ApiError(response.status, error.detail || 'Veterinarian not found', error);
+      }
+      
       if (response.status === 422) {
         throw new ApiError(response.status, error.detail || 'Business rule violation', error);
       }
@@ -349,7 +356,12 @@ export async function updateConsultation(id: number, consultation: ConsultationR
       }
       
       if (response.status === 404) {
-        throw new ApiError(response.status, 'Consultation not found', error);
+        const isVeterinarianNotFound = error.detail?.includes('Veterinarian not found');
+        throw new ApiError(
+          response.status,
+          isVeterinarianNotFound ? error.detail : 'Consultation not found',
+          error
+        );
       }
       
       if (response.status === 422) {

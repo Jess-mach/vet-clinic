@@ -15,11 +15,12 @@ public class Consultation {
     @JoinColumn(name = "animal_id", nullable = false)
     private Animal animal;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "veterinarian_id", nullable = false)
+    private Veterinarian veterinarian;
+
     @Column(name = "consultation_date", nullable = false)
     private LocalDateTime consultationDate;
-
-    @Column(name = "veterinarian_name", nullable = false, length = 100)
-    private String veterinarianName;
 
     @Column(name = "reason_code", nullable = false)
     private Integer reasonCode;
@@ -90,12 +91,12 @@ public class Consultation {
         this.consultationDate = consultationDate;
     }
 
-    public String getVeterinarianName() {
-        return veterinarianName;
+    public Veterinarian getVeterinarian() {
+        return veterinarian;
     }
 
-    public void setVeterinarianName(String veterinarianName) {
-        this.veterinarianName = veterinarianName;
+    public void setVeterinarian(Veterinarian veterinarian) {
+        this.veterinarian = veterinarian;
     }
 
     public Integer getReasonCode() {

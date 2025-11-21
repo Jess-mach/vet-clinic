@@ -63,6 +63,7 @@ public class ConsultationControllerTest {
                 1L,
                 testAnimal,
                 LocalDateTime.of(2025, 11, 15, 14, 30),
+                1L,
                 "Dr. Silva",
                 ConsultationReasonType.GENERAL_CHECKUP.getId(),
                 ConsultationReasonType.GENERAL_CHECKUP.getDescription(),
@@ -118,7 +119,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -134,7 +135,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.totalPages", is(1)));
 
         verify(consultationService, times(1)).findByFilters(
-                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -149,7 +150,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -163,7 +164,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].animal.name", is("Rex")));
 
         verify(consultationService, times(1)).findByFilters(
-                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -178,7 +179,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(),
+                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -192,7 +193,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].veterinarianName", is("Dr. Silva")));
 
         verify(consultationService, times(1)).findByFilters(
-                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(),
+                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -207,7 +208,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -221,7 +222,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].status", is("COMPLETED")));
 
         verify(consultationService, times(1)).findByFilters(
-                isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -236,7 +237,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), eq("COMPLETED"), 
+                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), isNull(), eq("COMPLETED"), 
                 isNull(), isNull(), isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -256,7 +257,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].status", is("COMPLETED")));
 
         verify(consultationService, times(1)).findByFilters(
-                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), eq("COMPLETED"),
+                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), isNull(), eq("COMPLETED"),
                 isNull(), isNull(), isNull(), isNull(), any()
         );
     }
@@ -271,7 +272,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(emptyPage);
 
@@ -285,7 +286,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.totalElements", is(0)));
 
         verify(consultationService, times(1)).findByFilters(
-                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -297,11 +298,12 @@ public class ConsultationControllerTest {
                 2L,
                 testAnimal,
                 LocalDateTime.of(2025, 12, 1, 14, 0),
+                2L,
                 "Dr. Costa",
-                null,
+                ConsultationReasonType.GENERAL_CHECKUP.getId(),
+                ConsultationReasonType.GENERAL_CHECKUP.getDescription(),
                 "Scheduled checkup",
                 "Future appointment",
-                null,
                 null,
                 null,
                 null,
@@ -366,7 +368,7 @@ public class ConsultationControllerTest {
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 11, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(1L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         request.setDescription("Updated description");
         request.setDiagnosis("Updated diagnosis");
@@ -375,6 +377,7 @@ public class ConsultationControllerTest {
                 1L,
                 testAnimal,
                 testConsultation.getConsultationDate(),
+                testConsultation.getVeterinarianId(),
                 testConsultation.getVeterinarianName(),
                 testConsultation.getReasonCode(),
                 testConsultation.getReason(),
@@ -421,7 +424,7 @@ public class ConsultationControllerTest {
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(999L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(1L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         when(consultationService.update(eq(999L), any()))
@@ -441,7 +444,7 @@ public class ConsultationControllerTest {
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(1L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         when(consultationService.update(eq(1L), any()))
@@ -461,7 +464,7 @@ public class ConsultationControllerTest {
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(1L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         request.setDescription("General health examination");
         request.setStatus("SCHEDULED");
@@ -470,7 +473,8 @@ public class ConsultationControllerTest {
                 1L,
                 testAnimal,
                 request.getConsultationDate(),
-                request.getVeterinarianName(),
+                request.getVeterinarianId(),
+                "Dr. Silva",
                 request.getReasonCode(),
                 ConsultationReasonType.GENERAL_CHECKUP.getDescription(),
                 request.getDescription(),
@@ -519,7 +523,7 @@ public class ConsultationControllerTest {
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(999L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(1L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         when(consultationService.create(any()))
@@ -539,7 +543,7 @@ public class ConsultationControllerTest {
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(1L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         request.setStatus(null);
 
@@ -547,9 +551,10 @@ public class ConsultationControllerTest {
                 1L,
                 testAnimal,
                 request.getConsultationDate(),
-                request.getVeterinarianName(),
+                request.getVeterinarianId(),
+                "Dr. Silva",
                 request.getReasonCode(),
-                null,
+                ConsultationReasonType.GENERAL_CHECKUP.getDescription(),
                 null,
                 null,
                 null,

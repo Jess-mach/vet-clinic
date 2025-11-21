@@ -35,7 +35,7 @@ export function CreateConsultation() {
   const [formData, setFormData] = useState<ConsultationRequest>({
     animalId: 0,
     consultationDate: '',
-    veterinarianName: '',
+    veterinarianId: 0,
     reasonCode: specialtyCodeFromUrl ? parseInt(specialtyCodeFromUrl, 10) : 0,
     description: '',
     diagnosis: '',
@@ -86,7 +86,7 @@ export function CreateConsultation() {
         if (veterinarianFromUrl && data.length > 0) {
           const vetFromUrl = data.find(vet => vet.id.toString() === veterinarianFromUrl);
           if (vetFromUrl) {
-            setFormData(prev => ({ ...prev, veterinarianName: vetFromUrl.name }));
+            setFormData(prev => ({ ...prev, veterinarianId: vetFromUrl.id }));
           }
         }
       } catch (error) {
@@ -119,10 +119,10 @@ export function CreateConsultation() {
     }
   }, [isEditMode]);
 
-  const getAutoVeterinarianByReason = (reasonCode: number): string | undefined => {
+  const getAutoVeterinarianByReason = (reasonCode: number): number | undefined => {
     // Find first veterinarian with matching specialty code
     const matchingVet = veterinarians.find(vet => vet.specialtyCode === reasonCode);
-    return matchingVet?.name;
+    return matchingVet?.id;
   };
 
 
@@ -140,7 +140,7 @@ export function CreateConsultation() {
         setFormData({
           animalId: state.consultation.animal.id,
           consultationDate: toInputDateTime(state.consultation.consultationDate),
-          veterinarianName: state.consultation.veterinarianName,
+          veterinarianId: state.consultation.veterinarianId,
           reasonCode: (state.consultation.reasonCode ?? 0) as number,
           description: state.consultation.description || '',
           diagnosis: state.consultation.diagnosis || '',
@@ -156,14 +156,6 @@ export function CreateConsultation() {
     if (!isoDateTime) return '';
     // Backend envia com segundos; input datetime-local espera até minutos
     return isoDateTime.substring(0, 16);
-  };
-
-  const formatDateTimeForBackend = (dateTime: string): string => {
-    if (!dateTime) return '';
-    if (dateTime.length === 16) {
-      return `${dateTime}:00`;
-    }
-    return dateTime;
   };
 
 
@@ -186,13 +178,13 @@ export function CreateConsultation() {
               setFormData(prev => ({
                 ...prev,
                 reasonCode: numericReasonCode,
-                veterinarianName: data[0].name
+                veterinarianId: data[0].id
               }));
             } else {
               setFormData(prev => ({
                 ...prev,
                 reasonCode: numericReasonCode,
-                veterinarianName: ''
+                veterinarianId: 0
               }));
             }
           } catch (error) {
@@ -209,7 +201,7 @@ export function CreateConsultation() {
           const autoVet = getAutoVeterinarianByReason(numericReasonCode);
 
           if (autoVet) {
-            updated.veterinarianName = autoVet;
+            updated.veterinarianId = autoVet;
           }
 
           return updated;
@@ -224,6 +216,21 @@ export function CreateConsultation() {
         });
       }
 
+      setGeneralError(null);
+      return;
+    }
+
+    if (name === 'veterinarianId') {
+      const numericVeterinarianId = value === '' || value === '0' ? 0 : Number(value);
+      setFormData(prev => ({ ...prev, veterinarianId: numericVeterinarianId }));
+      
+      if (fieldErrors.veterinarianId) {
+        setFieldErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.veterinarianId;
+          return newErrors;
+        });
+      }
       setGeneralError(null);
       return;
     }
@@ -275,10 +282,8 @@ export function CreateConsultation() {
       errors.consultationDate = 'Data da consulta é obrigatória';
     }
 
-    if (!formData.veterinarianName || formData.veterinarianName.trim() === '') {
-      errors.veterinarianName = 'Nome do veterinário é obrigatório';
-    } else if (formData.veterinarianName.length > 100) {
-      errors.veterinarianName = 'Nome do veterinário deve ter no máximo 100 caracteres';
+    if (!formData.veterinarianId || formData.veterinarianId <= 0) {
+      errors.veterinarianId = 'Selecione um veterinário';
     }
 
     if (!formData.reasonCode || formData.reasonCode === 0) {
@@ -336,7 +341,7 @@ export function CreateConsultation() {
       const requestData: ConsultationRequest = {
         animalId: formData.animalId,
         consultationDate: formatDateTimeForBackend(formData.consultationDate),
-        veterinarianName: formData.veterinarianName.trim(),
+        veterinarianId: formData.veterinarianId,
         reasonCode: formData.reasonCode,
         description: formData.description?.trim() || undefined,
         diagnosis: formData.diagnosis?.trim() || undefined,
@@ -382,10 +387,13 @@ export function CreateConsultation() {
             error.errorData.errors
           );
         } else if (error.status === 404) {
-          // Animal not found
+          // Animal or Veterinarian not found
+          const isVeterinarianNotFound = error.detail?.includes('Veterinarian not found');
           showErrorModal(
-            'Animal Não Encontrado',
-            error.detail || 'O animal selecionado não foi encontrado ou não está ativo.'
+            isVeterinarianNotFound ? 'Veterinário Não Encontrado' : 'Animal Não Encontrado',
+            error.detail || (isVeterinarianNotFound 
+              ? 'O veterinário selecionado não foi encontrado.' 
+              : 'O animal selecionado não foi encontrado ou não está ativo.')
           );
         } else if (error.status === 422) {
           // Business rule violation
@@ -546,28 +554,28 @@ export function CreateConsultation() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="veterinarianName">
-                  Nome do Veterinário <span className="required">*</span>
+                <label htmlFor="veterinarianId">
+                  Veterinário <span className="required">*</span>
                 </label>
                 <select
-                  id="veterinarianName"
-                  name="veterinarianName"
-                  value={formData.veterinarianName}
+                  id="veterinarianId"
+                  name="veterinarianId"
+                  value={formData.veterinarianId || ''}
                   onChange={handleChange}
                   required
                   disabled={loading || loadingVeterinarians}
                 >
-                  <option value="">
+                  <option value="0">
                     {loadingVeterinarians ? 'Carregando veterinários...' : 'Selecione o veterinário'}
                   </option>
                   {veterinarians.map((vet) => (
-                    <option key={vet.id} value={vet.name}>
+                    <option key={vet.id} value={vet.id}>
                       {vet.name} - {vet.specialty}
                     </option>
                   ))}
                 </select>
-                {fieldErrors.veterinarianName && (
-                  <span className="field-error">{fieldErrors.veterinarianName}</span>
+                {fieldErrors.veterinarianId && (
+                  <span className="field-error">{fieldErrors.veterinarianId}</span>
                 )}
               </div>
 

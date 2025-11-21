@@ -16,10 +16,10 @@ public class ConsultationRequest {
     @Schema(description = "Date and time of the consultation (ISO-8601 format)", example = "2025-11-15T14:30:00", required = true)
     private LocalDateTime consultationDate;
 
-    @NotBlank(message = "Veterinarian name is required")
-    @Size(max = 100, message = "Veterinarian name must not exceed 100 characters")
-    @Schema(description = "Name of the veterinarian", example = "Dr. Silva", required = true, maxLength = 100)
-    private String veterinarianName;
+    @NotNull(message = "Veterinarian ID is required")
+    @Min(value = 1, message = "Veterinarian ID must be greater than 0")
+    @Schema(description = "ID of the veterinarian", example = "1", required = true)
+    private Long veterinarianId;
 
     @NotNull(message = "Reason code is required")
     @Min(value = 1, message = "Reason code must be greater than or equal to 1")
@@ -73,12 +73,12 @@ public class ConsultationRequest {
         this.consultationDate = consultationDate;
     }
 
-    public String getVeterinarianName() {
-        return veterinarianName;
+    public Long getVeterinarianId() {
+        return veterinarianId;
     }
 
-    public void setVeterinarianName(String veterinarianName) {
-        this.veterinarianName = veterinarianName;
+    public void setVeterinarianId(Long veterinarianId) {
+        this.veterinarianId = veterinarianId;
     }
 
     public Integer getReasonCode() {

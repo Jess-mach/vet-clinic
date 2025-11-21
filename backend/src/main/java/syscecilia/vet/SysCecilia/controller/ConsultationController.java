@@ -77,7 +77,7 @@ public class ConsultationController {
             summary = "List consultations with multiple filters and pagination",
             description = "Retrieves a paginated list of consultations with optional filters. " +
                     "All filters are optional and can be combined. Filters include: animal name, owner name, " +
-                    "veterinarian name, status, reason, description, and creation date range."
+                    "veterinarian name, veterinarian ID, status, reason, description, and creation date range."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -102,6 +102,8 @@ public class ConsultationController {
             @RequestParam(required = false) String ownerName,
             @Parameter(description = "Filter by veterinarian name (partial match, case-insensitive)", required = false, example = "Dr. Silva")
             @RequestParam(required = false) String veterinarianName,
+            @Parameter(description = "Filter by veterinarian ID (exact match)", required = false, example = "1")
+            @RequestParam(required = false) Long veterinarianId,
             @Parameter(description = "Filter by consultation status", required = false, example = "COMPLETED")
             @RequestParam(required = false) String status,
             @Parameter(description = "Filter by consultation reason (partial match, case-insensitive)", required = false, example = "Checkup")
@@ -153,6 +155,7 @@ public class ConsultationController {
                     animalName,
                     ownerName,
                     veterinarianName,
+                    veterinarianId,
                     status,
                     reason,
                     description,

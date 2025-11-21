@@ -51,9 +51,21 @@ public class ConsultationSpecification {
                 return criteriaBuilder.conjunction();
             }
             return criteriaBuilder.like(
-                    criteriaBuilder.lower(root.get("veterinarianName")),
+                    criteriaBuilder.lower(root.join("veterinarian").get("name")),
                     "%" + veterinarianName.toLowerCase() + "%"
             );
+        };
+    }
+
+    /**
+     * Filter by veterinarian ID (exact match)
+     */
+    public static Specification<Consultation> hasVeterinarianId(Long veterinarianId) {
+        return (root, query, criteriaBuilder) -> {
+            if (veterinarianId == null) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.equal(root.get("veterinarian").get("id"), veterinarianId);
         };
     }
 
@@ -134,21 +146,31 @@ public class ConsultationSpecification {
             String animalName,
             String ownerName,
             String veterinarianName,
+            Long veterinarianId,
             String status,
             String reason,
             String description,
             LocalDateTime createdAtStart,
             LocalDateTime createdAtEnd) {
         
-        return Specification
+        Specification<Consultation> spec = Specification
                 .where(hasAnimalName(animalName))
                 .and(hasOwnerName(ownerName))
-                .and(hasVeterinarianName(veterinarianName))
                 .and(hasStatus(status))
                 .and(hasReason(reason))
                 .and(hasDescription(description))
                 .and(createdAtStart(createdAtStart))
                 .and(createdAtEnd(createdAtEnd));
+
+        // Apply veterinarian filters (name OR id)
+        if (veterinarianName != null && !veterinarianName.trim().isEmpty()) {
+            spec = spec.and(hasVeterinarianName(veterinarianName));
+        }
+        if (veterinarianId != null) {
+            spec = spec.and(hasVeterinarianId(veterinarianId));
+        }
+
+        return spec;
     }
 }
 

@@ -18,8 +18,8 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
 
     Optional<Consultation> findById(Long id);
 
-    List<Consultation> findByConsultationDateAndVeterinarianNameAndStatusNot(
-            LocalDateTime consultationDate, String veterinarianName, String status);
+    List<Consultation> findByConsultationDateAndVeterinarianIdAndStatusNot(
+            LocalDateTime consultationDate, Long veterinarianId, String status);
 
     List<Consultation> findByConsultationDateAndAnimalIdAndStatusNot(
             LocalDateTime consultationDate, Long animalId, String status);

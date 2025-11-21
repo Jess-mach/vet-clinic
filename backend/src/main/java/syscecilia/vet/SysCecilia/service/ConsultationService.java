@@ -13,9 +13,11 @@ import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.model.Consultation;
 import syscecilia.vet.SysCecilia.model.ConsultationReasonType;
+import syscecilia.vet.SysCecilia.model.Veterinarian;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationSpecification;
+import syscecilia.vet.SysCecilia.repository.VeterinarianRepository;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -27,11 +29,15 @@ public class ConsultationService {
 
     private final ConsultationRepository consultationRepository;
     private final AnimalRepository animalRepository;
+    private final VeterinarianRepository veterinarianRepository;
 
     @Autowired
-    public ConsultationService(ConsultationRepository consultationRepository, AnimalRepository animalRepository) {
+    public ConsultationService(ConsultationRepository consultationRepository, 
+                               AnimalRepository animalRepository,
+                               VeterinarianRepository veterinarianRepository) {
         this.consultationRepository = consultationRepository;
         this.animalRepository = animalRepository;
+        this.veterinarianRepository = veterinarianRepository;
     }
 
     @Transactional(readOnly = true)
@@ -46,6 +52,7 @@ public class ConsultationService {
             String animalName,
             String ownerName,
             String veterinarianName,
+            Long veterinarianId,
             String status,
             String reason,
             String description,
@@ -57,6 +64,7 @@ public class ConsultationService {
                         animalName,
                         ownerName,
                         veterinarianName,
+                        veterinarianId,
                         status,
                         reason,
                         description,
@@ -77,7 +85,7 @@ public class ConsultationService {
     @Transactional(readOnly = true)
     public Page<ConsultationResponse> findAllByAnimalId(Long animalId, Pageable pageable) {
         verifyAnimalExists(animalId);
-        return findByFilters(null, null, null, null, null, null, null, null, pageable);
+        return findByFilters(null, null, null, null, null, null, null, null, null, pageable);
     }
 
     @Transactional
@@ -85,13 +93,15 @@ public class ConsultationService {
         Animal animal = animalRepository.findByIdAndIsActiveTrue(request.getAnimalId())
                 .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + request.getAnimalId()));
 
+        Veterinarian veterinarian = veterinarianRepository.findById(request.getVeterinarianId())
+                .orElseThrow(() -> new ResourceNotFoundException("Veterinarian not found with id: " + request.getVeterinarianId()));
+
         LocalDateTime consultationDate = request.getConsultationDate();
-        String veterinarianName = request.getVeterinarianName();
 
         // Validar regras de negócio para nova consulta
-        validateBusinessRules(consultationDate, veterinarianName, request.getAnimalId(), null);
+        validateBusinessRules(consultationDate, veterinarian.getId(), request.getAnimalId(), null);
 
-        Consultation consultation = convertToEntity(request, animal);
+        Consultation consultation = convertToEntity(request, animal, veterinarian);
         Consultation savedConsultation = consultationRepository.save(consultation);
 
         return convertToResponse(savedConsultation);
@@ -119,18 +129,22 @@ public class ConsultationService {
             LocalDateTime newDate = request.getConsultationDate() != null
                     ? request.getConsultationDate()
                     : existingConsultation.getConsultationDate();
-            String newVeterinarian = request.getVeterinarianName() != null && !request.getVeterinarianName().isBlank()
-                    ? request.getVeterinarianName()
-                    : existingConsultation.getVeterinarianName();
+            
+            Long newVeterinarianId = request.getVeterinarianId() != null
+                    ? request.getVeterinarianId()
+                    : existingConsultation.getVeterinarian().getId();
 
             if (!newDate.isEqual(existingConsultation.getConsultationDate())
-                    || !newVeterinarian.equals(existingConsultation.getVeterinarianName())) {
+                    || !newVeterinarianId.equals(existingConsultation.getVeterinarian().getId())) {
                 Long animalId = existingConsultation.getAnimal() != null
                         ? existingConsultation.getAnimal().getId()
                         : request.getAnimalId();
-                validateBusinessRules(newDate, newVeterinarian, animalId, existingConsultation.getId());
+                validateBusinessRules(newDate, newVeterinarianId, animalId, existingConsultation.getId());
                 existingConsultation.setConsultationDate(newDate);
-                existingConsultation.setVeterinarianName(newVeterinarian);
+                
+                Veterinarian newVeterinarian = veterinarianRepository.findById(newVeterinarianId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Veterinarian not found with id: " + newVeterinarianId));
+                existingConsultation.setVeterinarian(newVeterinarian);
             }
         }
 
@@ -181,14 +195,14 @@ public class ConsultationService {
     }
 
     private void validateBusinessRules(LocalDateTime consultationDate,
-                                       String veterinarianName,
+                                       Long veterinarianId,
                                        Long animalId,
                                        Long currentConsultationId) {
         // Validar horário de funcionamento
         validateClinicHours(consultationDate);
 
         // Validar se já existe consulta no mesmo horário para o mesmo veterinário
-        validateVeterinarianAvailability(consultationDate, veterinarianName, currentConsultationId);
+        validateVeterinarianAvailability(consultationDate, veterinarianId, currentConsultationId);
 
         // Validar se já existe consulta no mesmo horário para o mesmo animal
         validateAnimalAvailability(consultationDate, animalId, currentConsultationId);
@@ -238,12 +252,12 @@ public class ConsultationService {
     }
 
     private void validateVeterinarianAvailability(LocalDateTime consultationDate,
-                                                  String veterinarianName,
+                                                  Long veterinarianId,
                                                   Long currentConsultationId) {
         // Buscar consultas no mesmo horário para o mesmo veterinário que não estejam canceladas
         List<Consultation> existingConsultations = consultationRepository
-                .findByConsultationDateAndVeterinarianNameAndStatusNot(
-                        consultationDate, veterinarianName, "CANCELLED");
+                .findByConsultationDateAndVeterinarianIdAndStatusNot(
+                        consultationDate, veterinarianId, "CANCELLED");
 
         if (!existingConsultations.isEmpty()) {
             boolean hasConflict = existingConsultations.stream()
@@ -253,11 +267,14 @@ public class ConsultationService {
                 return;
             }
 
+            Veterinarian veterinarian = veterinarianRepository.findById(veterinarianId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Veterinarian not found with id: " + veterinarianId));
+            
             throw new BusinessException(
                     String.format("Veterinarian %s already has a consultation scheduled at %s", 
-                            veterinarianName, consultationDate),
+                            veterinarian.getName(), consultationDate),
                     String.format("The veterinarian %s already has a consultation scheduled at this date and time. " +
-                            "Please choose a different time or veterinarian.", veterinarianName)
+                            "Please choose a different time or veterinarian.", veterinarian.getName())
             );
         }
     }
@@ -286,11 +303,11 @@ public class ConsultationService {
         }
     }
 
-    private Consultation convertToEntity(ConsultationRequest request, Animal animal) {
+    private Consultation convertToEntity(ConsultationRequest request, Animal animal, Veterinarian veterinarian) {
         Consultation consultation = new Consultation();
         consultation.setAnimal(animal);
+        consultation.setVeterinarian(veterinarian);
         consultation.setConsultationDate(request.getConsultationDate());
-        consultation.setVeterinarianName(request.getVeterinarianName());
 
         // Map numeric reason code from request to enum and store its id in database
         ConsultationReasonType reasonType = ConsultationReasonType.fromId(request.getReasonCode());
@@ -321,13 +338,15 @@ public class ConsultationService {
                 animal.getOwnerName()
         );
 
+        Veterinarian veterinarian = consultation.getVeterinarian();
         ConsultationReasonType reasonType = ConsultationReasonType.fromId(consultation.getReasonCode());
 
         return new ConsultationResponse(
                 consultation.getId(),
                 animalBasicInfo,
                 consultation.getConsultationDate(),
-                consultation.getVeterinarianName(),
+                veterinarian.getId(),
+                veterinarian.getName(),
                 reasonType.getId(),
                 reasonType.getDescription(),
                 consultation.getDescription(),

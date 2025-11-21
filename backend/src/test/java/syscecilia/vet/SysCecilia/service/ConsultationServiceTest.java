@@ -18,8 +18,10 @@ import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
 import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.model.Consultation;
+import syscecilia.vet.SysCecilia.model.Veterinarian;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
+import syscecilia.vet.SysCecilia.repository.VeterinarianRepository;
 import syscecilia.vet.SysCecilia.model.ConsultationReasonType;
 
 import java.time.LocalDateTime;
@@ -41,10 +43,14 @@ public class ConsultationServiceTest {
     @Mock
     private AnimalRepository animalRepository;
 
+    @Mock
+    private VeterinarianRepository veterinarianRepository;
+
     @InjectMocks
     private ConsultationService consultationService;
 
     private Animal testAnimal;
+    private Veterinarian testVeterinarian;
     private Consultation testConsultation;
 
     @BeforeEach
@@ -57,11 +63,16 @@ public class ConsultationServiceTest {
         testAnimal.setGender("Female");
         testAnimal.setOwnerName("Jane Smith");
 
+        testVeterinarian = new Veterinarian();
+        testVeterinarian.setId(1L);
+        testVeterinarian.setName("Dr. Santos");
+        testVeterinarian.setSpecialtyCode(ConsultationReasonType.VACCINATION.getId());
+
         testConsultation = new Consultation();
         testConsultation.setId(1L);
         testConsultation.setAnimal(testAnimal);
+        testConsultation.setVeterinarian(testVeterinarian);
         testConsultation.setConsultationDate(LocalDateTime.of(2025, 10, 20, 10, 0));
-        testConsultation.setVeterinarianName("Dr. Santos");
         testConsultation.setReasonCode(ConsultationReasonType.VACCINATION.getId());
         testConsultation.setDescription("Annual vaccination applied");
         testConsultation.setDiagnosis("Vaccinated successfully");
@@ -77,6 +88,7 @@ public class ConsultationServiceTest {
         
         assertNotNull(consultation);
         assertEquals(1L, consultation.getId());
+        assertEquals(1L, consultation.getVeterinarianId());
         assertEquals("Dr. Santos", consultation.getVeterinarianName());
         assertEquals("Luna", consultation.getAnimal().getName());
         
@@ -149,7 +161,7 @@ public class ConsultationServiceTest {
         )).thenReturn(page);
 
         Page<ConsultationResponse> consultations = consultationService.findByFilters(
-                "Luna", null, "Dr. Santos", "COMPLETED", null, null, null, null,
+                "Luna", null, "Dr. Santos", null, "COMPLETED", null, null, null, null,
                 PageRequest.of(0, 10)
         );
         
@@ -202,11 +214,16 @@ public class ConsultationServiceTest {
     @Test
     @DisplayName("Should cancel consultation successfully")
     public void testCancelConsultation() {
+        Veterinarian vet2 = new Veterinarian();
+        vet2.setId(2L);
+        vet2.setName("Dr. Silva");
+        vet2.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
         Consultation scheduledConsultation = new Consultation();
         scheduledConsultation.setId(2L);
         scheduledConsultation.setAnimal(testAnimal);
+        scheduledConsultation.setVeterinarian(vet2);
         scheduledConsultation.setConsultationDate(LocalDateTime.of(2025, 11, 20, 10, 0));
-        scheduledConsultation.setVeterinarianName("Dr. Silva");
         scheduledConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         scheduledConsultation.setStatus("SCHEDULED");
         scheduledConsultation.setCreatedAt(LocalDateTime.now());
@@ -246,8 +263,8 @@ public class ConsultationServiceTest {
         Consultation cancelledConsultation = new Consultation();
         cancelledConsultation.setId(3L);
         cancelledConsultation.setAnimal(testAnimal);
+        cancelledConsultation.setVeterinarian(testVeterinarian);
         cancelledConsultation.setConsultationDate(LocalDateTime.of(2025, 11, 20, 10, 0));
-        cancelledConsultation.setVeterinarianName("Dr. Silva");
         cancelledConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         cancelledConsultation.setStatus("CANCELLED");
 
@@ -277,10 +294,15 @@ public class ConsultationServiceTest {
     @Test
     @DisplayName("Should create consultation successfully when all data is valid")
     public void testCreateConsultationSuccessfully() {
+        Veterinarian vet3 = new Veterinarian();
+        vet3.setId(3L);
+        vet3.setName("Dr. Silva");
+        vet3.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(3L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         request.setDescription("General health examination");
         request.setStatus("SCHEDULED");
@@ -288,8 +310,8 @@ public class ConsultationServiceTest {
         Consultation savedConsultation = new Consultation();
         savedConsultation.setId(1L);
         savedConsultation.setAnimal(testAnimal);
+        savedConsultation.setVeterinarian(vet3);
         savedConsultation.setConsultationDate(request.getConsultationDate());
-        savedConsultation.setVeterinarianName(request.getVeterinarianName());
         savedConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         savedConsultation.setDescription(request.getDescription());
         savedConsultation.setStatus("SCHEDULED");
@@ -297,8 +319,9 @@ public class ConsultationServiceTest {
         savedConsultation.setUpdatedAt(LocalDateTime.now());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
-        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
-                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(veterinarianRepository.findById(3L)).thenReturn(Optional.of(vet3));
+        when(consultationRepository.findByConsultationDateAndVeterinarianIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
                 any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.save(any(Consultation.class))).thenReturn(savedConsultation);
@@ -307,37 +330,45 @@ public class ConsultationServiceTest {
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
+        assertEquals(3L, result.getVeterinarianId());
         assertEquals("Dr. Silva", result.getVeterinarianName());
         assertEquals(ConsultationReasonType.GENERAL_CHECKUP.getDescription(), result.getReason());
         assertEquals("SCHEDULED", result.getStatus());
         assertEquals("Luna", result.getAnimal().getName());
         verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(veterinarianRepository, times(1)).findById(3L);
         verify(consultationRepository, times(1)).save(any(Consultation.class));
     }
 
     @Test
     @DisplayName("Should create consultation with default SCHEDULED status when status not provided")
     public void testCreateConsultationWithDefaultStatus() {
+        Veterinarian vet3 = new Veterinarian();
+        vet3.setId(3L);
+        vet3.setName("Dr. Silva");
+        vet3.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(3L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         request.setStatus(null);
 
         Consultation savedConsultation = new Consultation();
         savedConsultation.setId(1L);
         savedConsultation.setAnimal(testAnimal);
+        savedConsultation.setVeterinarian(vet3);
         savedConsultation.setConsultationDate(request.getConsultationDate());
-        savedConsultation.setVeterinarianName(request.getVeterinarianName());
         savedConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         savedConsultation.setStatus("SCHEDULED");
         savedConsultation.setCreatedAt(LocalDateTime.now());
         savedConsultation.setUpdatedAt(LocalDateTime.now());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
-        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
-                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(veterinarianRepository.findById(3L)).thenReturn(Optional.of(vet3));
+        when(consultationRepository.findByConsultationDateAndVeterinarianIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
                 any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.save(any(Consultation.class))).thenAnswer(invocation -> {
@@ -362,7 +393,7 @@ public class ConsultationServiceTest {
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(999L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(3L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         when(animalRepository.findByIdAndIsActiveTrue(999L)).thenReturn(Optional.empty());
@@ -421,22 +452,33 @@ public class ConsultationServiceTest {
     @Test
     @DisplayName("Should update scheduled consultation date and veterinarian when available")
     public void testUpdateScheduledConsultationChangeDateAndVeterinarian() {
+        Veterinarian vet4 = new Veterinarian();
+        vet4.setId(4L);
+        vet4.setName("Dr. Silva");
+        vet4.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
+        Veterinarian vet5 = new Veterinarian();
+        vet5.setId(5L);
+        vet5.setName("Dr. Costa");
+        vet5.setSpecialtyCode(ConsultationReasonType.VACCINATION.getId());
+
         Consultation scheduledConsultation = new Consultation();
         scheduledConsultation.setId(5L);
         scheduledConsultation.setAnimal(testAnimal);
+        scheduledConsultation.setVeterinarian(vet4);
         scheduledConsultation.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        scheduledConsultation.setVeterinarianName("Dr. Silva");
         scheduledConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         scheduledConsultation.setStatus("SCHEDULED");
 
         ConsultationRequest request = new ConsultationRequest();
         request.setConsultationDate(LocalDateTime.of(2025, 12, 16, 10, 0));
-        request.setVeterinarianName("Dr. Costa");
+        request.setVeterinarianId(5L);
         request.setReasonCode(ConsultationReasonType.VACCINATION.getId());
 
         when(consultationRepository.findById(5L)).thenReturn(Optional.of(scheduledConsultation));
-        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
-                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(veterinarianRepository.findById(5L)).thenReturn(Optional.of(vet5));
+        when(consultationRepository.findByConsultationDateAndVeterinarianIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
                 any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.save(any(Consultation.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -445,6 +487,7 @@ public class ConsultationServiceTest {
 
         assertNotNull(result);
         assertEquals(LocalDateTime.of(2025, 12, 16, 10, 0), result.getConsultationDate());
+        assertEquals(5L, result.getVeterinarianId());
         assertEquals("Dr. Costa", result.getVeterinarianName());
         assertEquals(ConsultationReasonType.VACCINATION.getId(), result.getReasonCode());
 
@@ -455,10 +498,15 @@ public class ConsultationServiceTest {
     @Test
     @DisplayName("Should create consultation with all optional fields")
     public void testCreateConsultationWithAllFields() {
+        Veterinarian vet3 = new Veterinarian();
+        vet3.setId(3L);
+        vet3.setName("Dr. Silva");
+        vet3.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(3L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         request.setDescription("General health examination performed");
         request.setDiagnosis("Healthy");
@@ -470,8 +518,8 @@ public class ConsultationServiceTest {
         Consultation savedConsultation = new Consultation();
         savedConsultation.setId(1L);
         savedConsultation.setAnimal(testAnimal);
+        savedConsultation.setVeterinarian(vet3);
         savedConsultation.setConsultationDate(request.getConsultationDate());
-        savedConsultation.setVeterinarianName(request.getVeterinarianName());
         savedConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         savedConsultation.setDescription(request.getDescription());
         savedConsultation.setDiagnosis(request.getDiagnosis());
@@ -483,8 +531,9 @@ public class ConsultationServiceTest {
         savedConsultation.setUpdatedAt(LocalDateTime.now());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
-        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
-                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(veterinarianRepository.findById(3L)).thenReturn(Optional.of(vet3));
+        when(consultationRepository.findByConsultationDateAndVeterinarianIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
                 any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.save(any(Consultation.class))).thenReturn(savedConsultation);
@@ -492,6 +541,7 @@ public class ConsultationServiceTest {
         ConsultationResponse result = consultationService.create(request);
 
         assertNotNull(result);
+        assertEquals(3L, result.getVeterinarianId());
         assertEquals("Dr. Silva", result.getVeterinarianName());
         assertEquals(ConsultationReasonType.GENERAL_CHECKUP.getDescription(), result.getReason());
         assertEquals("General health examination performed", result.getDescription());
@@ -501,27 +551,34 @@ public class ConsultationServiceTest {
         assertEquals(LocalDateTime.of(2026, 6, 15, 14, 30), result.getNextAppointmentDate());
         assertEquals("COMPLETED", result.getStatus());
         verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(veterinarianRepository, times(1)).findById(3L);
         verify(consultationRepository, times(1)).save(any(Consultation.class));
     }
 
     @Test
     @DisplayName("Should throw BusinessException when veterinarian already has consultation at same time")
     public void testCreateConsultationVeterinarianConflict() {
+        Veterinarian vet3 = new Veterinarian();
+        vet3.setId(3L);
+        vet3.setName("Dr. Silva");
+        vet3.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(3L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         Consultation existingConsultation = new Consultation();
         existingConsultation.setId(2L);
-        existingConsultation.setVeterinarianName("Dr. Silva");
+        existingConsultation.setVeterinarian(vet3);
         existingConsultation.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         existingConsultation.setStatus("SCHEDULED");
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
-        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
-                eq(LocalDateTime.of(2025, 12, 15, 14, 30)), eq("Dr. Silva"), eq("CANCELLED")))
+        when(veterinarianRepository.findById(3L)).thenReturn(Optional.of(vet3));
+        when(consultationRepository.findByConsultationDateAndVeterinarianIdAndStatusNot(
+                eq(LocalDateTime.of(2025, 12, 15, 14, 30)), eq(3L), eq("CANCELLED")))
                 .thenReturn(Arrays.asList(existingConsultation));
 
         assertThrows(BusinessException.class, () -> {
@@ -535,21 +592,28 @@ public class ConsultationServiceTest {
     @Test
     @DisplayName("Should throw BusinessException when animal already has consultation at same time")
     public void testCreateConsultationAnimalConflict() {
+        Veterinarian vet3 = new Veterinarian();
+        vet3.setId(3L);
+        vet3.setName("Dr. Silva");
+        vet3.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(3L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         Consultation existingConsultation = new Consultation();
         existingConsultation.setId(2L);
         existingConsultation.setAnimal(testAnimal);
+        existingConsultation.setVeterinarian(vet3);
         existingConsultation.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
         existingConsultation.setStatus("SCHEDULED");
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
-        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
-                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(veterinarianRepository.findById(3L)).thenReturn(Optional.of(vet3));
+        when(consultationRepository.findByConsultationDateAndVeterinarianIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
                 eq(LocalDateTime.of(2025, 12, 15, 14, 30)), eq(1L), eq("CANCELLED")))
                 .thenReturn(Arrays.asList(existingConsultation));
@@ -565,13 +629,19 @@ public class ConsultationServiceTest {
     @Test
     @DisplayName("Should throw BusinessException when consultation time is before clinic opening")
     public void testCreateConsultationBeforeOpeningTime() {
+        Veterinarian vet3 = new Veterinarian();
+        vet3.setId(3L);
+        vet3.setName("Dr. Silva");
+        vet3.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 6, 30)); // 6:30 AM
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(3L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(veterinarianRepository.findById(3L)).thenReturn(Optional.of(vet3));
 
         assertThrows(BusinessException.class, () -> {
             consultationService.create(request);
@@ -584,13 +654,19 @@ public class ConsultationServiceTest {
     @Test
     @DisplayName("Should throw BusinessException when consultation time is after last appointment time on weekday")
     public void testCreateConsultationAfterLastAppointmentTimeWeekday() {
+        Veterinarian vet3 = new Veterinarian();
+        vet3.setId(3L);
+        vet3.setName("Dr. Silva");
+        vet3.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 18, 30)); // Monday 18:30
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(3L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(veterinarianRepository.findById(3L)).thenReturn(Optional.of(vet3));
 
         assertThrows(BusinessException.class, () -> {
             consultationService.create(request);
@@ -603,14 +679,20 @@ public class ConsultationServiceTest {
     @Test
     @DisplayName("Should throw BusinessException when consultation time is after last appointment time on Saturday")
     public void testCreateConsultationAfterLastAppointmentTimeSaturday() {
+        Veterinarian vet3 = new Veterinarian();
+        vet3.setId(3L);
+        vet3.setName("Dr. Silva");
+        vet3.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         // Saturday, December 20, 2025
         request.setConsultationDate(LocalDateTime.of(2025, 12, 20, 13, 30)); // Saturday 13:30
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(3L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
+        when(veterinarianRepository.findById(3L)).thenReturn(Optional.of(vet3));
 
         assertThrows(BusinessException.class, () -> {
             consultationService.create(request);
@@ -623,25 +705,31 @@ public class ConsultationServiceTest {
     @Test
     @DisplayName("Should allow consultation at last appointment time on weekday")
     public void testCreateConsultationAtLastAppointmentTimeWeekday() {
+        Veterinarian vet3 = new Veterinarian();
+        vet3.setId(3L);
+        vet3.setName("Dr. Silva");
+        vet3.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 18, 0)); // Monday 18:00
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(3L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         Consultation savedConsultation = new Consultation();
         savedConsultation.setId(1L);
         savedConsultation.setAnimal(testAnimal);
+        savedConsultation.setVeterinarian(vet3);
         savedConsultation.setConsultationDate(request.getConsultationDate());
-        savedConsultation.setVeterinarianName(request.getVeterinarianName());
         savedConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         savedConsultation.setStatus("SCHEDULED");
         savedConsultation.setCreatedAt(LocalDateTime.now());
         savedConsultation.setUpdatedAt(LocalDateTime.now());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
-        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
-                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(veterinarianRepository.findById(3L)).thenReturn(Optional.of(vet3));
+        when(consultationRepository.findByConsultationDateAndVeterinarianIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
                 any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.save(any(Consultation.class))).thenReturn(savedConsultation);
@@ -656,26 +744,32 @@ public class ConsultationServiceTest {
     @Test
     @DisplayName("Should allow consultation at last appointment time on Saturday")
     public void testCreateConsultationAtLastAppointmentTimeSaturday() {
+        Veterinarian vet3 = new Veterinarian();
+        vet3.setId(3L);
+        vet3.setName("Dr. Silva");
+        vet3.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
         ConsultationRequest request = new ConsultationRequest();
         request.setAnimalId(1L);
         // Saturday, December 20, 2025
         request.setConsultationDate(LocalDateTime.of(2025, 12, 20, 13, 0)); // Saturday 13:00
-        request.setVeterinarianName("Dr. Silva");
+        request.setVeterinarianId(3L);
         request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
 
         Consultation savedConsultation = new Consultation();
         savedConsultation.setId(1L);
         savedConsultation.setAnimal(testAnimal);
+        savedConsultation.setVeterinarian(vet3);
         savedConsultation.setConsultationDate(request.getConsultationDate());
-        savedConsultation.setVeterinarianName(request.getVeterinarianName());
         savedConsultation.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         savedConsultation.setStatus("SCHEDULED");
         savedConsultation.setCreatedAt(LocalDateTime.now());
         savedConsultation.setUpdatedAt(LocalDateTime.now());
 
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(testAnimal));
-        when(consultationRepository.findByConsultationDateAndVeterinarianNameAndStatusNot(
-                any(LocalDateTime.class), anyString(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
+        when(veterinarianRepository.findById(3L)).thenReturn(Optional.of(vet3));
+        when(consultationRepository.findByConsultationDateAndVeterinarianIdAndStatusNot(
+                any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.findByConsultationDateAndAnimalIdAndStatusNot(
                 any(LocalDateTime.class), anyLong(), eq("CANCELLED"))).thenReturn(Collections.emptyList());
         when(consultationRepository.save(any(Consultation.class))).thenReturn(savedConsultation);
