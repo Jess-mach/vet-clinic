@@ -106,12 +106,14 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
         </button>
 
         <div className="consultation-details-header">
-          <div>
+          <div className="consultation-details-header-info">
             <h2 className="consultation-details-title">{consultation.animal.name}</h2>
             <p className="consultation-details-subtitle">Consulta Veterinária</p>
-          </div>
-          <div className="consultation-details-header-actions">
-            <span className={`consultation-status-large ${getStatusBadgeClass(consultation.status)}`}>
+            <span
+              className={`consultation-status-large consultation-status-inline ${getStatusBadgeClass(
+                consultation.status
+              )}`}
+            >
               {consultation.status}
             </span>
           </div>
