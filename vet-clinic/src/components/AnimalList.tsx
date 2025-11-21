@@ -12,7 +12,12 @@ interface AnimalListProps {
   onAnimalDeleted?: () => void;
 }
 
-export function AnimalList({ animals, onAnimalClick, loading, onAnimalDeleted }: AnimalListProps) {
+export function AnimalList({ 
+  animals, 
+  onAnimalClick, 
+  loading, 
+  onAnimalDeleted 
+}: AnimalListProps) {
   const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
     isOpen: boolean;
     animal: Animal | null;
@@ -92,7 +97,7 @@ export function AnimalList({ animals, onAnimalClick, loading, onAnimalDeleted }:
   return (
     <div className="animal-list">
       <div className="animal-list-header">
-        <h2>Animais Cadastrados ({animals.length})</h2>
+        <h2>Listagem de Pets ({animals.length})</h2>
       </div>
       <div className="animal-table-container">
         <table className="animal-table">

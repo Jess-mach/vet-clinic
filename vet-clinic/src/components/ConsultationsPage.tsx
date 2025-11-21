@@ -38,7 +38,7 @@ export function ConsultationsPage() {
         ...filtersToUse,
         page: pageToUse,
         size: sizeToUse,
-        sort: filtersToUse.sort || 'consultationDate,desc',
+        sort: filtersToUse.sort || 'consultationDate,asc',
       };
       
       const data = await searchConsultations(searchFilters);
@@ -114,16 +114,11 @@ export function ConsultationsPage() {
         </div>
 
         <div className="consultations-page-header">
-          <div className="consultations-page-header-content">
-            <div>
-              <h1>Consultas Veterinárias</h1>
-              <p className="consultations-page-subtitle">Gerenciamento de consultas e histórico</p>
-            </div>
-            <ConsultationList
+        <ConsultationList
               consultations={consultations}
               onConsultationClick={handleConsultationClick}
               loading={loading}
-              onConsultationDeleted={() => loadConsultations(currentFilters, page, size)}
+              onConsultationCancelled={() => loadConsultations(currentFilters, page, size)}
               pagination={{
                 page,
                 size,
@@ -133,7 +128,6 @@ export function ConsultationsPage() {
               onPageChange={handlePageChange}
               onSizeChange={handleSizeChange}
             />
-          </div>
         </div>
 
         {selectedConsultationId && (

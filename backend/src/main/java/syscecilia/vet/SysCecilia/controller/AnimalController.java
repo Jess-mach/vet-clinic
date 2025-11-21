@@ -99,9 +99,9 @@ public class AnimalController {
     })
     public ResponseEntity<PageResponse<AnimalResponse>> searchAnimals(
             @Parameter(description = "Page number (0-indexed)", required = false, example = "0")
-            @RequestParam(required = false) Integer page,
+            @RequestParam(defaultValue = "0", required = false) Integer page,
             @Parameter(description = "Number of items per page", required = false, example = "10")
-            @RequestParam(required = false) Integer pageSize,
+            @RequestParam(defaultValue = "10", required = false) Integer pageSize,
             @Parameter(description = "Animal name (partial match, case-insensitive)", required = false, example = "Rex")
             @RequestParam(required = false) String name,
             @Parameter(description = "Animal species (e.g., Dog, Cat, Bird)", required = false, example = "Dog")

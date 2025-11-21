@@ -12,13 +12,18 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.model.Consultation;
+import syscecilia.vet.SysCecilia.model.Veterinarian;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
+import syscecilia.vet.SysCecilia.repository.VeterinarianRepository;
+import syscecilia.vet.SysCecilia.model.ConsultationReasonType;
 
 import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -37,17 +42,41 @@ public class ConsultationControllerIntegrationTest {
     @Autowired
     private ConsultationRepository consultationRepository;
 
+    @Autowired
+    private VeterinarianRepository veterinarianRepository;
+
     private Animal animal1;
     private Animal animal2;
+    private Veterinarian veterinarian1;
+    private Veterinarian veterinarian2;
+    private Veterinarian veterinarian3;
     private Consultation consultation1;
     private Consultation consultation2;
     private Consultation consultation3;
+    private Consultation consultation4;
 
     @BeforeEach
     public void setUp() {
         // Limpar dados anteriores
         consultationRepository.deleteAll();
         animalRepository.deleteAll();
+        veterinarianRepository.deleteAll();
+
+        // Criar veterinários
+        veterinarian1 = new Veterinarian();
+        veterinarian1.setName("Dr. Silva");
+        veterinarian1.setSpecialtyCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+        veterinarian1 = veterinarianRepository.save(veterinarian1);
+
+        veterinarian2 = new Veterinarian();
+        veterinarian2.setName("Dr. Santos");
+        veterinarian2.setSpecialtyCode(ConsultationReasonType.VACCINATION.getId());
+        veterinarian2 = veterinarianRepository.save(veterinarian2);
+
+        veterinarian3 = new Veterinarian();
+        veterinarian3.setName("Dr. Costa");
+        veterinarian3.setSpecialtyCode(ConsultationReasonType.FOLLOW_UP.getId());
+        veterinarian3 = veterinarianRepository.save(veterinarian3);
 
         // Criar animals
         animal1 = new Animal();
@@ -69,9 +98,9 @@ public class ConsultationControllerIntegrationTest {
         // Criar consultations com datas em intervalos específicos para testes
         consultation1 = new Consultation();
         consultation1.setAnimal(animal1);
+        consultation1.setVeterinarian(veterinarian1);
         consultation1.setConsultationDate(LocalDateTime.of(2025, 11, 10, 10, 0));
-        consultation1.setVeterinarianName("Dr. Silva");
-        consultation1.setReason("Routine checkup");
+        consultation1.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
         consultation1.setDescription("General health examination");
         consultation1.setDiagnosis("Healthy");
         consultation1.setStatus("COMPLETED");
@@ -80,9 +109,9 @@ public class ConsultationControllerIntegrationTest {
 
         consultation2 = new Consultation();
         consultation2.setAnimal(animal1);
+        consultation2.setVeterinarian(veterinarian2);
         consultation2.setConsultationDate(LocalDateTime.of(2025, 11, 12, 14, 30));
-        consultation2.setVeterinarianName("Dr. Santos");
-        consultation2.setReason("Vaccination");
+        consultation2.setReasonCode(ConsultationReasonType.VACCINATION.getId());
         consultation2.setDescription("Annual vaccination applied");
         consultation2.setDiagnosis("Vaccinated");
         consultation2.setStatus("COMPLETED");
@@ -91,14 +120,24 @@ public class ConsultationControllerIntegrationTest {
 
         consultation3 = new Consultation();
         consultation3.setAnimal(animal2);
+        consultation3.setVeterinarian(veterinarian1);
         consultation3.setConsultationDate(LocalDateTime.of(2025, 11, 16, 11, 0));
-        consultation3.setVeterinarianName("Dr. Silva");
-        consultation3.setReason("Dental cleaning");
+        consultation3.setReasonCode(ConsultationReasonType.EXAMS.getId());
         consultation3.setDescription("Dental procedure");
         consultation3.setDiagnosis("Cleaned");
         consultation3.setStatus("COMPLETED");
         consultation3.setCreatedAt(LocalDateTime.of(2025, 11, 16, 10, 0));
         consultation3 = consultationRepository.save(consultation3);
+
+        consultation4 = new Consultation();
+        consultation4.setAnimal(animal1);
+        consultation4.setVeterinarian(veterinarian3);
+        consultation4.setConsultationDate(LocalDateTime.of(2025, 12, 1, 14, 0));
+        consultation4.setReasonCode(ConsultationReasonType.FOLLOW_UP.getId());
+        consultation4.setDescription("Future appointment");
+        consultation4.setStatus("SCHEDULED");
+        consultation4.setCreatedAt(LocalDateTime.of(2025, 11, 20, 10, 0));
+        consultation4 = consultationRepository.save(consultation4);
     }
 
     @Test
@@ -109,8 +148,10 @@ public class ConsultationControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(consultation1.getId().intValue())))
                 .andExpect(jsonPath("$.animal.name", is("Rex")))
+                .andExpect(jsonPath("$.veterinarianId", is(veterinarian1.getId().intValue())))
                 .andExpect(jsonPath("$.veterinarianName", is("Dr. Silva")))
-                .andExpect(jsonPath("$.reason", is("Routine checkup")));
+                .andExpect(jsonPath("$.reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())))
+                .andExpect(jsonPath("$.reasonCode", is(ConsultationReasonType.GENERAL_CHECKUP.getId())));
     }
 
     @Test
@@ -129,8 +170,8 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(3)))
-                .andExpect(jsonPath("$.totalElements", is(3)))
+                .andExpect(jsonPath("$.content", hasSize(4)))
+                .andExpect(jsonPath("$.totalElements", is(4)))
                 .andExpect(jsonPath("$.totalPages", is(1)));
     }
 
@@ -143,9 +184,10 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content", hasSize(3)))
                 .andExpect(jsonPath("$.content[0].animal.name", is("Rex")))
-                .andExpect(jsonPath("$.content[1].animal.name", is("Rex")));
+                .andExpect(jsonPath("$.content[1].animal.name", is("Rex")))
+                .andExpect(jsonPath("$.content[2].animal.name", is("Rex")));
     }
 
     @Test
@@ -157,7 +199,7 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content", hasSize(3)))
                 .andExpect(jsonPath("$.content[0].animal.name", is("Rex")));
     }
 
@@ -183,9 +225,10 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content", hasSize(3)))
                 .andExpect(jsonPath("$.content[0].animal.ownerName", is("John Doe")))
-                .andExpect(jsonPath("$.content[1].animal.ownerName", is("John Doe")));
+                .andExpect(jsonPath("$.content[1].animal.ownerName", is("John Doe")))
+                .andExpect(jsonPath("$.content[2].animal.ownerName", is("John Doe")));
     }
 
     @Test
@@ -199,6 +242,22 @@ public class ConsultationControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(2)))
                 .andExpect(jsonPath("$.content[0].veterinarianName", is("Dr. Silva")))
+                .andExpect(jsonPath("$.content[1].veterinarianName", is("Dr. Silva")));
+    }
+
+    @Test
+    @DisplayName("Should filter consultations by veterinarian ID")
+    public void testFilterByVeterinarianId() throws Exception {
+        mockMvc.perform(get("/api/consultations")
+                .param("veterinarianId", veterinarian1.getId().toString())
+                .param("page", "0")
+                .param("size", "10")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].veterinarianId", is(veterinarian1.getId().intValue())))
+                .andExpect(jsonPath("$.content[0].veterinarianName", is("Dr. Silva")))
+                .andExpect(jsonPath("$.content[1].veterinarianId", is(veterinarian1.getId().intValue())))
                 .andExpect(jsonPath("$.content[1].veterinarianName", is("Dr. Silva")));
     }
 
@@ -221,13 +280,14 @@ public class ConsultationControllerIntegrationTest {
     @DisplayName("Should filter consultations by reason")
     public void testFilterByReason() throws Exception {
         mockMvc.perform(get("/api/consultations")
-                .param("reason", "Vaccination")
+                .param("reason", ConsultationReasonType.VACCINATION.getDescription())
                 .param("page", "0")
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].reason", is("Vaccination")));
+                .andExpect(jsonPath("$.content[0].reason", is(ConsultationReasonType.VACCINATION.getDescription())))
+                .andExpect(jsonPath("$.content[0].reasonCode", is(ConsultationReasonType.VACCINATION.getId())));
     }
 
     @Test
@@ -253,7 +313,7 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(3)));
+                .andExpect(jsonPath("$.content", hasSize(4)));
     }
 
     @Test
@@ -262,7 +322,7 @@ public class ConsultationControllerIntegrationTest {
         mockMvc.perform(get("/api/consultations")
                 .param("animalName", "Rex")
                 .param("veterinarianName", "Dr. Silva")
-                .param("reason", "Routine")
+                .param("reason", ConsultationReasonType.GENERAL_CHECKUP.getDescription())
                 .param("page", "0")
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
@@ -270,7 +330,8 @@ public class ConsultationControllerIntegrationTest {
                 .andExpect(jsonPath("$.content", hasSize(1)))
                 .andExpect(jsonPath("$.content[0].animal.name", is("Rex")))
                 .andExpect(jsonPath("$.content[0].veterinarianName", is("Dr. Silva")))
-                .andExpect(jsonPath("$.content[0].reason", is("Routine checkup")));
+                .andExpect(jsonPath("$.content[0].reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())))
+                .andExpect(jsonPath("$.content[0].reasonCode", is(ConsultationReasonType.GENERAL_CHECKUP.getId())));
     }
 
     @Test
@@ -281,13 +342,14 @@ public class ConsultationControllerIntegrationTest {
                 .param("ownerName", "John")
                 .param("veterinarianName", "Dr. Silva")
                 .param("status", "COMPLETED")
-                .param("reason", "Routine")
+                .param("reason", ConsultationReasonType.GENERAL_CHECKUP.getDescription())
                 .param("page", "0")
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.content[0].animal.name", is("Rex")));
+                .andExpect(jsonPath("$.content[0].animal.name", is("Rex")))
+                .andExpect(jsonPath("$.content[0].reasonCode", is(ConsultationReasonType.GENERAL_CHECKUP.getId())));
     }
 
     @Test
@@ -322,7 +384,7 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "2")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content", hasSize(2)))
                 .andExpect(jsonPath("$.number", is(1)));
     }
 
@@ -335,10 +397,11 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(3)))
-                .andExpect(jsonPath("$.content[0].reason", is("Dental cleaning")))
-                .andExpect(jsonPath("$.content[1].reason", is("Vaccination")))
-                .andExpect(jsonPath("$.content[2].reason", is("Routine checkup")));
+                .andExpect(jsonPath("$.content", hasSize(4)))
+                .andExpect(jsonPath("$.content[0].reason", is(ConsultationReasonType.FOLLOW_UP.getDescription())))
+                .andExpect(jsonPath("$.content[1].reason", is(ConsultationReasonType.EXAMS.getDescription())))
+                .andExpect(jsonPath("$.content[2].reason", is(ConsultationReasonType.VACCINATION.getDescription())))
+                .andExpect(jsonPath("$.content[3].reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())));
     }
 
     @Test
@@ -350,10 +413,11 @@ public class ConsultationControllerIntegrationTest {
                 .param("size", "10")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content", hasSize(3)))
-                .andExpect(jsonPath("$.content[0].reason", is("Routine checkup")))
-                .andExpect(jsonPath("$.content[1].reason", is("Vaccination")))
-                .andExpect(jsonPath("$.content[2].reason", is("Dental cleaning")));
+                .andExpect(jsonPath("$.content", hasSize(4)))
+                .andExpect(jsonPath("$.content[0].reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())))
+                .andExpect(jsonPath("$.content[1].reason", is(ConsultationReasonType.VACCINATION.getDescription())))
+                .andExpect(jsonPath("$.content[2].reason", is(ConsultationReasonType.EXAMS.getDescription())))
+                .andExpect(jsonPath("$.content[3].reason", is(ConsultationReasonType.FOLLOW_UP.getDescription())));
     }
 
     @Test
@@ -369,7 +433,49 @@ public class ConsultationControllerIntegrationTest {
                 .andExpect(jsonPath("$.content", hasSize(1)))
                 .andExpect(jsonPath("$.totalElements", is(2)))
                 .andExpect(jsonPath("$.totalPages", is(2)))
-                .andExpect(jsonPath("$.content[0].reason", is("Dental cleaning")));
+                .andExpect(jsonPath("$.content[0].reason", is(ConsultationReasonType.EXAMS.getDescription())));
+    }
+
+    @Test
+    @DisplayName("Should cancel consultation successfully")
+    public void testCancelConsultation() throws Exception {
+        mockMvc.perform(patch("/api/consultations/{id}/cancel", consultation4.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(consultation4.getId().intValue())))
+                .andExpect(jsonPath("$.status", is("CANCELLED")));
+
+        // Verificar que o status foi realmente alterado no banco
+        Consultation updated = consultationRepository.findById(consultation4.getId()).orElseThrow();
+        assertEquals("CANCELLED", updated.getStatus());
+    }
+
+    @Test
+    @DisplayName("Should return 404 when consultation not found for cancellation")
+    public void testCancelConsultationNotFound() throws Exception {
+        mockMvc.perform(patch("/api/consultations/{id}/cancel", 9999L)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Should return 422 when trying to cancel already cancelled consultation")
+    public void testCancelConsultationAlreadyCancelled() throws Exception {
+        // Primeiro cancelar a consulta
+        consultation4.setStatus("CANCELLED");
+        consultationRepository.save(consultation4);
+
+        mockMvc.perform(patch("/api/consultations/{id}/cancel", consultation4.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    @DisplayName("Should return 422 when trying to cancel completed consultation")
+    public void testCancelConsultationCompleted() throws Exception {
+        mockMvc.perform(patch("/api/consultations/{id}/cancel", consultation1.getId())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity());
     }
 }
 

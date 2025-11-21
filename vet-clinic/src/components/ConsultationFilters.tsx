@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ConsultationFilters } from '../types/consultation';
+import type { Veterinarian } from '../types/veterinarian';
+import { getVeterinarians } from '../services/api';
 import './ConsultationFilters.css';
 
 interface ConsultationFiltersComponentProps {
@@ -14,12 +16,34 @@ export function ConsultationFiltersComponent({
   const [animalName, setAnimalName] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [veterinarianName, setVeterinarianName] = useState('');
+  const [veterinarianId, setVeterinarianId] = useState<number | ''>('');
   const [status, setStatus] = useState<'COMPLETED' | 'SCHEDULED' | 'CANCELLED' | ''>('');
   const [reason, setReason] = useState('');
   const [description, setDescription] = useState('');
   const [createdAtStart, setCreatedAtStart] = useState('');
   const [createdAtEnd, setCreatedAtEnd] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([]);
+  const [loadingVeterinarians, setLoadingVeterinarians] = useState(false);
+
+  // Load veterinarians for filter dropdown
+  useEffect(() => {
+    const fetchVeterinarians = async () => {
+      setLoadingVeterinarians(true);
+      try {
+        const data = await getVeterinarians();
+        setVeterinarians(data);
+      } catch (error) {
+        console.error('Error fetching veterinarians:', error);
+      } finally {
+        setLoadingVeterinarians(false);
+      }
+    };
+    
+    if (isExpanded) {
+      fetchVeterinarians();
+    }
+  }, [isExpanded]);
 
   const formatDateTimeForBackend = (dateTimeLocal: string): string => {
     // datetime-local retorna formato "YYYY-MM-DDTHH:mm"
@@ -39,6 +63,9 @@ export function ConsultationFiltersComponent({
     if (animalName.trim()) filters.animalName = animalName.trim();
     if (ownerName.trim()) filters.ownerName = ownerName.trim();
     if (veterinarianName.trim()) filters.veterinarianName = veterinarianName.trim();
+    if (veterinarianId && veterinarianId !== '') {
+      filters.veterinarianId = typeof veterinarianId === 'number' ? veterinarianId : Number(veterinarianId);
+    }
     if (status) filters.status = status as 'COMPLETED' | 'SCHEDULED' | 'CANCELLED';
     if (reason.trim()) filters.reason = reason.trim();
     if (description.trim()) filters.description = description.trim();
@@ -48,7 +75,7 @@ export function ConsultationFiltersComponent({
     // Resetar para página 0 ao aplicar filtros
     filters.page = 0;
     filters.size = 10;
-    filters.sort = 'consultationDate,desc';
+    filters.sort = 'consultationDate,asc';
     
     onSearch(filters);
   };
@@ -57,6 +84,7 @@ export function ConsultationFiltersComponent({
     setAnimalName('');
     setOwnerName('');
     setVeterinarianName('');
+    setVeterinarianId('');
     setStatus('');
     setReason('');
     setDescription('');
@@ -70,6 +98,7 @@ export function ConsultationFiltersComponent({
     if (animalName.trim()) count++;
     if (ownerName.trim()) count++;
     if (veterinarianName.trim()) count++;
+    if (veterinarianId && veterinarianId !== '') count++;
     if (status) count++;
     if (reason.trim()) count++;
     if (description.trim()) count++;
@@ -136,6 +165,26 @@ export function ConsultationFiltersComponent({
                 onChange={(e) => setVeterinarianName(e.target.value)}
                 className="filter-input"
               />
+            </div>
+
+            <div className="filter-group">
+              <label htmlFor="veterinarianId" className="filter-label">
+                🩺 Veterinário (ID)
+              </label>
+              <select
+                id="veterinarianId"
+                value={veterinarianId || ''}
+                onChange={(e) => setVeterinarianId(e.target.value === '' ? '' : Number(e.target.value))}
+                className="filter-select"
+                disabled={loadingVeterinarians}
+              >
+                <option value="">Todos</option>
+                {veterinarians.map((vet) => (
+                  <option key={vet.id} value={vet.id}>
+                    {vet.name} - {vet.specialty}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="filter-group">

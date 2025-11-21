@@ -1,4 +1,4 @@
-// ✅ Compatível com Backend Contract V0003
+// ✅ Compatível com Backend Contract V0002
 export interface AnimalBasicInfo {
   id: number;
   name: string;
@@ -11,8 +11,10 @@ export interface Consultation {
   id: number;
   animal: AnimalBasicInfo;
   consultationDate: string;
-  veterinarianName: string;
+  veterinarianId: number;      // NOVO: ID do veterinário (obrigatório)
+  veterinarianName: string;   // Mantido para compatibilidade (leitura)
   reason: string;
+  reasonCode: number;
   description?: string;
   diagnosis?: string;
   treatmentPrescribed?: string;
@@ -37,7 +39,8 @@ export interface PaginatedResponse<T> {
 export interface ConsultationFilters {
   animalName?: string;
   ownerName?: string;
-  veterinarianName?: string;
+  veterinarianName?: string;  // Mantido para busca por nome
+  veterinarianId?: number;     // NOVO: Filtro por ID do veterinário
   status?: 'COMPLETED' | 'SCHEDULED' | 'CANCELLED';
   reason?: string;
   description?: string;
@@ -51,8 +54,9 @@ export interface ConsultationFilters {
 export interface ConsultationRequest {
   animalId: number;
   consultationDate: string;
-  veterinarianName: string;
-  reason: string;
+  veterinarianId: number;  // ALTERADO: era veterinarianName (string)
+  reason?: string;
+  reasonCode: number;
   description?: string;
   diagnosis?: string;
   treatmentPrescribed?: string;
@@ -66,8 +70,8 @@ export interface ApiError {
   title: string;
   status: number;
   detail: string;
-  timestamp?: string;
-  path?: string;
+  timestamp: string;
+  path: string;
   errors?: Record<string, string>;
 }
 

@@ -16,21 +16,25 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import syscecilia.vet.SysCecilia.config.TestConfig;
+import syscecilia.vet.SysCecilia.dto.ConsultationRequest;
 import syscecilia.vet.SysCecilia.dto.AnimalBasicInfo;
 import syscecilia.vet.SysCecilia.dto.ConsultationResponse;
 import syscecilia.vet.SysCecilia.exception.GlobalExceptionHandler;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
+import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.service.ConsultationService;
+import syscecilia.vet.SysCecilia.model.ConsultationReasonType;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ConsultationController.class)
@@ -41,6 +45,9 @@ public class ConsultationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockBean
     private ConsultationService consultationService;
@@ -56,8 +63,10 @@ public class ConsultationControllerTest {
                 1L,
                 testAnimal,
                 LocalDateTime.of(2025, 11, 15, 14, 30),
+                1L,
                 "Dr. Silva",
-                "Routine checkup",
+                ConsultationReasonType.GENERAL_CHECKUP.getId(),
+                ConsultationReasonType.GENERAL_CHECKUP.getDescription(),
                 "General health examination performed",
                 "Healthy",
                 "Continue with regular diet",
@@ -79,7 +88,8 @@ public class ConsultationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(1)))
                 .andExpect(jsonPath("$.veterinarianName", is("Dr. Silva")))
-                .andExpect(jsonPath("$.reason", is("Routine checkup")))
+                .andExpect(jsonPath("$.reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())))
+                .andExpect(jsonPath("$.reasonCode", is(ConsultationReasonType.GENERAL_CHECKUP.getId())))
                 .andExpect(jsonPath("$.animal.name", is("Rex")))
                 .andExpect(jsonPath("$.animal.species", is("Dog")));
 
@@ -109,7 +119,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -125,7 +135,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.totalPages", is(1)));
 
         verify(consultationService, times(1)).findByFilters(
-                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -140,7 +150,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -154,7 +164,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].animal.name", is("Rex")));
 
         verify(consultationService, times(1)).findByFilters(
-                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -169,7 +179,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(),
+                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -183,7 +193,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].veterinarianName", is("Dr. Silva")));
 
         verify(consultationService, times(1)).findByFilters(
-                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(),
+                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -198,7 +208,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -212,7 +222,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].status", is("COMPLETED")));
 
         verify(consultationService, times(1)).findByFilters(
-                isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -227,7 +237,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), eq("COMPLETED"), 
+                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), isNull(), eq("COMPLETED"), 
                 isNull(), isNull(), isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -247,7 +257,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].status", is("COMPLETED")));
 
         verify(consultationService, times(1)).findByFilters(
-                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), eq("COMPLETED"),
+                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), isNull(), eq("COMPLETED"),
                 isNull(), isNull(), isNull(), isNull(), any()
         );
     }
@@ -262,7 +272,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(emptyPage);
 
@@ -276,9 +286,294 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.totalElements", is(0)));
 
         verify(consultationService, times(1)).findByFilters(
-                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
+    }
+
+    @Test
+    @DisplayName("Should cancel consultation successfully")
+    public void testCancelConsultation() throws Exception {
+        ConsultationResponse cancelledConsultation = new ConsultationResponse(
+                2L,
+                testAnimal,
+                LocalDateTime.of(2025, 12, 1, 14, 0),
+                2L,
+                "Dr. Costa",
+                ConsultationReasonType.GENERAL_CHECKUP.getId(),
+                ConsultationReasonType.GENERAL_CHECKUP.getDescription(),
+                "Scheduled checkup",
+                "Future appointment",
+                null,
+                null,
+                null,
+                "CANCELLED",
+                LocalDateTime.of(2025, 11, 20, 10, 0),
+                LocalDateTime.now()
+        );
+
+        when(consultationService.cancelConsultation(2L)).thenReturn(cancelledConsultation);
+
+        mockMvc.perform(patch("/api/consultations/2/cancel")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(2)))
+                .andExpect(jsonPath("$.status", is("CANCELLED")));
+
+        verify(consultationService, times(1)).cancelConsultation(2L);
+    }
+
+    @Test
+    @DisplayName("Should return 404 when consultation not found for cancellation")
+    public void testCancelConsultationNotFound() throws Exception {
+        when(consultationService.cancelConsultation(9999L))
+                .thenThrow(new ResourceNotFoundException("Consultation not found with id: 9999"));
+
+        mockMvc.perform(patch("/api/consultations/9999/cancel")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        verify(consultationService, times(1)).cancelConsultation(9999L);
+    }
+
+    @Test
+    @DisplayName("Should return 422 when trying to cancel already cancelled consultation")
+    public void testCancelConsultationAlreadyCancelled() throws Exception {
+        when(consultationService.cancelConsultation(3L))
+                .thenThrow(new BusinessException("Consultation is already cancelled"));
+
+        mockMvc.perform(patch("/api/consultations/3/cancel")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity());
+
+        verify(consultationService, times(1)).cancelConsultation(3L);
+    }
+
+    @Test
+    @DisplayName("Should return 422 when trying to cancel completed consultation")
+    public void testCancelConsultationCompleted() throws Exception {
+        when(consultationService.cancelConsultation(1L))
+                .thenThrow(new BusinessException("Cannot cancel a completed consultation"));
+
+        mockMvc.perform(patch("/api/consultations/1/cancel")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnprocessableEntity());
+
+        verify(consultationService, times(1)).cancelConsultation(1L);
+    }
+
+    @Test
+    @DisplayName("Should update consultation successfully")
+    public void testUpdateConsultation() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 11, 15, 14, 30));
+        request.setVeterinarianId(1L);
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+        request.setDescription("Updated description");
+        request.setDiagnosis("Updated diagnosis");
+
+        ConsultationResponse updatedConsultation = new ConsultationResponse(
+                1L,
+                testAnimal,
+                testConsultation.getConsultationDate(),
+                testConsultation.getVeterinarianId(),
+                testConsultation.getVeterinarianName(),
+                testConsultation.getReasonCode(),
+                testConsultation.getReason(),
+                "Updated description",
+                "Updated diagnosis",
+                testConsultation.getTreatmentPrescribed(),
+                testConsultation.getObservations(),
+                testConsultation.getNextAppointmentDate(),
+                testConsultation.getStatus(),
+                testConsultation.getCreatedAt(),
+                LocalDateTime.now()
+        );
+
+        when(consultationService.update(eq(1L), any())).thenReturn(updatedConsultation);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/consultations/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.description", is("Updated description")))
+                .andExpect(jsonPath("$.diagnosis", is("Updated diagnosis")));
+
+        verify(consultationService, times(1)).update(eq(1L), any());
+    }
+
+    @Test
+    @DisplayName("Should return 400 when updating consultation with invalid data")
+    public void testUpdateConsultationWithInvalidData() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        // Missing required fields like animalId and consultationDate triggers validation
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/consultations/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(consultationService, never()).update(anyLong(), any());
+    }
+
+    @Test
+    @DisplayName("Should return 404 when consultation not found for update")
+    public void testUpdateConsultationNotFound() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(999L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianId(1L);
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
+        when(consultationService.update(eq(999L), any()))
+                .thenThrow(new ResourceNotFoundException("Consultation not found with id: 999"));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/consultations/999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+
+        verify(consultationService, times(1)).update(eq(999L), any());
+    }
+
+    @Test
+    @DisplayName("Should return 422 when business rule violation occurs on update")
+    public void testUpdateConsultationBusinessRuleViolation() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianId(1L);
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
+        when(consultationService.update(eq(1L), any()))
+                .thenThrow(new BusinessException("Business rule violation"));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/consultations/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnprocessableEntity());
+
+        verify(consultationService, times(1)).update(eq(1L), any());
+    }
+
+    @Test
+    @DisplayName("Should create consultation successfully")
+    public void testCreateConsultation() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianId(1L);
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+        request.setDescription("General health examination");
+        request.setStatus("SCHEDULED");
+
+        ConsultationResponse createdConsultation = new ConsultationResponse(
+                1L,
+                testAnimal,
+                request.getConsultationDate(),
+                request.getVeterinarianId(),
+                "Dr. Silva",
+                request.getReasonCode(),
+                ConsultationReasonType.GENERAL_CHECKUP.getDescription(),
+                request.getDescription(),
+                null,
+                null,
+                null,
+                null,
+                "SCHEDULED",
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+
+        when(consultationService.create(any())).thenReturn(createdConsultation);
+
+        mockMvc.perform(post("/api/consultations")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.veterinarianName", is("Dr. Silva")))
+                .andExpect(jsonPath("$.reason", is(ConsultationReasonType.GENERAL_CHECKUP.getDescription())))
+                .andExpect(jsonPath("$.status", is("SCHEDULED")))
+                .andExpect(jsonPath("$.animal.name", is("Rex")))
+                .andExpect(header().string("Location", "/api/consultations/1"));
+
+        verify(consultationService, times(1)).create(any());
+    }
+
+    @Test
+    @DisplayName("Should return 400 when creating consultation with invalid data")
+    public void testCreateConsultationWithInvalidData() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        // Missing required fields
+
+        mockMvc.perform(post("/api/consultations")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(consultationService, never()).create(any());
+    }
+
+    @Test
+    @DisplayName("Should return 404 when animal not found")
+    public void testCreateConsultationAnimalNotFound() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(999L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianId(1L);
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+
+        when(consultationService.create(any()))
+                .thenThrow(new ResourceNotFoundException("Animal not found with id: 999"));
+
+        mockMvc.perform(post("/api/consultations")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+
+        verify(consultationService, times(1)).create(any());
+    }
+
+    @Test
+    @DisplayName("Should create consultation with default SCHEDULED status when status not provided")
+    public void testCreateConsultationWithDefaultStatus() throws Exception {
+        ConsultationRequest request = new ConsultationRequest();
+        request.setAnimalId(1L);
+        request.setConsultationDate(LocalDateTime.of(2025, 12, 15, 14, 30));
+        request.setVeterinarianId(1L);
+        request.setReasonCode(ConsultationReasonType.GENERAL_CHECKUP.getId());
+        request.setStatus(null);
+
+        ConsultationResponse createdConsultation = new ConsultationResponse(
+                1L,
+                testAnimal,
+                request.getConsultationDate(),
+                request.getVeterinarianId(),
+                "Dr. Silva",
+                request.getReasonCode(),
+                ConsultationReasonType.GENERAL_CHECKUP.getDescription(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                "SCHEDULED",
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+
+        when(consultationService.create(any())).thenReturn(createdConsultation);
+
+        mockMvc.perform(post("/api/consultations")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status", is("SCHEDULED")));
+
+        verify(consultationService, times(1)).create(any());
     }
 }
 

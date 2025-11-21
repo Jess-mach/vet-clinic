@@ -15,14 +15,15 @@ public class Consultation {
     @JoinColumn(name = "animal_id", nullable = false)
     private Animal animal;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "veterinarian_id", nullable = false)
+    private Veterinarian veterinarian;
+
     @Column(name = "consultation_date", nullable = false)
     private LocalDateTime consultationDate;
 
-    @Column(name = "veterinarian_name", nullable = false, length = 100)
-    private String veterinarianName;
-
-    @Column(name = "reason", nullable = false, length = 255)
-    private String reason;
+    @Column(name = "reason_code", nullable = false)
+    private Integer reasonCode;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
@@ -90,20 +91,28 @@ public class Consultation {
         this.consultationDate = consultationDate;
     }
 
-    public String getVeterinarianName() {
-        return veterinarianName;
+    public Veterinarian getVeterinarian() {
+        return veterinarian;
     }
 
-    public void setVeterinarianName(String veterinarianName) {
-        this.veterinarianName = veterinarianName;
+    public void setVeterinarian(Veterinarian veterinarian) {
+        this.veterinarian = veterinarian;
     }
 
-    public String getReason() {
-        return reason;
+    public Integer getReasonCode() {
+        return reasonCode;
     }
 
-    public void setReason(String reason) {
-        this.reason = reason;
+    public void setReasonCode(Integer reasonCode) {
+        this.reasonCode = reasonCode;
+    }
+
+    @Transient
+    public String getReasonDescription() {
+        if (reasonCode == null) {
+            return null;
+        }
+        return ConsultationReasonType.fromId(reasonCode).getDescription();
     }
 
     public String getDescription() {

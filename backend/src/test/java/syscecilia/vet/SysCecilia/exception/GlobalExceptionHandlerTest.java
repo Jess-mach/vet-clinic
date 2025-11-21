@@ -13,6 +13,7 @@ import syscecilia.vet.SysCecilia.controller.AnimalController;
 import syscecilia.vet.SysCecilia.service.AnimalService;
 
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -30,18 +31,15 @@ class GlobalExceptionHandlerTest {
     private AnimalService animalService;
 
     @Test
-    @DisplayName("DELETE /api/animals/{id}/not-allowed - Should return 405 Method Not Allowed")
-    void shouldReturn405MethodNotAllowedForDeleteRequest() throws Exception {
+    @DisplayName("DELETE /api/animals/{id} - Should return 204 No Content (method exists)")
+    void shouldReturn204NoContentForDeleteRequest() throws Exception {
+        doNothing().when(animalService).delete(1L);
+        
         mockMvc.perform(delete("/api/animals/1"))
                 .andDo(print())
-                .andExpect(status().isMethodNotAllowed())
-                .andExpect(jsonPath("$.status", equalTo(405)))
-                .andExpect(jsonPath("$.title", equalTo("Method Not Allowed")))
-                .andExpect(jsonPath("$.type", equalTo("https://syscecilia.vet/problems/method-not-allowed")))
-                .andExpect(jsonPath("$.detail", notNullValue()))
-                .andExpect(jsonPath("$.timestamp", notNullValue()))
-                .andExpect(jsonPath("$.path", equalTo("/api/animals/1")))
-                .andExpect(jsonPath("$.supportedMethods", notNullValue()));
+                .andExpect(status().isNoContent());
+        
+        verify(animalService, times(1)).delete(1L);
     }
 
     @Test

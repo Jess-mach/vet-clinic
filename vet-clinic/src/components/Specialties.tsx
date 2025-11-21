@@ -1,37 +1,44 @@
+import { Link } from 'react-router-dom';
 import './Specialties.css';
 
 interface Specialty {
   id: string;
   title: string;
   image: string;
+  veterinarian: string;
 }
 
 const specialties: Specialty[] = [
   {
     id: 'clinico-geral',
     title: 'Clínico Geral',
-    image: 'https://via.placeholder.com/400x300?text=Clinico+Geral',
+    image: '/Clinico-geral.png',
+    veterinarian: '1',
   },
   {
     id: 'cardiologia',
     title: 'Cardiologia',
-    image: 'https://via.placeholder.com/400x300?text=Cardiologia',
+    image: '/cardiologista.png',
+    veterinarian: '3',
   },
   {
     id: 'neurologia',
     title: 'Neurologia',
-    image: 'https://via.placeholder.com/400x300?text=Neurologia',
+    image: '/Neurologista.png',
+    veterinarian: '5',
   },
   {
     id: 'ortopedia',
     title: 'Ortopedia',
-    image: 'https://via.placeholder.com/400x300?text=Ortopedia',
+    image: '/Ortopedista.png',
+    veterinarian: '4',
   },
   {
     id: 'oftalmologia',
     title: 'Oftalmologia',
-    image: 'https://via.placeholder.com/400x300?text=Oftalmologia',
-  },
+    image: '/oftamologista.png',
+      veterinarian: '2',
+    },
 ];
 
 export function Specialties() {
@@ -39,7 +46,7 @@ export function Specialties() {
     <section id="especialidades" className="section specialties">
       <div className="container">
         <div className="section-title">
-          <h2>Nossas Especialidades</h2>
+          <h2>Especialidades</h2>
           <p>Contamos com profissionais especializados em diversas áreas</p>
         </div>
         <div className="specialties-grid">
@@ -53,9 +60,12 @@ export function Specialties() {
               </div>
               <div className="specialty-content">
                 <h3 className="specialty-title">{specialty.title}</h3>
-                <a href={`#${specialty.id}`} className="btn btn-gradient specialty-btn">
+                <Link 
+                  to={`/cadastrar-consulta?specialtyCode=${encodeURIComponent(specialty.veterinarian)}`}
+                  className="btn btn-gradient specialty-btn"
+                >
                   Agendar
-                </a>
+                </Link>
               </div>
             </div>
           ))}
@@ -64,4 +74,3 @@ export function Specialties() {
     </section>
   );
 }
-

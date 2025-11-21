@@ -7,10 +7,10 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
 
+  const handleCreateNew = () => {
+    navigate('/cadastrar-consulta');
+  };
   const closeMenu = () => {
     setIsMenuOpen(false);
   };
@@ -41,7 +41,7 @@ export function Header() {
 
         <nav className={`header-nav ${isMenuOpen ? 'header-nav-open' : ''}`}>
           <ul className="nav-list">
-            <li><a href="#servicos" onClick={(e) => handleNavClick(e, '#servicos')}>Nossos Serviços</a></li>
+            <li><a href="#servicos" onClick={(e) => handleNavClick(e, '#servicos')}>Serviços</a></li>
 
             <li><a href="#especialidades" onClick={(e) => handleNavClick(e, '#especialidades')}>Especialidades</a></li>
             <li><a href="#sobre" onClick={(e) => handleNavClick(e, '#sobre')}>Sobre</a></li>
@@ -52,12 +52,12 @@ export function Header() {
         </nav>
 
         <div className="header-actions">
-          <a href="#agendar" className="btn btn-gradient header-cta" onClick={closeMenu}>
+          <a href="/cadastrar-consulta" className="btn btn-gradient header-cta" onClick={handleCreateNew}>
             Agendar agora
           </a>
           <button
             className="header-menu-toggle"
-            onClick={toggleMenu}
+            onClick={handleCreateNew}
             aria-label="Toggle menu"
             aria-expanded={isMenuOpen}
           >

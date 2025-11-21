@@ -1,7 +1,9 @@
 import type { Animal, AnimalFilters, AnimalRequest, ApiError as ApiErrorResponse, PaginatedResponse as AnimalPaginatedResponse } from '../types/animal';
 import type { Consultation, ConsultationFilters, ConsultationRequest, ApiError as ConsultationApiErrorResponse, PaginatedResponse } from '../types/consultation';
+import type { Veterinarian, VeterinarianFilters } from '../types/veterinarian';
 
 const API_BASE_URL = 'http://localhost:8080/api';
+
 
 export class ApiError extends Error {
   constructor(
@@ -196,6 +198,8 @@ export async function deleteAnimal(id: number): Promise<void> {
   }
 }
 
+
+
 // ==================== CONSULTATION FUNCTIONS ====================
 
 export async function searchConsultations(
@@ -212,6 +216,9 @@ export async function searchConsultations(
   }
   if (filters?.veterinarianName) {
     params.append('veterinarianName', filters.veterinarianName);
+  }
+  if (filters?.veterinarianId !== undefined) {
+    params.append('veterinarianId', filters.veterinarianId.toString());
   }
   if (filters?.status) {
     params.append('status', filters.status);
@@ -305,6 +312,10 @@ export async function createConsultation(consultation: ConsultationRequest): Pro
         throw new ApiError(response.status, error.detail || 'Validation failed', error);
       }
       
+      if (response.status === 404) {
+        throw new ApiError(response.status, error.detail || 'Veterinarian not found', error);
+      }
+      
       if (response.status === 422) {
         throw new ApiError(response.status, error.detail || 'Business rule violation', error);
       }
@@ -345,7 +356,12 @@ export async function updateConsultation(id: number, consultation: ConsultationR
       }
       
       if (response.status === 404) {
-        throw new ApiError(response.status, 'Consultation not found', error);
+        const isVeterinarianNotFound = error.detail?.includes('Veterinarian not found');
+        throw new ApiError(
+          response.status,
+          isVeterinarianNotFound ? error.detail : 'Consultation not found',
+          error
+        );
       }
       
       if (response.status === 422) {
@@ -364,16 +380,16 @@ export async function updateConsultation(id: number, consultation: ConsultationR
   }
 }
 
-export async function deleteConsultation(id: number): Promise<void> {
+export async function cancelConsultation(id: number): Promise<Consultation> {
   if (id <= 0) {
     throw new ApiError(400, 'ID must be greater than 0');
   }
 
-  const url = `${API_BASE_URL}/consultations/${id}`;
+  const url = `${API_BASE_URL}/consultations/${id}/cancel`;
   
   try {
     const response = await fetch(url, {
-      method: 'DELETE',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -386,8 +402,48 @@ export async function deleteConsultation(id: number): Promise<void> {
         throw new ApiError(404, 'Consultation not found', error);
       }
       
-      throw new ApiError(response.status, error.detail || 'Failed to delete consultation', error);
+      if (response.status === 422) {
+        throw new ApiError(422, error.detail || 'Business rule violation', error);
+      }
+      
+      throw new ApiError(response.status, error.detail || 'Failed to cancel consultation', error);
     }
+    
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Network error or server unavailable');
+  }
+}
+
+// ==================== VETERINARIAN FUNCTIONS ====================
+
+export async function getVeterinarians(
+  filters?: VeterinarianFilters
+): Promise<Veterinarian[]> {
+  const params = new URLSearchParams();
+  
+  if (filters?.name) {
+    params.append('name', filters.name);
+  }
+  
+  if (filters?.specialtyCode !== undefined) {
+    params.append('specialtyCode', filters.specialtyCode.toString());
+  }
+
+  const url = `${API_BASE_URL}/veterinarians${params.toString() ? `?${params.toString()}` : ''}`;
+  
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      const error: ApiErrorResponse = await response.json();
+      throw new ApiError(response.status, error.detail || 'Failed to get veterinarians', error);
+    }
+    
+    return await response.json();
   } catch (error) {
     if (error instanceof ApiError) {
       throw error;

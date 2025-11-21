@@ -15,8 +15,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import syscecilia.vet.SysCecilia.dto.ConsultationRequest;
 import syscecilia.vet.SysCecilia.dto.ConsultationResponse;
 import syscecilia.vet.SysCecilia.service.ConsultationService;
+import jakarta.validation.constraints.Min;
+
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
+
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+
+import java.net.URI;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -67,7 +77,7 @@ public class ConsultationController {
             summary = "List consultations with multiple filters and pagination",
             description = "Retrieves a paginated list of consultations with optional filters. " +
                     "All filters are optional and can be combined. Filters include: animal name, owner name, " +
-                    "veterinarian name, status, reason, description, and creation date range."
+                    "veterinarian name, veterinarian ID, status, reason, description, and creation date range."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -92,6 +102,8 @@ public class ConsultationController {
             @RequestParam(required = false) String ownerName,
             @Parameter(description = "Filter by veterinarian name (partial match, case-insensitive)", required = false, example = "Dr. Silva")
             @RequestParam(required = false) String veterinarianName,
+            @Parameter(description = "Filter by veterinarian ID (exact match)", required = false, example = "1")
+            @RequestParam(required = false) Long veterinarianId,
             @Parameter(description = "Filter by consultation status", required = false, example = "COMPLETED")
             @RequestParam(required = false) String status,
             @Parameter(description = "Filter by consultation reason (partial match, case-insensitive)", required = false, example = "Checkup")
@@ -143,6 +155,7 @@ public class ConsultationController {
                     animalName,
                     ownerName,
                     veterinarianName,
+                    veterinarianId,
                     status,
                     reason,
                     description,
@@ -156,5 +169,131 @@ public class ConsultationController {
             throw new IllegalArgumentException("Invalid filter or pagination parameters: " + e.getMessage(), e);
         }
     }
+
+    @PatchMapping("/{id}/cancel")
+    @Operation(
+            summary = "Cancel consultation",
+            description = "Cancels a consultation by setting its status to CANCELLED. " +
+                    "Cannot cancel consultations that are already cancelled or completed."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Consultation successfully cancelled",
+                    content = @Content(schema = @Schema(implementation = ConsultationResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Consultation not found",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "Business rule violation - consultation cannot be cancelled",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error"
+            )
+    })
+    public ResponseEntity<ConsultationResponse> cancelConsultation(
+            @Parameter(description = "Consultation ID", required = true, example = "1")
+            @PathVariable @Min(value = 1, message = "ID must be greater than 0") Long id) {
+        ConsultationResponse consultation = consultationService.cancelConsultation(id);
+        return ResponseEntity.ok(consultation);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(
+            summary = "Update consultation",
+            description = "Updates an existing consultation. " +
+                    "If the consultation is COMPLETED, the consultationDate cannot be changed, " +
+                    "but clinical information and nextAppointmentDate can be updated."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Consultation successfully updated",
+                    content = @Content(schema = @Schema(implementation = ConsultationResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validation error - one or more fields are invalid",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Consultation not found",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "422",
+                    description = "Business rule violation",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error"
+            )
+    })
+    public ResponseEntity<ConsultationResponse> updateConsultation(
+            @Parameter(description = "Consultation ID", required = true, example = "1")
+            @PathVariable @Min(value = 1, message = "ID must be greater than 0") Long id,
+            @RequestBody(
+                    description = "Consultation data to be updated",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = ConsultationRequest.class))
+            )
+            @Valid @org.springframework.web.bind.annotation.RequestBody ConsultationRequest request) {
+        ConsultationResponse updatedConsultation = consultationService.update(id, request);
+        return ResponseEntity.ok(updatedConsultation);
+    }
+
+    @PostMapping
+    @Operation(
+            summary = "Create a new consultation",
+            description = "Creates a new consultation (appointment) for an animal. " +
+                    "All required fields must be provided. " +
+                    "The consultation date must be provided. " +
+                    "The animal must exist and be active. " +
+                    "If status is not provided, it will default to SCHEDULED."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Consultation successfully created",
+                    content = @Content(schema = @Schema(implementation = ConsultationResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Validation error - one or more fields are invalid",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Animal not found or inactive",
+                    content = @Content(schema = @Schema(implementation = org.springframework.http.ProblemDetail.class))
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Internal server error"
+            )
+    })
+    public ResponseEntity<ConsultationResponse> createConsultation(
+            @RequestBody(
+                    description = "Consultation data to be created",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = ConsultationRequest.class))
+            )
+            @Valid @org.springframework.web.bind.annotation.RequestBody ConsultationRequest request) {
+        ConsultationResponse createdConsultation = consultationService.create(request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .location(URI.create("/api/consultations/" + createdConsultation.getId()))
+                .body(createdConsultation);
+    }
 }
+
+
 

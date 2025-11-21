@@ -39,7 +39,7 @@ export function Services() {
     <section id="servicos" className="section services">
       <div className="container">
         <div className="section-title">
-          <h2>Nossos Serviços</h2>
+          <h2>Serviços</h2>
           <p>Oferecemos cuidados completos para a saúde do seu pet</p>
         </div>
         <div className="services-grid">
