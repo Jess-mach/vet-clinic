@@ -657,6 +657,56 @@ export function CreateConsultation() {
           <section className="form-section">
             <h2>Informações da Consulta</h2>
             <div className="form-grid">
+              <div className="form-group form-group-full">
+                <label htmlFor="reasonCode">
+                  Tipo de Consulta <span className="required">*</span>
+                </label>
+                <select
+                  id="reasonCode"
+                  name="reasonCode"
+                  value={formData.reasonCode}
+                  onChange={handleChange}
+                  required
+                  disabled={loading}
+                >
+
+                <option value="">Selecione um tipo</option>
+                {CONSULTATION_REASON_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+                </select>
+
+                {fieldErrors.reasonCode && (
+                  <span className="field-error">{fieldErrors.reasonCode}</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="veterinarianId">
+                  Veterinário <span className="required">*</span>
+                </label>
+                <select
+                  id="veterinarianId"
+                  name="veterinarianId"
+                  value={formData.veterinarianId || ''}
+                  onChange={handleChange}
+                  required
+                  disabled={loading || loadingVeterinarians}
+                >
+                  <option value="0">
+                    {loadingVeterinarians ? 'Carregando veterinários...' : 'Selecione o veterinário'}
+                  </option>
+                  {veterinarians.map((vet) => (
+                    <option key={vet.id} value={vet.id}>
+                      {vet.name} - {vet.specialty}
+                    </option>
+                  ))}
+                </select>
+                {fieldErrors.veterinarianId && (
+                  <span className="field-error">{fieldErrors.veterinarianId}</span>
+                )}
+              </div>
+
               <div className={`form-group ${!isEditMode ? 'consultation-date-with-table' : ''}`}>
                 <label htmlFor="consultationDate">
                   Data e Hora da Consulta <span className="required">*</span>
@@ -721,56 +771,6 @@ export function CreateConsultation() {
                       </div>
                     )}
                   </div>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="veterinarianId">
-                  Veterinário <span className="required">*</span>
-                </label>
-                <select
-                  id="veterinarianId"
-                  name="veterinarianId"
-                  value={formData.veterinarianId || ''}
-                  onChange={handleChange}
-                  required
-                  disabled={loading || loadingVeterinarians}
-                >
-                  <option value="0">
-                    {loadingVeterinarians ? 'Carregando veterinários...' : 'Selecione o veterinário'}
-                  </option>
-                  {veterinarians.map((vet) => (
-                    <option key={vet.id} value={vet.id}>
-                      {vet.name} - {vet.specialty}
-                    </option>
-                  ))}
-                </select>
-                {fieldErrors.veterinarianId && (
-                  <span className="field-error">{fieldErrors.veterinarianId}</span>
-                )}
-              </div>
-
-              <div className="form-group form-group-full">
-                <label htmlFor="reasonCode">
-                  Tipo de Consulta <span className="required">*</span>
-                </label>
-                <select
-                  id="reasonCode"
-                  name="reasonCode"
-                  value={formData.reasonCode}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                >
-
-                <option value="">Selecione um tipo</option>
-                {CONSULTATION_REASON_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-                </select>
-
-                {fieldErrors.reasonCode && (
-                  <span className="field-error">{fieldErrors.reasonCode}</span>
                 )}
               </div>
 

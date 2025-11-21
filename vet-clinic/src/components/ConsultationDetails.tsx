@@ -110,14 +110,25 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
             <h2 className="consultation-details-title">{consultation.animal.name}</h2>
             <p className="consultation-details-subtitle">Consulta Veterinária</p>
           </div>
-          <span className={`consultation-status-large ${getStatusBadgeClass(consultation.status)}`}>
-            {consultation.status}
-          </span>
+          <div className="consultation-details-header-actions">
+            <span className={`consultation-status-large ${getStatusBadgeClass(consultation.status)}`}>
+              {consultation.status}
+            </span>
+          </div>
         </div>
 
         <div className="consultation-details-content">
           <div className="details-section">
-            <h3 className="section-title">📋 Informações Gerais</h3>
+            <div className="section-title-row">
+              <h3 className="section-title">📋 Informações Gerais</h3>
+              <button
+                type="button"
+                className="consultation-edit-btn"
+                onClick={handleEdit}
+              >
+                ✏️ Editar consulta
+              </button>
+            </div>
             <div className="details-grid">
               <div className="detail-row">
                 <span className="detail-label">Animal:</span>
@@ -139,7 +150,9 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
           </div>
 
           <div className="details-section">
-            <h3 className="section-title">🩺 Dados da Consulta</h3>
+            <div className="section-title-row">
+              <h3 className="section-title">🩺 Dados da Consulta</h3>
+            </div>
             <div className="details-grid">
               <div className="detail-row">
                 <span className="detail-label">Data da Consulta:</span>
@@ -157,7 +170,9 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
           </div>
 
           <div className="details-section">
-            <h3 className="section-title">📝 Descrição</h3>
+            <div className="section-title-row">
+              <h3 className="section-title">📝 Descrição</h3>
+            </div>
             <div className="details-grid">
               <div className="detail-row full-width">
                 <span className="detail-label">Descrição:</span>
@@ -167,7 +182,9 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
           </div>
 
           <div className="details-section">
-            <h3 className="section-title">🩺 Diagnóstico e Tratamento</h3>
+            <div className="section-title-row">
+              <h3 className="section-title">🩺 Diagnóstico e Tratamento</h3>
+            </div>
             <div className="details-grid">
               <div className="detail-row full-width">
                 <span className="detail-label">Diagnóstico:</span>
@@ -186,7 +203,9 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
 
           {consultation.nextAppointmentDate && (
             <div className="details-section">
-              <h3 className="section-title">📅 Próxima Consulta</h3>
+              <div className="section-title-row">
+                <h3 className="section-title">📅 Próxima Consulta</h3>
+              </div>
               <div className="details-grid">
                 <div className="detail-row">
                   <span className="detail-label">Data Agendada:</span>
@@ -197,7 +216,9 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
           )}
 
           <div className="details-section">
-            <h3 className="section-title">⏱️ Auditoria</h3>
+            <div className="section-title-row">
+              <h3 className="section-title">⏱️ Auditoria</h3>
+            </div>
             <div className="details-grid">
               <div className="detail-row">
                 <span className="detail-label">Criado em:</span>
@@ -211,15 +232,6 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
           </div>
         </div>
 
-        {/* Botão para ir para a página de agendamento/edição da consulta */}
-        <div className="consultation-details-footer">
-          <button
-            className="btn btn-primary"
-            onClick={handleEdit}
-          >
-            Editar consulta
-          </button>
-        </div>
       </div>
     </div>
   );
