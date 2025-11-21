@@ -6,17 +6,25 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import syscecilia.vet.SysCecilia.dto.VeterinarianAvailabilityResponse;
 import syscecilia.vet.SysCecilia.dto.VeterinarianResponse;
 import syscecilia.vet.SysCecilia.model.Veterinarian;
+import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
 import syscecilia.vet.SysCecilia.repository.VeterinarianRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,6 +36,9 @@ class VeterinarianServiceTest {
 
     @Mock
     private VeterinarianRepository veterinarianRepository;
+
+    @Mock
+    private ConsultationRepository consultationRepository;
 
     @InjectMocks
     private VeterinarianService veterinarianService;
@@ -187,6 +198,83 @@ class VeterinarianServiceTest {
         assertEquals("Consulta com oftalmologista", response.getSpecialty());
         assertNotNull(response.getCreatedAt());
         assertNotNull(response.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("findAvailability should skip past hours for current day requests")
+    void testFindAvailability_SkipsPastHoursForToday() {
+        // Arrange
+        when(veterinarianRepository.findById(1L)).thenReturn(Optional.of(veterinarian1));
+        when(consultationRepository
+                .findByVeterinarianIdAndConsultationDateBetweenAndStatusNotOrderByConsultationDateAsc(
+                        anyLong(),
+                        any(LocalDateTime.class),
+                        any(LocalDateTime.class),
+                        anyString()
+                ))
+                .thenReturn(Collections.emptyList());
+
+        ZonedDateTime fixedNow = ZonedDateTime.of(
+                LocalDate.of(2025, 11, 21),
+                LocalTime.of(12, 30),
+                ZoneId.of("America/Sao_Paulo")
+        );
+
+        try (MockedStatic<ZonedDateTime> zonedDateTimeMock = mockStatic(ZonedDateTime.class)) {
+            zonedDateTimeMock.when(() -> ZonedDateTime.now(any(ZoneId.class))).thenReturn(fixedNow);
+
+            // Act
+            List<VeterinarianAvailabilityResponse> availability =
+                    veterinarianService.findAvailability(1L, null);
+
+            // Assert
+            assertFalse(availability.isEmpty());
+            VeterinarianAvailabilityResponse firstSlot = availability.get(0);
+            assertEquals(LocalDate.of(2025, 11, 21), firstSlot.getDate());
+            assertEquals(LocalTime.of(13, 0), firstSlot.getStartTime());
+            assertEquals(LocalTime.of(18, 0), firstSlot.getEndTime());
+            assertTrue(availability.stream()
+                    .filter(slot -> slot.getDate().equals(LocalDate.of(2025, 11, 21)))
+                    .noneMatch(slot -> slot.getStartTime().isBefore(LocalTime.of(13, 0))));
+        }
+    }
+
+    @Test
+    @DisplayName("findAvailability should not trim future reference dates")
+    void testFindAvailability_FutureReferenceDateKeepsMorningSlots() {
+        // Arrange
+        when(veterinarianRepository.findById(1L)).thenReturn(Optional.of(veterinarian1));
+        when(consultationRepository
+                .findByVeterinarianIdAndConsultationDateBetweenAndStatusNotOrderByConsultationDateAsc(
+                        anyLong(),
+                        any(LocalDateTime.class),
+                        any(LocalDateTime.class),
+                        anyString()
+                ))
+                .thenReturn(Collections.emptyList());
+
+        ZonedDateTime fixedNow = ZonedDateTime.of(
+                LocalDate.of(2025, 11, 21),
+                LocalTime.of(12, 30),
+                ZoneId.of("America/Sao_Paulo")
+        );
+
+        try (MockedStatic<ZonedDateTime> zonedDateTimeMock = mockStatic(ZonedDateTime.class)) {
+            zonedDateTimeMock.when(() -> ZonedDateTime.now(any(ZoneId.class))).thenReturn(fixedNow);
+
+            LocalDate referenceDate = LocalDate.of(2025, 11, 24);
+
+            // Act
+            List<VeterinarianAvailabilityResponse> availability =
+                    veterinarianService.findAvailability(1L, referenceDate);
+
+            // Assert
+            assertFalse(availability.isEmpty());
+            VeterinarianAvailabilityResponse firstSlot = availability.get(0);
+            assertEquals(referenceDate, firstSlot.getDate());
+            assertEquals(LocalTime.of(8, 0), firstSlot.getStartTime());
+            assertEquals(LocalTime.of(12, 0), firstSlot.getEndTime());
+        }
     }
 }
 

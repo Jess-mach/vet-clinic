@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -73,9 +74,11 @@ public class VeterinarianService {
         veterinarianRepository.findById(veterinarianId)
                 .orElseThrow(() -> new ResourceNotFoundException("Veterinarian", "id", veterinarianId));
 
+        ZonedDateTime requestDateTime = ZonedDateTime.now(BR_ZONE);
+
         LocalDate startDate = referenceDate != null
                 ? referenceDate
-                : ZonedDateTime.now(BR_ZONE).toLocalDate();
+                : requestDateTime.toLocalDate();
 
         List<VeterinarianAvailabilityResponse> availability = new ArrayList<>();
         LocalDate currentDate = startDate;
@@ -84,7 +87,7 @@ public class VeterinarianService {
         while (availability.size() < MAX_INTERVALS && inspectedDays < MAX_DAYS_LOOKUP) {
             if (isBusinessDay(currentDate)) {
                 List<VeterinarianAvailabilityResponse> dailyAvailability =
-                        buildDailyAvailability(veterinarianId, currentDate);
+                        buildDailyAvailability(veterinarianId, currentDate, requestDateTime);
                 for (VeterinarianAvailabilityResponse interval : dailyAvailability) {
                     availability.add(interval);
                     if (availability.size() == MAX_INTERVALS) {
@@ -99,7 +102,9 @@ public class VeterinarianService {
         return availability;
     }
 
-    private List<VeterinarianAvailabilityResponse> buildDailyAvailability(Long veterinarianId, LocalDate date) {
+    private List<VeterinarianAvailabilityResponse> buildDailyAvailability(Long veterinarianId,
+                                                                         LocalDate date,
+                                                                         ZonedDateTime requestDateTime) {
         LocalDateTime dayStart = date.atTime(MORNING_START);
         LocalDateTime dayEnd = date.atTime(AFTERNOON_END);
 
@@ -114,7 +119,13 @@ public class VeterinarianService {
         List<VeterinarianAvailabilityResponse> intervals = new ArrayList<>();
         intervals.addAll(buildBlockAvailability(date, MORNING_START, MORNING_END, busyHours));
         intervals.addAll(buildBlockAvailability(date, AFTERNOON_START, AFTERNOON_END, busyHours));
-        return intervals;
+
+        LocalTime earliestStart = determineEarliestStart(date, requestDateTime);
+        if (earliestStart == null) {
+            return intervals;
+        }
+
+        return trimIntervalsForSameDay(intervals, date, earliestStart);
     }
 
     private List<VeterinarianAvailabilityResponse> buildBlockAvailability(LocalDate date,
@@ -146,6 +157,61 @@ public class VeterinarianService {
         }
 
         return intervals;
+    }
+
+    private LocalTime determineEarliestStart(LocalDate date, ZonedDateTime requestDateTime) {
+        if (requestDateTime == null || !date.equals(requestDateTime.toLocalDate())) {
+            return null;
+        }
+
+        LocalDateTime currentDateTime = requestDateTime.toLocalDateTime();
+        LocalDateTime roundedToHour = currentDateTime.truncatedTo(ChronoUnit.HOURS);
+
+        LocalDateTime nextSlot = currentDateTime.isEqual(roundedToHour)
+                ? roundedToHour
+                : roundedToHour.plusHours(1);
+
+        if (!nextSlot.toLocalDate().isEqual(date)) {
+            return AFTERNOON_END;
+        }
+
+        LocalTime nextStart = nextSlot.toLocalTime();
+        if (nextStart.isAfter(AFTERNOON_END)) {
+            return AFTERNOON_END;
+        }
+
+        return nextStart;
+    }
+
+    private List<VeterinarianAvailabilityResponse> trimIntervalsForSameDay(
+            List<VeterinarianAvailabilityResponse> intervals,
+            LocalDate date,
+            LocalTime earliestStart) {
+
+        List<VeterinarianAvailabilityResponse> adjusted = new ArrayList<>();
+        for (VeterinarianAvailabilityResponse interval : intervals) {
+            if (!interval.getDate().equals(date)) {
+                adjusted.add(interval);
+                continue;
+            }
+
+            if (!interval.getEndTime().isAfter(earliestStart)) {
+                continue;
+            }
+
+            LocalTime adjustedStart = interval.getStartTime().isBefore(earliestStart)
+                    ? earliestStart
+                    : interval.getStartTime();
+
+            adjusted.add(new VeterinarianAvailabilityResponse(
+                    interval.getDate(),
+                    adjustedStart,
+                    interval.getEndTime(),
+                    interval.getTimezone()
+            ));
+        }
+
+        return adjusted;
     }
 
     private boolean isBusinessDay(LocalDate date) {
