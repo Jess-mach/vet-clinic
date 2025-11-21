@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createConsultation,  updateConsultation, ApiError, getVeterinarians} from '../services/api';
+import { createConsultation,  updateConsultation, ApiError, getVeterinarians, getVeterinarianAvailability} from '../services/api';
 import type { Consultation, ConsultationRequest } from '../types/consultation';
 import type { Animal } from '../types/animal';
-import type { Veterinarian } from '../types/veterinarian';
+import type { Veterinarian, VeterinarianAvailabilityResponse } from '../types/veterinarian';
 import { ErrorModal } from './ErrorModal';
 import { AnimalSearchModal } from './AnimalSearchModal';
 import './CreateConsultation.css';
@@ -31,6 +31,8 @@ export function CreateConsultation() {
   const [consultation, setConsultation] = useState<Consultation | null>(null);
   const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([]);
   const [loadingVeterinarians, setLoadingVeterinarians] = useState(false);
+  const [availability, setAvailability] = useState<VeterinarianAvailabilityResponse[]>([]);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
 
   const [formData, setFormData] = useState<ConsultationRequest>({
     animalId: 0,
@@ -58,6 +60,34 @@ export function CreateConsultation() {
     { value: 10, label: 'Retorno' },
     { value: 11, label: 'Emergência' },
   ];
+
+  // Fetch veterinarian availability
+  const fetchAvailability = useCallback(async (veterinarianId: number, date?: string) => {
+    if (isEditMode || veterinarianId <= 0) {
+      setAvailability([]);
+      return;
+    }
+    
+    setLoadingAvailability(true);
+    try {
+      const data = await getVeterinarianAvailability(veterinarianId, date);
+      setAvailability(data);
+    } catch (error) {
+      console.error('Error fetching availability:', error);
+      setAvailability([]);
+    } finally {
+      setLoadingAvailability(false);
+    }
+  }, [isEditMode]);
+
+  // Fetch availability when veterinarianId changes (only in creation mode)
+  useEffect(() => {
+    if (!isEditMode && formData.veterinarianId > 0) {
+      fetchAvailability(formData.veterinarianId);
+    } else if (isEditMode) {
+      setAvailability([]);
+    }
+  }, [formData.veterinarianId, isEditMode, fetchAvailability]);
 
   // Fetch veterinarians from API
   useEffect(() => {
@@ -224,6 +254,18 @@ export function CreateConsultation() {
       const numericVeterinarianId = value === '' || value === '0' ? 0 : Number(value);
       setFormData(prev => ({ ...prev, veterinarianId: numericVeterinarianId }));
       
+      // Buscar disponibilidade quando um veterinário for selecionado (apenas em modo criação)
+      if (!isEditMode && numericVeterinarianId > 0) {
+        fetchAvailability(numericVeterinarianId);
+      } else {
+        setAvailability([]);
+      }
+      
+      // Limpar data quando trocar de veterinário
+      if (!isEditMode) {
+        setFormData(prev => ({ ...prev, consultationDate: '' }));
+      }
+      
       if (fieldErrors.veterinarianId) {
         setFieldErrors(prev => {
           const newErrors = { ...prev };
@@ -280,6 +322,8 @@ export function CreateConsultation() {
 
     if (!formData.consultationDate || formData.consultationDate.trim() === '') {
       errors.consultationDate = 'Data da consulta é obrigatória';
+    } else if (!isEditMode && availability.length > 0 && !isDateTimeAvailable(formData.consultationDate)) {
+      errors.consultationDate = 'Por favor, selecione um horário disponível da tabela';
     }
 
     if (!formData.veterinarianId || formData.veterinarianId <= 0) {
@@ -453,6 +497,88 @@ export function CreateConsultation() {
   };
 
 
+  // Check if a datetime is within available slots
+  const isDateTimeAvailable = (dateTime: string): boolean => {
+    if (!dateTime || availability.length === 0) return false;
+    
+    const [date, time] = dateTime.split('T');
+    if (!date || !time) return false;
+    
+    const [hours, minutes] = time.split(':');
+    const timeInSeconds = parseInt(hours) * 3600 + parseInt(minutes) * 60;
+    
+    return availability.some(slot => {
+      if (slot.date !== date) return false;
+      
+      const [startHours, startMinutes, startSeconds] = slot.startTime.split(':').map(Number);
+      const [endHours, endMinutes, endSeconds] = slot.endTime.split(':').map(Number);
+      
+      const startTimeInSeconds = startHours * 3600 + startMinutes * 60 + (startSeconds || 0);
+      const endTimeInSeconds = endHours * 3600 + endMinutes * 60 + (endSeconds || 0);
+      
+      // Check if the selected time is at the start of an available slot (hourly intervals)
+      // The API returns intervals, so we check if the time matches the start of any interval
+      return timeInSeconds >= startTimeInSeconds && timeInSeconds < endTimeInSeconds;
+    });
+  };
+
+  // Handle consultation date change with validation
+  const handleConsultationDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    
+    // If in creation mode and we have availability, validate
+    if (!isEditMode && availability.length > 0 && value) {
+      if (!isDateTimeAvailable(value)) {
+        setFieldErrors(prev => ({
+          ...prev,
+          consultationDate: 'Por favor, selecione um horário disponível da tabela ao lado'
+        }));
+        return;
+      }
+    }
+    
+    // Clear error if valid
+    if (fieldErrors.consultationDate) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.consultationDate;
+        return newErrors;
+      });
+    }
+    
+    handleChange(e);
+  };
+
+  // Format time for display (HH:mm)
+  const formatTime = (time: string): string => {
+    return time.substring(0, 5);
+  };
+
+  // Format date for display (DD/MM/YYYY)
+  const formatDate = (date: string): string => {
+    const [year, month, day] = date.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  // Handle click on availability slot
+  const handleAvailabilitySlotClick = (slot: VeterinarianAvailabilityResponse) => {
+    if (isEditMode) return;
+    
+    // Set the date and time to the start of the slot
+    const dateTime = `${slot.date}T${formatTime(slot.startTime)}`;
+    setFormData(prev => ({ ...prev, consultationDate: dateTime }));
+    
+    // Clear error
+    if (fieldErrors.consultationDate) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.consultationDate;
+        return newErrors;
+      });
+    }
+  };
+
+
   return (
     <div className="create-consultation-container">
       <div className="create-consultation-content">
@@ -531,7 +657,7 @@ export function CreateConsultation() {
           <section className="form-section">
             <h2>Informações da Consulta</h2>
             <div className="form-grid">
-              <div className="form-group">
+              <div className={`form-group ${!isEditMode ? 'consultation-date-with-table' : ''}`}>
                 <label htmlFor="consultationDate">
                   Data e Hora da Consulta <span className="required">*</span>
                 </label>
@@ -540,7 +666,7 @@ export function CreateConsultation() {
                   id="consultationDate"
                   name="consultationDate"
                   value={formData.consultationDate}
-                  onChange={handleChange}
+                  onChange={handleConsultationDateChange}
                   min={getCurrentDateTime()}
                   required
                   disabled={
@@ -550,6 +676,51 @@ export function CreateConsultation() {
                 />
                 {fieldErrors.consultationDate && (
                   <span className="field-error">{fieldErrors.consultationDate}</span>
+                )}
+                {!isEditMode && formData.veterinarianId > 0 && (
+                  <div className="availability-table-container">
+                    <h3 className="availability-table-title">Horários Disponíveis</h3>
+                    {loadingAvailability ? (
+                      <div className="availability-loading">Carregando disponibilidade...</div>
+                    ) : availability.length === 0 ? (
+                      <div className="availability-empty">
+                        Nenhum horário disponível encontrado. Selecione outro veterinário ou tente novamente mais tarde.
+                      </div>
+                    ) : (
+                      <div className="availability-table-wrapper">
+                        <table className="availability-table">
+                          <thead>
+                            <tr>
+                              <th>Data</th>
+                              <th>Horário</th>
+                              <th>Ação</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {availability.map((slot, index) => (
+                              <tr 
+                                key={`${slot.date}-${slot.startTime}-${index}`}
+                                className={formData.consultationDate === `${slot.date}T${formatTime(slot.startTime)}` ? 'selected' : ''}
+                              >
+                                <td>{formatDate(slot.date)}</td>
+                                <td>{formatTime(slot.startTime)} - {formatTime(slot.endTime)}</td>
+                                <td>
+                                  <button
+                                    type="button"
+                                    className="availability-select-btn"
+                                    onClick={() => handleAvailabilitySlotClick(slot)}
+                                    disabled={loading}
+                                  >
+                                    Selecionar
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 

@@ -1,6 +1,6 @@
 import type { Animal, AnimalFilters, AnimalRequest, ApiError as ApiErrorResponse, PaginatedResponse as AnimalPaginatedResponse } from '../types/animal';
 import type { Consultation, ConsultationFilters, ConsultationRequest, ApiError as ConsultationApiErrorResponse, PaginatedResponse } from '../types/consultation';
-import type { Veterinarian, VeterinarianFilters } from '../types/veterinarian';
+import type { Veterinarian, VeterinarianFilters, VeterinarianAvailabilityResponse } from '../types/veterinarian';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -441,6 +441,43 @@ export async function getVeterinarians(
     if (!response.ok) {
       const error: ApiErrorResponse = await response.json();
       throw new ApiError(response.status, error.detail || 'Failed to get veterinarians', error);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, 'Network error or server unavailable');
+  }
+}
+
+export async function getVeterinarianAvailability(
+  veterinarianId: number,
+  date?: string
+): Promise<VeterinarianAvailabilityResponse[]> {
+  if (veterinarianId <= 0) {
+    throw new ApiError(400, 'Veterinarian ID must be greater than 0');
+  }
+
+  const params = new URLSearchParams();
+  if (date) {
+    params.append('date', date);
+  }
+
+  const url = `${API_BASE_URL}/veterinarians/${veterinarianId}/availability${params.toString() ? `?${params.toString()}` : ''}`;
+  
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      const error: ApiErrorResponse = await response.json();
+      
+      if (response.status === 404) {
+        throw new ApiError(404, 'Veterinarian not found', error);
+      }
+      
+      throw new ApiError(response.status, error.detail || 'Failed to get veterinarian availability', error);
     }
     
     return await response.json();

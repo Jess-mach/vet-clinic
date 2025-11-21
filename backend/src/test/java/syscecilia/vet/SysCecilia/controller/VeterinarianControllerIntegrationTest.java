@@ -10,8 +10,16 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import syscecilia.vet.SysCecilia.model.Animal;
+import syscecilia.vet.SysCecilia.model.Consultation;
 import syscecilia.vet.SysCecilia.model.Veterinarian;
+import syscecilia.vet.SysCecilia.repository.AnimalRepository;
+import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
 import syscecilia.vet.SysCecilia.repository.VeterinarianRepository;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -30,15 +38,31 @@ public class VeterinarianControllerIntegrationTest {
     @Autowired
     private VeterinarianRepository veterinarianRepository;
 
+    @Autowired
+    private ConsultationRepository consultationRepository;
+
+    @Autowired
+    private AnimalRepository animalRepository;
+
     private Veterinarian vet1;
     private Veterinarian vet2;
     private Veterinarian vet3;
     private Veterinarian vet4;
+    private Animal animal;
 
     @BeforeEach
     public void setUp() {
         // Clear existing data
+        consultationRepository.deleteAll();
+        animalRepository.deleteAll();
         veterinarianRepository.deleteAll();
+
+        animal = new Animal();
+        animal.setName("Luna");
+        animal.setSpecies("Canine");
+        animal.setGender("Female");
+        animal.setOwnerName("Alice Johnson");
+        animal = animalRepository.save(animal);
 
         // Create test veterinarians
         vet1 = new Veterinarian();
@@ -182,6 +206,64 @@ public class VeterinarianControllerIntegrationTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name", is("Dr. Amelia Rivers")));
+    }
+
+    @Test
+    @DisplayName("GET /api/veterinarians/{id}/availability - Should return full business intervals when no bookings exist")
+    void testGetAvailability_NoBookings() throws Exception {
+        LocalDate referenceDate = LocalDate.of(2025, 11, 24); // Monday
+
+        mockMvc.perform(get("/api/veterinarians/{id}/availability", vet1.getId())
+                        .param("date", referenceDate.toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].date", is("2025-11-24")))
+                .andExpect(jsonPath("$[0].startTime", is("08:00:00")))
+                .andExpect(jsonPath("$[0].endTime", is("12:00:00")))
+                .andExpect(jsonPath("$[1].startTime", is("13:00:00")))
+                .andExpect(jsonPath("$[1].endTime", is("18:00:00")));
+    }
+
+    @Test
+    @DisplayName("GET /api/veterinarians/{id}/availability - Should remove booked slots from availability")
+    void testGetAvailability_WithBooking() throws Exception {
+        LocalDate referenceDate = LocalDate.of(2025, 11, 24);
+        scheduleConsultation(vet1, referenceDate, 10);
+
+        mockMvc.perform(get("/api/veterinarians/{id}/availability", vet1.getId())
+                        .param("date", referenceDate.toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[0].startTime", is("08:00:00")))
+                .andExpect(jsonPath("$[0].endTime", is("10:00:00")))
+                .andExpect(jsonPath("$[1].startTime", is("11:00:00")))
+                .andExpect(jsonPath("$[1].endTime", is("12:00:00")))
+                .andExpect(jsonPath("$[2].startTime", is("13:00:00")))
+                .andExpect(jsonPath("$[2].endTime", is("18:00:00")));
+    }
+
+    @Test
+    @DisplayName("GET /api/veterinarians/{id}/availability - Should skip weekends")
+    void testGetAvailability_SkipsWeekends() throws Exception {
+        mockMvc.perform(get("/api/veterinarians/{id}/availability", vet2.getId())
+                        .param("date", "2025-11-22") // Saturday
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].date", is("2025-11-24")))
+                .andExpect(jsonPath("$[0].startTime", is("08:00:00")));
+    }
+
+    private void scheduleConsultation(Veterinarian veterinarian, LocalDate date, int hour) {
+        Consultation consultation = new Consultation();
+        consultation.setAnimal(animal);
+        consultation.setVeterinarian(veterinarian);
+        consultation.setConsultationDate(LocalDateTime.of(date, LocalTime.of(hour, 0)));
+        consultation.setReasonCode(1);
+        consultation.setStatus("SCHEDULED");
+        consultationRepository.save(consultation);
     }
 }
 
