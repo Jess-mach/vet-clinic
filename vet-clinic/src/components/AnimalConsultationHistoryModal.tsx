@@ -287,9 +287,9 @@ export function AnimalConsultationHistoryModal({
                           <tr
                             className={`consultation-row ${consultation.status === 'COMPLETED' ? 'consultation-row-expandable' : ''} ${isExpanded(consultation.id) ? 'consultation-row-expanded' : ''}`}
                             onClick={(e) => {
-                              // Só expande se não clicar nos botões de ação
+                              // Só expande se não clicar diretamente em um botão
                               const target = e.target as HTMLElement;
-                              if (!target.closest('.action-buttons') && !target.closest('button')) {
+                              if (target.tagName !== 'BUTTON' && !target.closest('button')) {
                                 handleConsultationClick(consultation);
                               }
                             }}

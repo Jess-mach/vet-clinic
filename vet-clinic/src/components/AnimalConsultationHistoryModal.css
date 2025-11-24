@@ -26,7 +26,7 @@
 .animal-consultation-history-modal {
   background: var(--bg-primary);
   border-radius: var(--radius-lg);
-  max-width: 95%;
+  max-width: 1000px;
   width: 100%;
   max-height: 90vh;
   display: flex;
@@ -107,7 +107,7 @@
 
 @media (max-width: 768px) {
   .animal-consultation-history-modal {
-    max-width: 98%;
+    max-width: 95%;
     max-height: 95vh;
   }
 

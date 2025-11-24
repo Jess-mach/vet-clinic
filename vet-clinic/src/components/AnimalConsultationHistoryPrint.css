@@ -152,8 +152,8 @@
 }
 
 #animal-consultation-history-print-container .print-table .detail-table .detail-label {
-  width: 15%;
-  min-width: 100px;
+  width: 20%;
+  min-width: 120px;
   padding: 4px 8px;
   font-weight: 600;
   color: #6B46C1;
@@ -164,7 +164,7 @@
 }
 
 #animal-consultation-history-print-container .print-table .detail-table .detail-value {
-  width: 85%;
+  width: 80%;
   padding: 4px 8px;
   color: #333;
   vertical-align: top;

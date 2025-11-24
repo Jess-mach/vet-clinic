@@ -124,6 +124,7 @@ export function printConsultations(consultations: Consultation[], onError?: (mes
               </td>
               <td>${consultation.animal.species}${consultation.animal.breed ? ' - ' + consultation.animal.breed : ''}</td>
             </tr>
+            ${consultation.status === 'COMPLETED' ? `
             <tr class="detail-row">
               <td colspan="8" class="detail-cell" style="width: 100%; padding: 8px;">
                 <table class="detail-table" style="width: 100%;">
@@ -142,6 +143,7 @@ export function printConsultations(consultations: Consultation[], onError?: (mes
                 </table>
               </td>
             </tr>
+            ` : ''}
           `).join('')}
         </tbody>
       </table>

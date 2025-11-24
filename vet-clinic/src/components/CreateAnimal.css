@@ -5,7 +5,7 @@
 }
 
 .create-animal-content {
-  max-width: 900px;
+  max-width: var(--container-max-width);
   margin: 0 auto;
   background-color: var(--color-white);
   border-radius: var(--radius-lg);

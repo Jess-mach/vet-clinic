@@ -38,12 +38,12 @@
 
 @keyframes slideUp {
   from {
-    transform: translateY(30px);
     opacity: 0;
+    transform: translateY(20px);
   }
   to {
-    transform: translateY(0);
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -67,11 +67,11 @@
 .animal-search-modal-close {
   background: transparent;
   border: none;
-  font-size: 32px;
+  font-size: 24px;
   cursor: pointer;
   color: var(--color-primary);
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
