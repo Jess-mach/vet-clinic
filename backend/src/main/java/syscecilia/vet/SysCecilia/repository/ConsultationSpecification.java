@@ -28,6 +28,18 @@ public class ConsultationSpecification {
     }
 
     /**
+     * Filter by animal ID (exact match)
+     */
+    public static Specification<Consultation> hasAnimalId(Long animalId) {
+        return (root, query, criteriaBuilder) -> {
+            if (animalId == null) {
+                return criteriaBuilder.conjunction();
+            }
+            return criteriaBuilder.equal(root.get("animal").get("id"), animalId);
+        };
+    }
+
+    /**
      * Filter by owner name (partial match, case-insensitive)
      */
     public static Specification<Consultation> hasOwnerName(String ownerName) {
@@ -144,6 +156,7 @@ public class ConsultationSpecification {
      */
     public static Specification<Consultation> withFilters(
             String animalName,
+            Long animalId,
             String ownerName,
             String veterinarianName,
             Long veterinarianId,
@@ -161,6 +174,11 @@ public class ConsultationSpecification {
                 .and(hasDescription(description))
                 .and(createdAtStart(createdAtStart))
                 .and(createdAtEnd(createdAtEnd));
+
+        // Apply animal ID filter
+        if (animalId != null) {
+            spec = spec.and(hasAnimalId(animalId));
+        }
 
         // Apply veterinarian filters (name OR id)
         if (veterinarianName != null && !veterinarianName.trim().isEmpty()) {

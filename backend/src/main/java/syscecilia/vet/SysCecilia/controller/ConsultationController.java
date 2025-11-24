@@ -76,7 +76,7 @@ public class ConsultationController {
     @Operation(
             summary = "List consultations with multiple filters and pagination",
             description = "Retrieves a paginated list of consultations with optional filters. " +
-                    "All filters are optional and can be combined. Filters include: animal name, owner name, " +
+                    "All filters are optional and can be combined. Filters include: animal name, animal ID, owner name, " +
                     "veterinarian name, veterinarian ID, status, reason, description, and creation date range."
     )
     @ApiResponses(value = {
@@ -98,6 +98,8 @@ public class ConsultationController {
     public ResponseEntity<Page<ConsultationResponse>> findAll(
             @Parameter(description = "Filter by animal name (partial match, case-insensitive)", required = false, example = "Rex")
             @RequestParam(required = false) String animalName,
+            @Parameter(description = "Filter by animal ID (exact match)", required = false, example = "1")
+            @RequestParam(required = false) Long animalId,
             @Parameter(description = "Filter by owner name (partial match, case-insensitive)", required = false, example = "João")
             @RequestParam(required = false) String ownerName,
             @Parameter(description = "Filter by veterinarian name (partial match, case-insensitive)", required = false, example = "Dr. Silva")
@@ -153,6 +155,7 @@ public class ConsultationController {
             
             Page<ConsultationResponse> consultations = consultationService.findByFilters(
                     animalName,
+                    animalId,
                     ownerName,
                     veterinarianName,
                     veterinarianId,

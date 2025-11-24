@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { createAnimal, updateAnimal, ApiError } from '../services/api';
 import type { AnimalRequest, Animal } from '../types/animal';
 import { ErrorModal } from './ErrorModal';
+import { AnimalConsultationHistoryModal } from './AnimalConsultationHistoryModal';
 import './CreateAnimal.css';
 
 export function CreateAnimal() {
@@ -19,6 +20,7 @@ export function CreateAnimal() {
   const [errorModalTitle, setErrorModalTitle] = useState('Erro');
   const [errorModalMessage, setErrorModalMessage] = useState('');
   const [errorModalDetails, setErrorModalDetails] = useState<Record<string, string>>({});
+  const [consultationHistoryModalOpen, setConsultationHistoryModalOpen] = useState(false);
 
   const [formData, setFormData] = useState<AnimalRequest>({
     name: '',
@@ -292,12 +294,45 @@ export function CreateAnimal() {
     <div className="create-animal-container">
       <div className="create-animal-content">
         <div className="create-animal-header">
-          <h1>{isEditMode ? '✏️ Editar Pet' : 'Cadastre seu Pet'}</h1>
-          <p>
-            {isEditMode
-              ? 'Atualize os dados do animal abaixo'
-              : 'Preencha os dados abaixo para cadastrar um novo animal na clínica'}
-          </p>
+          <div className="create-animal-header-content">
+            <div>
+              <h1>{isEditMode ? '✏️ Editar Pet' : 'Cadastre seu Pet'}</h1>
+              <p>
+                {isEditMode
+                  ? 'Atualize os dados do animal abaixo'
+                  : 'Preencha os dados abaixo para cadastrar um novo animal na clínica'}
+              </p>
+            </div>
+            {isEditMode && editingAnimalId && (
+              <button
+                type="button"
+                className="btn btn-secondary create-animal-history-btn"
+                onClick={() => setConsultationHistoryModalOpen(true)}
+                disabled={loading}
+                title="Ver histórico de consultas"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ marginRight: '8px', verticalAlign: 'middle' }}
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <path d="M14 2v6h6" />
+                  <path d="M16 13H8" />
+                  <path d="M16 17H8" />
+                  <path d="M10 9H8" />
+                </svg>
+                Histórico de Consultas
+              </button>
+            )}
+          </div>
         </div>
 
         {success && (
@@ -557,6 +592,15 @@ export function CreateAnimal() {
         details={errorModalDetails}
         onClose={closeErrorModal}
       />
+
+      {isEditMode && editingAnimalId && (
+        <AnimalConsultationHistoryModal
+          isOpen={consultationHistoryModalOpen}
+          animalId={editingAnimalId}
+          animalName={formData.name || 'Animal'}
+          onClose={() => setConsultationHistoryModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

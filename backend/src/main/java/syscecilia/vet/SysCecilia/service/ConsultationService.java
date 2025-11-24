@@ -50,6 +50,7 @@ public class ConsultationService {
     @Transactional(readOnly = true)
     public Page<ConsultationResponse> findByFilters(
             String animalName,
+            Long animalId,
             String ownerName,
             String veterinarianName,
             Long veterinarianId,
@@ -62,6 +63,7 @@ public class ConsultationService {
         Page<Consultation> consultations = consultationRepository.findAll(
                 ConsultationSpecification.withFilters(
                         animalName,
+                        animalId,
                         ownerName,
                         veterinarianName,
                         veterinarianId,
@@ -85,7 +87,7 @@ public class ConsultationService {
     @Transactional(readOnly = true)
     public Page<ConsultationResponse> findAllByAnimalId(Long animalId, Pageable pageable) {
         verifyAnimalExists(animalId);
-        return findByFilters(null, null, null, null, null, null, null, null, null, pageable);
+        return findByFilters(null, animalId, null, null, null, null, null, null, null, null, pageable);
     }
 
     @Transactional

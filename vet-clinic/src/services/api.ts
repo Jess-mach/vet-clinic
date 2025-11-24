@@ -246,6 +246,9 @@ export async function searchConsultations(
   if (filters?.sort) {
     params.append('sort', filters.sort);
   }
+  if (filters?.animalId !== undefined) {
+    params.append('animalId', filters.animalId.toString());
+  }
 
   const url = `${API_BASE_URL}/consultations${params.toString() ? `?${params.toString()}` : ''}`;
   

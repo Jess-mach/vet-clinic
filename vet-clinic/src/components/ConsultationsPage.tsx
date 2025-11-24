@@ -6,6 +6,7 @@ import { ConsultationList } from './ConsultationList';
 import { ConsultationDetails } from './ConsultationDetails';
 import { ConsultationFiltersComponent } from './ConsultationFilters';
 import { ErrorModal } from './ErrorModal';
+import { printConsultationDetails } from './ConsultationDetailsPrint';
 import './ConsultationsPage.css';
 
 export function ConsultationsPage() {
@@ -93,6 +94,12 @@ export function ConsultationsPage() {
     navigate('/cadastrar-consulta');
   };
 
+  const handlePrintDetails = (consultation: Consultation) => {
+    printConsultationDetails(consultation, (errorMessage) => {
+      showErrorModal('Erro ao Imprimir', errorMessage);
+    });
+  };
+
   const showErrorModal = (title: string, message: string) => {
     setErrorModalTitle(title);
     setErrorModalMessage(message);
@@ -119,6 +126,7 @@ export function ConsultationsPage() {
               onConsultationClick={handleConsultationClick}
               loading={loading}
               onConsultationCancelled={() => loadConsultations(currentFilters, page, size)}
+              onPrintDetails={handlePrintDetails}
               pagination={{
                 page,
                 size,

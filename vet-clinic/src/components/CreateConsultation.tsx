@@ -7,6 +7,9 @@ import type { Animal } from '../types/animal';
 import type { Veterinarian, VeterinarianAvailabilityResponse } from '../types/veterinarian';
 import { ErrorModal } from './ErrorModal';
 import { AnimalSearchModal } from './AnimalSearchModal';
+import { AnimalConsultationHistoryModal } from './AnimalConsultationHistoryModal';
+import { printConsultationDetails } from './ConsultationDetailsPrint';
+import { printConsultationRecipe } from './ConsultationRecipePrint';
 import './CreateConsultation.css';
 
 
@@ -26,6 +29,7 @@ export function CreateConsultation() {
   const [errorModalDetails, setErrorModalDetails] = useState<Record<string, string>>({});
   const [animalSearchModalOpen, setAnimalSearchModalOpen] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
+  const [consultationHistoryModalOpen, setConsultationHistoryModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingConsultationId, setEditingConsultationId] = useState<number | null>(null);
   const [consultation, setConsultation] = useState<Consultation | null>(null);
@@ -485,6 +489,22 @@ export function CreateConsultation() {
     navigate('/cadastrar-animal');
   };
 
+  const handlePrintDetails = () => {
+    if (consultation) {
+      printConsultationDetails(consultation, (errorMessage) => {
+        showErrorModal('Erro ao Imprimir', errorMessage);
+      });
+    }
+  };
+
+  const handlePrintRecipe = () => {
+    if (consultation) {
+      printConsultationRecipe(consultation, (errorMessage) => {
+        showErrorModal('Erro ao Imprimir', errorMessage);
+      });
+    }
+  };
+
   // Get current date and time in format for datetime-local input
   const getCurrentDateTime = (): string => {
     const now = new Date();
@@ -583,8 +603,13 @@ export function CreateConsultation() {
     <div className="create-consultation-container">
       <div className="create-consultation-content">
         <div className="create-consultation-header">
-          <h1>{isEditMode ? '✏️ Editar Consulta' : '📅 Agendar Consulta'} </h1>
-          <p>Preencha os dados abaixo para agendar uma nova consulta</p>
+          <div className="create-consultation-header-content">
+            <div>
+              <h1>{isEditMode ? '✏️ Editar Consulta' : '📅 Agendar Consulta'} </h1>
+              <p>Preencha os dados abaixo para agendar uma nova consulta</p>
+            </div>
+            
+          </div>
         </div>
 
         {success && (
@@ -888,6 +913,89 @@ export function CreateConsultation() {
           </section>
 
           <div className="form-actions">
+          {isEditMode && consultation && (
+              <div className="create-consultation-print-actions">
+                <button
+                  type="button"
+                  className="consultation-print-btn btn btn-secondary"
+                  onClick={handlePrintDetails}
+                  title="Imprimir detalhes da consulta"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ marginRight: '8px', verticalAlign: 'middle' }}
+                  >
+                    <path d="M6 9V2h12v7" />
+                    <path d="M6 18h12v4H6z" />
+                    <path d="M6 14h12a2 2 0 0 0 2-2v-3H4v3a2 2 0 0 0 2 2z" />
+                  </svg>
+                  Imprimir Detalhes
+                </button>
+                <button
+                  type="button"
+                  className="consultation-recipe-btn btn btn-secondary"
+                  onClick={handlePrintRecipe}
+                  title="Imprimir receita"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ marginRight: '8px', verticalAlign: 'middle' }}
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
+                  Imprimir Receita
+                </button>
+              </div>
+            )}
+            {selectedAnimal && formData.animalId > 0 && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setConsultationHistoryModalOpen(true)}
+                disabled={loading}
+                title="Ver histórico de consultas do animal"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ marginRight: '8px', verticalAlign: 'middle' }}
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <path d="M14 2v6h6" />
+                  <path d="M16 13H8" />
+                  <path d="M16 17H8" />
+                  <path d="M10 9H8" />
+                </svg>
+                Histórico do Animal
+              </button>
+            )}
             <button
               type="button"
               onClick={handleCancel}
@@ -920,6 +1028,15 @@ export function CreateConsultation() {
         details={errorModalDetails}
         onClose={closeErrorModal}
       />
+
+      {selectedAnimal && formData.animalId > 0 && (
+        <AnimalConsultationHistoryModal
+          isOpen={consultationHistoryModalOpen}
+          animalId={formData.animalId}
+          animalName={selectedAnimal.name}
+          onClose={() => setConsultationHistoryModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

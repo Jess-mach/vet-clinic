@@ -104,9 +104,10 @@
   padding: var(--spacing-2xl);
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--spacing-lg);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  flex-wrap: wrap;
 }
 
 .consultation-details-header-info {
@@ -143,6 +144,43 @@
 .consultation-edit-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 16px 32px rgba(124, 58, 237, 0.45);
+}
+
+.consultation-details-print-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  align-items: flex-end;
+  margin-top: var(--spacing-md);
+}
+
+.consultation-print-btn,
+.consultation-recipe-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--color-primary);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.consultation-print-btn:hover,
+.consultation-recipe-btn:hover {
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.consultation-print-btn svg,
+.consultation-recipe-btn svg {
+  flex-shrink: 0;
 }
 
 .consultation-details-title {
@@ -289,6 +327,18 @@
   .consultation-details-header {
     flex-direction: column;
     padding: var(--spacing-xl);
+  }
+
+  .consultation-details-print-actions {
+    width: 100%;
+    align-items: stretch;
+    margin-top: var(--spacing-lg);
+  }
+
+  .consultation-print-btn,
+  .consultation-recipe-btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .consultation-details-content {

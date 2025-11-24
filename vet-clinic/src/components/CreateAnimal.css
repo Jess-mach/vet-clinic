@@ -14,16 +14,34 @@
 }
 
 .create-animal-header {
-  text-align: center;
   margin-bottom: var(--spacing-2xl);
   padding-bottom: var(--spacing-lg);
   border-bottom: 2px solid var(--color-gray-200);
+}
+
+.create-animal-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.create-animal-header-content > div:first-child {
+  flex: 1;
+  text-align: center;
 }
 
 .create-animal-header h1 {
   font-size: var(--font-size-3xl);
   color: var(--color-primary);
   margin-bottom: var(--spacing-md);
+}
+
+.create-animal-history-btn {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
 }
 
 .create-animal-header p {
@@ -173,6 +191,20 @@
 
   .create-animal-content {
     padding: var(--spacing-lg);
+  }
+
+  .create-animal-header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .create-animal-header-content > div:first-child {
+    text-align: center;
+  }
+
+  .create-animal-history-btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .create-animal-header h1 {

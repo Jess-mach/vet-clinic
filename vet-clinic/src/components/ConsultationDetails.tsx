@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Consultation } from '../types/consultation';
 import { getConsultationById, ApiError } from '../services/api';
+import { printConsultationDetails } from './ConsultationDetailsPrint';
+import { printConsultationRecipe } from './ConsultationRecipePrint';
 import './ConsultationDetails.css';
 
 interface ConsultationDetailsProps {
@@ -66,6 +68,22 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
     }
   };
 
+  const handlePrintDetails = () => {
+    if (consultation) {
+      printConsultationDetails(consultation, (errorMessage) => {
+        setError(errorMessage);
+      });
+    }
+  };
+
+  const handlePrintRecipe = () => {
+    if (consultation) {
+      printConsultationRecipe(consultation, (errorMessage) => {
+        setError(errorMessage);
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="consultation-details">
@@ -116,6 +134,58 @@ export function ConsultationDetails({ consultationId, onClose }: ConsultationDet
             >
               {consultation.status}
             </span>
+          </div>
+          <div className="consultation-details-print-actions">
+            <button
+              type="button"
+              className="consultation-print-btn btn btn-secondary"
+              onClick={handlePrintDetails}
+              title="Imprimir detalhes da consulta"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ marginRight: '8px', verticalAlign: 'middle' }}
+              >
+                <path d="M6 9V2h12v7" />
+                <path d="M6 18h12v4H6z" />
+                <path d="M6 14h12a2 2 0 0 0 2-2v-3H4v3a2 2 0 0 0 2 2z" />
+              </svg>
+              Imprimir Detalhes
+            </button>
+            <button
+              type="button"
+              className="consultation-recipe-btn btn btn-secondary"
+              onClick={handlePrintRecipe}
+              title="Imprimir receita"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ marginRight: '8px', verticalAlign: 'middle' }}
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+              Imprimir Receita
+            </button>
           </div>
         </div>
 

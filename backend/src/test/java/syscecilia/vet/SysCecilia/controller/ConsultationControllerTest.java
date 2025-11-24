@@ -119,7 +119,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -135,7 +135,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.totalPages", is(1)));
 
         verify(consultationService, times(1)).findByFilters(
-                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -150,7 +150,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -164,7 +164,36 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].animal.name", is("Rex")));
 
         verify(consultationService, times(1)).findByFilters(
-                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("Rex"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), any()
+        );
+    }
+
+    @Test
+    @DisplayName("Should find consultations filtered by animal ID")
+    public void testFindConsultationsByAnimalId() throws Exception {
+        Page<ConsultationResponse> page = new PageImpl<>(
+                Arrays.asList(testConsultation),
+                PageRequest.of(0, 10),
+                1
+        );
+
+        when(consultationService.findByFilters(
+                isNull(), eq(1L), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), any()
+        )).thenReturn(page);
+
+        mockMvc.perform(get("/api/consultations")
+                .param("animalId", "1")
+                .param("page", "0")
+                .param("size", "10")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].animal.id", is(1)));
+
+        verify(consultationService, times(1)).findByFilters(
+                isNull(), eq(1L), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -179,7 +208,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -193,7 +222,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].veterinarianName", is("Dr. Silva")));
 
         verify(consultationService, times(1)).findByFilters(
-                isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull(), eq("Dr. Silva"), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -208,7 +237,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                isNull(), isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -222,7 +251,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].status", is("COMPLETED")));
 
         verify(consultationService, times(1)).findByFilters(
-                isNull(), isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), isNull(), eq("COMPLETED"), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }
@@ -237,7 +266,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), isNull(), eq("COMPLETED"), 
+                eq("Rex"), isNull(), eq("John Doe"), eq("Dr. Silva"), isNull(), eq("COMPLETED"), 
                 isNull(), isNull(), isNull(), isNull(), any()
         )).thenReturn(page);
 
@@ -257,7 +286,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.content[0].status", is("COMPLETED")));
 
         verify(consultationService, times(1)).findByFilters(
-                eq("Rex"), eq("John Doe"), eq("Dr. Silva"), isNull(), eq("COMPLETED"),
+                eq("Rex"), isNull(), eq("John Doe"), eq("Dr. Silva"), isNull(), eq("COMPLETED"),
                 isNull(), isNull(), isNull(), isNull(), any()
         );
     }
@@ -272,7 +301,7 @@ public class ConsultationControllerTest {
         );
 
         when(consultationService.findByFilters(
-                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         )).thenReturn(emptyPage);
 
@@ -286,7 +315,7 @@ public class ConsultationControllerTest {
                 .andExpect(jsonPath("$.totalElements", is(0)));
 
         verify(consultationService, times(1)).findByFilters(
-                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                eq("NonExistent"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), any()
         );
     }

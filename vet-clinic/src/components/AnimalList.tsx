@@ -3,6 +3,7 @@ import type { Animal } from '../types/animal';
 import { deleteAnimal, ApiError } from '../services/api';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { ErrorModal } from './ErrorModal';
+import { AnimalConsultationHistoryModal } from './AnimalConsultationHistoryModal';
 import './AnimalList.css';
 
 interface AnimalListProps {
@@ -28,6 +29,8 @@ export function AnimalList({
     isOpen: false,
     message: '',
   });
+  const [consultationHistoryModalOpen, setConsultationHistoryModalOpen] = useState(false);
+  const [selectedAnimalForHistory, setSelectedAnimalForHistory] = useState<Animal | null>(null);
 
   if (loading) {
     return (
@@ -63,6 +66,12 @@ export function AnimalList({
   const handleDelete = (event: React.MouseEvent, animal: Animal) => {
     event.stopPropagation();
     setDeleteConfirmModal({ isOpen: true, animal });
+  };
+
+  const handleViewHistory = (event: React.MouseEvent, animal: Animal) => {
+    event.stopPropagation();
+    setSelectedAnimalForHistory(animal);
+    setConsultationHistoryModalOpen(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -144,6 +153,29 @@ export function AnimalList({
                       </svg>
                     </button>
                     <button 
+                      className="btn-action btn-history" 
+                      onClick={(e) => handleViewHistory(e, animal)}
+                      title="Ver histórico de consultas"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <path d="M14 2v6h6" />
+                        <path d="M16 13H8" />
+                        <path d="M16 17H8" />
+                        <path d="M10 9H8" />
+                      </svg>
+                    </button>
+                    <button 
                       className="btn-action btn-delete" 
                       onClick={(e) => handleDelete(e, animal)}
                       title="Deletar"
@@ -183,6 +215,18 @@ export function AnimalList({
         onClose={() => setError({ isOpen: false, message: '' })}
         details={error.details}
       />
+
+      {selectedAnimalForHistory && (
+        <AnimalConsultationHistoryModal
+          isOpen={consultationHistoryModalOpen}
+          animalId={selectedAnimalForHistory.id}
+          animalName={selectedAnimalForHistory.name}
+          onClose={() => {
+            setConsultationHistoryModalOpen(false);
+            setSelectedAnimalForHistory(null);
+          }}
+        />
+      )}
     </div>
   );
 }

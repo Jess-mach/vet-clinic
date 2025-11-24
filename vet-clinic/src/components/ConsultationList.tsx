@@ -12,6 +12,7 @@ interface ConsultationListProps {
   onConsultationClick: (consultation: Consultation) => void;
   loading?: boolean;
   onConsultationCancelled?: () => void;
+  onPrintDetails?: (consultation: Consultation) => void;
   pagination?: {
     page: number;
     size: number;
@@ -27,6 +28,7 @@ export function ConsultationList({
   onConsultationClick,
   loading,
   onConsultationCancelled,
+  onPrintDetails,
   pagination,
   onPageChange,
   onSizeChange,
@@ -136,8 +138,9 @@ export function ConsultationList({
 
   const handlePrint = (event: React.MouseEvent, consultation: Consultation) => {
     event.stopPropagation();
-    // Imprime a página atual; podemos evoluir depois para uma ficha dedicada
-    window.print();
+    if (onPrintDetails) {
+      onPrintDetails(consultation);
+    }
   };
 
   const handleFirstPage = () => {
