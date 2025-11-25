@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { Animal } from '../types/animal';
-import { searchAnimals, ApiError } from '../services/api';
+import type { Animal } from '../../types/animal';
+import { searchAnimals, ApiError } from '../../services/animalApi';
 import './AnimalSearchModal.css';
 
 interface AnimalSearchModalProps {

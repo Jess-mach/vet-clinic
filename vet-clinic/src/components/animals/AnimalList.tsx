@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import type { Animal } from '../types/animal';
-import { deleteAnimal, ApiError } from '../services/api';
-import { ConfirmDeleteModal } from './ConfirmDeleteModal';
-import { ErrorModal } from './ErrorModal';
+import type { Animal } from '../../types/animal';
+import { deleteAnimal, ApiError } from '../../services/animalApi';
+import { ConfirmDeleteModal } from '../shared/ConfirmDeleteModal';
+import { ErrorModal } from '../shared/ErrorModal';
 import { AnimalConsultationHistoryModal } from './AnimalConsultationHistoryModal';
 import './AnimalList.css';
 

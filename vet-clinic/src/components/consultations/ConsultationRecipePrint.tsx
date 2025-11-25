@@ -1,4 +1,4 @@
-import type { Consultation } from '../types/consultation';
+import type { Consultation } from '../../types/consultation';
 
 /**
  * Carrega os estilos de impressão no documento se ainda não estiverem carregados
@@ -13,7 +13,7 @@ function loadPrintStyles(): void {
   linkElement.id = 'consultation-recipe-print-styles-link';
   linkElement.rel = 'stylesheet';
   linkElement.type = 'text/css';
-  linkElement.href = '/src/components/ConsultationRecipePrint.css';
+  linkElement.href = '/src/components/consultations/ConsultationRecipePrint.css';
   document.head.appendChild(linkElement);
 }
 

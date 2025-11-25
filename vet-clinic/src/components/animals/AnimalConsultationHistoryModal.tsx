@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import React from 'react';
-import type { Consultation, ConsultationFilters } from '../types/consultation';
-import { searchConsultations, cancelConsultation, ApiError } from '../services/api';
-import { ErrorModal } from './ErrorModal';
-import { ConfirmDeleteModal } from './ConfirmDeleteModal';
-import { PageSizeSelector } from './PageSizeSelector';
-import { PaginationControls } from './PaginationControls';
+import type { Consultation, ConsultationFilters } from '../../types/consultation';
+import { searchConsultations, cancelConsultation, ApiError } from '../../services/consultationApi';
+import { ErrorModal } from '../shared/ErrorModal';
+import { ConfirmDeleteModal } from '../shared/ConfirmDeleteModal';
+import { PageSizeSelector } from '../shared/PageSizeSelector';
+import { PaginationControls } from '../shared/PaginationControls';
 import { printConsultations } from './AnimalConsultationHistoryPrint';
 import './AnimalConsultationHistoryModal.css';
-import './ConsultationList.css';
+import '../consultations/ConsultationList.css';
 
 interface AnimalConsultationHistoryModalProps {
   isOpen: boolean;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { AnimalFilters } from '../types/animal';
+import type { AnimalFilters } from '../../types/animal';
 import './AnimalFilters.css';
 
 interface AnimalFiltersProps {

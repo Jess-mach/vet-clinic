@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import type { Consultation } from '../types/consultation';
-import { cancelConsultation, ApiError } from '../services/api';
-import { ConfirmDeleteModal } from './ConfirmDeleteModal';
-import { ErrorModal } from './ErrorModal';
-import { PageSizeSelector } from './PageSizeSelector';
-import { PaginationControls } from './PaginationControls';
+import type { Consultation } from '../../types/consultation';
+import { cancelConsultation, ApiError } from '../../services/consultationApi';
+import { ConfirmDeleteModal } from '../shared/ConfirmDeleteModal';
+import { ErrorModal } from '../shared/ErrorModal';
+import { PageSizeSelector } from '../shared/PageSizeSelector';
+import { PaginationControls } from '../shared/PaginationControls';
 import './ConsultationList.css';
 
 interface ConsultationListProps {

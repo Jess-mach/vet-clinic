@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Consultation } from '../types/consultation';
-import { getConsultationById, ApiError } from '../services/api';
+import type { Consultation } from '../../types/consultation';
+import { getConsultationById, ApiError } from '../../services/consultationApi';
 import { printConsultationDetails } from './ConsultationDetailsPrint';
 import { printConsultationRecipe } from './ConsultationRecipePrint';
 import './ConsultationDetails.css';

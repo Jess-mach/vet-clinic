@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createAnimal, updateAnimal, ApiError } from '../services/api';
-import type { AnimalRequest, Animal } from '../types/animal';
-import { ErrorModal } from './ErrorModal';
+import { createAnimal, updateAnimal, ApiError } from '../../services/animalApi';
+import type { AnimalRequest, Animal } from '../../types/animal';
+import { ErrorModal } from '../shared/ErrorModal';
 import { AnimalConsultationHistoryModal } from './AnimalConsultationHistoryModal';
 import './CreateAnimal.css';
 

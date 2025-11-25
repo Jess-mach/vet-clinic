@@ -1,4 +1,4 @@
-import type { Consultation } from '../types/consultation';
+import type { Consultation } from '../../types/consultation';
 
 /**
  * Carrega os estilos de impressão no documento se ainda não estiverem carregados
@@ -17,7 +17,7 @@ function loadPrintStyles(): void {
   linkElement.rel = 'stylesheet';
   linkElement.type = 'text/css';
   // Usar um caminho relativo que será resolvido pelo bundler
-  linkElement.href = '/src/components/AnimalConsultationHistoryPrint.css';
+  linkElement.href = '/src/components/animals/AnimalConsultationHistoryPrint.css';
   document.head.appendChild(linkElement);
 }
 

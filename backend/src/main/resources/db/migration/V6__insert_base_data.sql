@@ -25,23 +25,68 @@ WITH base_animals AS (
 ),
 animal_data AS (
     SELECT
-        -- Names by species
+        -- Pet names (simple e compostos) baseados na lista fornecida
         ARRAY[
-            'Bella', 'Max', 'Luna', 'Charlie', 'Daisy', 'Rocky', 'Molly', 'Zeus', 'Lily', 'Buddy',
-            'Sophie', 'Toby', 'Coco', 'Jack', 'Ruby', 'Duke', 'Mia', 'Oscar', 'Penny', 'Sam',
-            'Zoe', 'Rex', 'Lola', 'Gus', 'Nina', 'Leo', 'Emma', 'Bruno', 'Stella', 'Jake'
-        ] AS dog_names,
+            'Abel', 'Abelardo', 'Açaí', 'Adalberto', 'Afonso', 'Agnes', 'Aipim', 'Akira', 'Aladdin', 'Alecrim',
+            'Alfredo', 'Alice', 'Amora', 'Ana Banana', 'Ana Clara', 'Ana Júlia', 'Ana Maria', 'Angel', 'Angelina', 'Anita',
+            'Apolo', 'Aquiles', 'Aragorn', 'Ariel', 'Arthur', 'Arya', 'Astro', 'Atena', 'Athos', 'Aurora',
+            'Babalu', 'Bacon', 'Baguera', 'Baloo', 'Balu', 'Bambam', 'Bambi', 'Bandido', 'Barbie', 'Barão Vermelho',
+            'Bart', 'Batata Doce', 'Batman', 'Beethoven', 'Bela', 'Belinha', 'Bella', 'Bento', 'Bernardo', 'Biscoito',
+            'Bisteca', 'Bob Esponja', 'Bob Marley', 'Boby', 'Bolacha', 'Bolinha', 'Bolt', 'Bombom', 'Branca de Neve', 'Brigadeiro',
+            'Brisa', 'Brownie', 'Bruce', 'Brutus', 'Bubaloo', 'Bubu', 'Buddy', 'Cacau', 'Cachaça', 'Café',
+            'Caju', 'Canela', 'Capitão Gancho', 'Caramelo', 'Carmen Miranda', 'Catatau', 'Chanel', 'Charlie', 'Chewbacca', 'Chiclete',
+            'Chico Bento', 'Chiquinha', 'Chocolate', 'Chokito', 'Cindy', 'Clarabela', 'Clark Kent', 'Cléo', 'Cocada', 'Cookie',
+            'Costelinha', 'Coxinha', 'Cupcake', 'Daisy', 'Dandara', 'Darth Vader', 'Dobby', 'Dom Casmurro', 'Dom Pedro', 'Dona Benta',
+            'Dona Florinda', 'Duque', 'Duquesa', 'Einstein', 'Elvis Presley', 'Estrela', 'Farofa', 'Faísca', 'Feijão', 'Fiona',
+            'Floquinho', 'Flora', 'Fofo', 'Fofão', 'Foguinho', 'Frida', 'Frida Kahlo', 'Fumaça', 'Fuscão', 'Gael',
+            'Galileu', 'Gandhi', 'Garfield', 'Gato de Botas', 'Gengibre', 'Goku', 'Gold', 'Golias', 'Gordo', 'Grazi',
+            'Gucci', 'Guga', 'Hachi', 'Hanna', 'Happy', 'Haroldo', 'Harry Potter', 'Hércules', 'Hermione', 'Hobbit',
+            'Homer', 'Honey', 'Hulk', 'Indiana Jones', 'Iogurte', 'Iolanda', 'Ivy', 'Jack Sparrow', 'Jambo', 'Janis',
+            'Jaspion', 'Jazz', 'Jedi', 'Jerry', 'Jiji', 'Joey', 'John Lennon', 'Jojo', 'Joker', 'Jolie',
+            'Juju', 'Jujuba', 'Julieta', 'Jumanji', 'Junior', 'Juno', 'Kaiser', 'Kiara', 'Kinder', 'King',
+            'Kira', 'Klaus', 'Koda', 'Krypto', 'Kung Fu', 'Kyara', 'Lady Gaga', 'Laika', 'Lampião', 'Lancelot',
+            'Lara Croft', 'Lassie', 'Leão', 'Led', 'Legolas', 'Leia', 'Lennon', 'Leo', 'Lilo', 'Lilo Stitch',
+            'Lilica', 'Linda', 'Link', 'Lobo Mau', 'Loki', 'Lola', 'Lolita', 'Lord', 'Lorde', 'Luca',
+            'Lucky', 'Luigi', 'Luke Skywalker', 'Luna', 'Lupita', 'Luther', 'Mabel', 'Macarrão', 'Madalena', 'Madonna',
+            'Mafalda', 'Magali', 'Maggie', 'Maia', 'Malu', 'Mané', 'Manolo', 'Manu', 'Maracujá', 'Maria Bonita',
+            'Maria Cecília', 'Maria Clara', 'Maria Eduarda', 'Maria Flor', 'Maria Joaquina', 'Maria Mole', 'Marley', 'Marshmallow', 'Martin', 'Matilda',
+            'Max', 'Maya', 'Mel', 'Melancia', 'Melissa', 'Merida', 'Mickey Mouse', 'Milka', 'Milkshake', 'Mimosa',
+            'Mingau', 'Minie', 'Minnie', 'Moana', 'Mogli', 'Monalisa', 'Monica', 'Monkey', 'Moon', 'Morgana',
+            'Morpheu', 'Morticia', 'Mozart', 'Mufasa', 'Mulher Maravilha', 'Mulan', 'Murphy', 'Mustafá', 'Nala', 'Napoleão',
+            'Narizinho', 'Negresco', 'Neve', 'Newton', 'Nick', 'Nhoque', 'Nutella', 'Obi-Wan', 'Odin', 'Olaf',
+            'Oliver', 'Olivia Palito', 'Onix', 'Oreo', 'Oscar', 'Ozzy Osbourne', 'Paçoca', 'Pac-Man', 'Panda', 'Pandora',
+            'Pantera Cor de Rosa', 'Papa Léguas', 'Pato Donald', 'Paul McCartney', 'Pé de Pano', 'Penélope Charmosa', 'Phoebe', 'Phoenix', 'Picles', 'Pimenta',
+            'Pingo', 'Pink', 'Pipoca', 'Pirata', 'Piu-Piu', 'Pixel', 'Pizza', 'Pluto', 'Pocahontas', 'Polenta',
+            'Polly', 'Pompom', 'Pongo', 'Popeye', 'Potter', 'Preta', 'Pretinho', 'Princesa Leia', 'Pudim', 'Pumba',
+            'Quico', 'Quindim', 'Rabito', 'Rambo', 'Rapunzel', 'Ratinho', 'Rei Arthur', 'Rei Leão', 'Rex', 'Rihanna',
+            'Ringo Starr', 'Rita Lee', 'Robin Hood', 'Rocky Balboa', 'Romeu', 'Rosinha', 'Ross', 'Roxy', 'Ruffles', 'Safira',
+            'Salsicha', 'Samba', 'Sansão', 'Scooby Doo', 'Scott', 'Shakira', 'Shazam', 'She-Ra', 'Sherlock Holmes', 'Shrek',
+            'Simba', 'Sininho', 'Skate', 'Snoopy', 'Snow', 'Sofia', 'Sol', 'Sombra', 'Sonic', 'Soneca',
+            'Sophie', 'Spock', 'Sr. Gato', 'Stark', 'Stella', 'Stuart Little', 'Suflair', 'Sushi', 'Super Homem', 'T-Rex',
+            'Tico e Teco', 'Taz', 'Ted', 'Tequila', 'Teodoro', 'Tiana', 'Tigrão', 'Timão', 'Tinker Bell', 'Tio Patinhas',
+            'Titan', 'Toddy', 'Tom Jobim', 'Tommy', 'Tony Stark', 'Topázio', 'Totó', 'Trovão', 'Trufa', 'Tuca',
+            'Tulipa', 'Tupã', 'Tutti-Frutti', 'Twister', 'Tyson', 'Ulisses', 'Ursinho Pooh', 'Vader', 'Valentina', 'Valente',
+            'Vanilla', 'Vênus', 'Vingador', 'Vinícius', 'Violeta', 'Vitório', 'Vodka', 'Waffle', 'Wally', 'Walter',
+            'Whisky', 'Whoopi', 'Willow', 'Winnie', 'Wolf', 'Wolverine', 'Woody', 'Xena', 'Xico', 'Xuxa',
+            'Yasmin', 'Yellow', 'Yoda', 'Yoshi', 'Yuki', 'Yumi', 'Zeca', 'Zelda', 'Zen', 'Zeus',
+            'Zé Carioca', 'Zé Colmeia', 'Zé Pequeno', 'Zé Gatinho', 'Zica', 'Ziggy', 'Zoe', 'Zorro', 'Zuleica', 'Zulu'
+        ] AS pet_names,
+
+        -- Nomes de tutores brasileiros
         ARRAY[
-            'Whiskers', 'Simba', 'Nala', 'Shadow', 'Mia', 'Chloe', 'Oliver', 'Loki', 'Luna', 'Jasper',
-            'Lily', 'Oscar', 'Toby', 'Ruby', 'Coco', 'Jack', 'Molly', 'Rocky', 'Sophie', 'Duke'
-        ] AS cat_names,
-        ARRAY[
-            'Polly', 'Rio', 'Sunny', 'Blue', 'Kiwi', 'Mango', 'Tweety', 'Coco', 'Luna', 'Max',
-            'Bella', 'Charlie', 'Daisy', 'Jasper', 'Lily'
-        ] AS bird_names,
-        ARRAY[
-            'Bunny', 'Thumper', 'Cocoa', 'Oreo', 'Pepper'
-        ] AS rabbit_names,
+            'João Silva', 'Maria Oliveira', 'Carlos Santos', 'Ana Paula Souza', 'Pedro Almeida',
+            'Mariana Costa', 'Lucas Pereira', 'Fernanda Rodrigues', 'Rafael Lima', 'Camila Ribeiro',
+            'Bruno Carvalho', 'Patrícia Fernandes', 'Gustavo Gomes', 'Juliana Araújo', 'Felipe Barros',
+            'Larissa Melo', 'André Castro', 'Beatriz Martins', 'Diego Teixeira', 'Aline Duarte',
+            'Rodrigo Rocha', 'Carolina Nogueira', 'Eduardo Monteiro', 'Letícia Freitas', 'Marcelo Cardoso',
+            'Vanessa Correia', 'Tiago Moraes', 'Natália Batista', 'Fábio Moreira', 'Priscila Antunes',
+            'Henrique Campos', 'Luciana Pires', 'Daniel Souza', 'Renata Farias', 'Sérgio Tavares',
+            'Tatiane Cunha', 'Igor Vieira', 'Vivian Barros', 'César Almeida', 'Roberta Mello',
+            'Vinícius Prado', 'Bianca Rezende', 'Alexandre Coutinho', 'Daniele Siqueira', 'Hugo Peixoto',
+            'Simone Brito', 'Ricardo Sales', 'Érika Cavalcante', 'Rogério Braga', 'Cláudia Silveira',
+            'Márcio Queiroz', 'Adriana Magalhães', 'Leandro Moraes', 'Carol Souza', 'Talita Lopes',
+            'Joana Campos', 'Paulo Henrique', 'Rafaela Dias', 'Caio Gonçalves', 'Sabrina Alves'
+        ] AS owner_names,
 
         -- Breeds by species
         ARRAY[
@@ -93,12 +138,7 @@ INSERT INTO animals (
 )
 SELECT
     b.id,
-    CASE b.species
-        WHEN 'Dog' THEN ad.dog_names[((b.id - 1) % array_length(ad.dog_names, 1)) + 1]
-        WHEN 'Cat' THEN ad.cat_names[((b.id - 1) % array_length(ad.cat_names, 1)) + 1]
-        WHEN 'Bird' THEN ad.bird_names[((b.id - 1) % array_length(ad.bird_names, 1)) + 1]
-        ELSE ad.rabbit_names[((b.id - 1) % array_length(ad.rabbit_names, 1)) + 1]
-    END AS name,
+    ad.pet_names[((b.id - 1) % array_length(ad.pet_names, 1)) + 1] AS name,
     b.species,
     CASE b.species
         WHEN 'Dog' THEN ad.dog_breeds[((b.id - 1) % array_length(ad.dog_breeds, 1)) + 1]
@@ -116,9 +156,15 @@ SELECT
         ELSE (1.50 + (b.id % 4) * 0.50)::DECIMAL(5,2)
     END AS weight,
     format('CHIP%06s', b.id::text) AS microchip_number,
-    format('Owner %s', b.id) AS owner_name,
+    ad.owner_names[((b.id - 1) % array_length(ad.owner_names, 1)) + 1] AS owner_name,
     format('(11) 9%07s', lpad(b.id::text, 7, '0')) AS owner_phone,
-    format('owner%03s@example.com', b.id) AS owner_email,
+    lower(
+        replace(
+            ad.owner_names[((b.id - 1) % array_length(ad.owner_names, 1)) + 1],
+            ' ',
+            '.'
+        )
+    ) || '@email.com' AS owner_email,
     TIMESTAMP '2024-12-01 10:00:00' + (b.id % 30) * INTERVAL '1 day' AS created_at,
     TIMESTAMP '2024-12-01 10:00:00' + (b.id % 30) * INTERVAL '1 day' AS updated_at,
     TRUE AS is_active,

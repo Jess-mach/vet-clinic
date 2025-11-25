@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import type { ConsultationFilters } from '../types/consultation';
-import type { Veterinarian } from '../types/veterinarian';
-import { getVeterinarians } from '../services/api';
+import type { ConsultationFilters } from '../../types/consultation';
+import type { Veterinarian } from '../../types/veterinarian';
+import { getVeterinarians } from '../../services/veterinarianApi';
 import './ConsultationFilters.css';
 
 interface ConsultationFiltersComponentProps {
@@ -75,7 +75,7 @@ export function ConsultationFiltersComponent({
     // Resetar para página 0 ao aplicar filtros
     filters.page = 0;
     filters.size = 10;
-    filters.sort = 'consultationDate,asc';
+    filters.sort = 'consultationDate,desc';
     
     onSearch(filters);
   };

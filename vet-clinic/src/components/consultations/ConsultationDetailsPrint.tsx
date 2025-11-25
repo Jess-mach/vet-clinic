@@ -1,4 +1,4 @@
-import type { Consultation } from '../types/consultation';
+import type { Consultation } from '../../types/consultation';
 
 /**
  * Carrega os estilos de impressão no documento se ainda não estiverem carregados

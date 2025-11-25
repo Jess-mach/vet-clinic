@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAnimalById, ApiError } from '../services/api';
-import type { Animal } from '../types/animal';
+import { getAnimalById, ApiError } from '../../services/animalApi';
+import type { Animal } from '../../types/animal';
 import { AnimalConsultationHistoryModal } from './AnimalConsultationHistoryModal';
 import './AnimalDetails.css';
 

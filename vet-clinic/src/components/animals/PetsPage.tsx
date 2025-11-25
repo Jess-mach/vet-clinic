@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Animal, AnimalFilters, PaginatedResponse } from '../types/animal';
-import { searchAnimals, ApiError } from '../services/api';
+import type { Animal, AnimalFilters, PaginatedResponse } from '../../types/animal';
+import { searchAnimals, ApiError } from '../../services/animalApi';
 import { AnimalList } from './AnimalList';
 import { AnimalDetails } from './AnimalDetails';
 import { AnimalFiltersComponent } from './AnimalFilters';
-import { ErrorModal } from './ErrorModal';
-import { PageSizeSelector } from './PageSizeSelector';
-import { PaginationControls } from './PaginationControls';
+import { ErrorModal } from '../shared/ErrorModal';
+import { PageSizeSelector } from '../shared/PageSizeSelector';
+import { PaginationControls } from '../shared/PaginationControls';
 import './PetsPage.css';
 
 export function PetsPage() {

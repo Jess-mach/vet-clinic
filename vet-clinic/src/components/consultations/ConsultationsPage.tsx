@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Consultation, ConsultationFilters } from '../types/consultation';
-import { searchConsultations, ApiError } from '../services/api';
+import type { Consultation, ConsultationFilters } from '../../types/consultation';
+import { searchConsultations, ApiError } from '../../services/consultationApi';
 import { ConsultationList } from './ConsultationList';
 import { ConsultationDetails } from './ConsultationDetails';
 import { ConsultationFiltersComponent } from './ConsultationFilters';
-import { ErrorModal } from './ErrorModal';
+import { ErrorModal } from '../shared/ErrorModal';
 import { printConsultationDetails } from './ConsultationDetailsPrint';
 import './ConsultationsPage.css';
 
@@ -39,7 +39,7 @@ export function ConsultationsPage() {
         ...filtersToUse,
         page: pageToUse,
         size: sizeToUse,
-        sort: filtersToUse.sort || 'consultationDate,asc',
+        sort: filtersToUse.sort || 'consultationDate,desc',
       };
       
       const data = await searchConsultations(searchFilters);

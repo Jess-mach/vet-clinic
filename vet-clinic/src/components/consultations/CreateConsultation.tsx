@@ -1,13 +1,24 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { createConsultation,  updateConsultation, ApiError, getVeterinarians, getVeterinarianAvailability} from '../services/api';
-import type { Consultation, ConsultationRequest } from '../types/consultation';
-import type { Animal } from '../types/animal';
-import type { Veterinarian, VeterinarianAvailabilityResponse } from '../types/veterinarian';
-import { ErrorModal } from './ErrorModal';
-import { AnimalSearchModal } from './AnimalSearchModal';
-import { AnimalConsultationHistoryModal } from './AnimalConsultationHistoryModal';
+import {
+  createConsultation,
+  updateConsultation,
+  ApiError,
+} from '../../services/consultationApi';
+import {
+  getVeterinarians,
+  getVeterinarianAvailability,
+} from '../../services/veterinarianApi';
+import type { Consultation, ConsultationRequest } from '../../types/consultation';
+import type { Animal } from '../../types/animal';
+import type {
+  Veterinarian,
+  VeterinarianAvailabilityResponse,
+} from '../../types/veterinarian';
+import { ErrorModal } from '../shared/ErrorModal';
+import { AnimalSearchModal } from '../animals/AnimalSearchModal';
+import { AnimalConsultationHistoryModal } from '../animals/AnimalConsultationHistoryModal';
 import { printConsultationDetails } from './ConsultationDetailsPrint';
 import { printConsultationRecipe } from './ConsultationRecipePrint';
 import './CreateConsultation.css';
