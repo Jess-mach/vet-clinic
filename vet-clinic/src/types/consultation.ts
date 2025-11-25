@@ -49,6 +49,7 @@ export interface ConsultationFilters {
   page?: number;
   size?: number;
   sort?: string;
+  animalId?: number;
 }
 
 export interface ConsultationRequest {

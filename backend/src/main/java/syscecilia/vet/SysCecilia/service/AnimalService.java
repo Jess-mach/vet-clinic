@@ -1,9 +1,6 @@
 package syscecilia.vet.SysCecilia.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import syscecilia.vet.SysCecilia.dto.AnimalRequest;
@@ -13,6 +10,7 @@ import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
 import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
+import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -25,10 +23,12 @@ import java.util.stream.Stream;
 public class AnimalService {
 
     private final AnimalRepository animalRepository;
+    private final ConsultationRepository consultationRepository;
 
     @Autowired
-    public AnimalService(AnimalRepository animalRepository) {
+    public AnimalService(AnimalRepository animalRepository, ConsultationRepository consultationRepository) {
         this.animalRepository = animalRepository;
+        this.consultationRepository = consultationRepository;
     }
 
     @Transactional(readOnly = true)
@@ -65,9 +65,16 @@ public class AnimalService {
     public void delete(Long id) {
         Animal animal = animalRepository.findByIdAndIsActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Animal not found with id: " + id));
-        animal.setIsActive(false);
-        animal.setInactivatedAt(LocalDateTime.now());
-        animalRepository.save(animal);
+
+        boolean hasConsultations = consultationRepository.existsByAnimalId(id);
+
+        if (hasConsultations) {
+            animal.setIsActive(false);
+            animal.setInactivatedAt(LocalDateTime.now());
+            animalRepository.save(animal);
+        } else {
+            animalRepository.delete(animal);
+        }
     }
 
     private void validateBusinessRules(AnimalRequest request) {

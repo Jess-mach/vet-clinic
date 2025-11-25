@@ -41,12 +41,6 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- <dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency> -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -83,12 +77,6 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 		
-		<!-- Dotenv for .env file support -->
-		<dependency>
-			<groupId>io.github.cdimascio</groupId>
-			<artifactId>dotenv-java</artifactId>
-			<version>3.0.0</version>
-		</dependency>
 	</dependencies>
 
 	<build>
@@ -125,25 +113,21 @@
 						<configuration>
 							<excludes>
 								<exclude>syscecilia/vet/SysCecilia/config/**</exclude>
+								<exclude>syscecilia/vet/SysCecilia/exception/**</exclude>
 								<exclude>syscecilia/vet/SysCecilia/SysCeciliaApplication*</exclude>
 							</excludes>
 						</configuration>
 					</execution>
 					<execution>
 						<id>jacoco-check</id>
+						<phase>test</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
 						<configuration>
 							<rules>
 								<rule>
-									<element>PACKAGE</element>
-									<excludes>
-										<exclude>*Test</exclude>
-										<exclude>syscecilia.vet.SysCecilia.config</exclude>
-										<exclude>syscecilia.vet.SysCecilia.exception</exclude>
-										<exclude>syscecilia.vet.SysCecilia.SysCeciliaApplication</exclude>
-									</excludes>
+									<element>BUNDLE</element>
 									<limits>
 										<limit>
 											<counter>LINE</counter>

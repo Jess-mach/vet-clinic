@@ -1,0 +1,200 @@
+@page {
+  size: A4;
+  margin: 2cm 2cm 2cm 2cm;
+}
+
+#consultation-recipe-print-container {
+  font-family: 'Times New Roman', serif;
+  font-size: 11pt;
+  line-height: 1.6;
+  color: #000;
+  background: white;
+  padding: 0;
+}
+
+#consultation-recipe-print-container .page-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1.5cm;
+  background-color: white;
+  border-bottom: 2px solid #000;
+  text-align: center;
+  padding: 8px;
+  font-size: 8pt;
+  color: #333;
+  z-index: 1000;
+}
+
+#consultation-recipe-print-container .print-content {
+  margin-top: 1.5cm;
+  margin-bottom: 1.5cm;
+}
+
+#consultation-recipe-print-container .recipe-header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 3px double #000;
+}
+
+#consultation-recipe-print-container .recipe-logo h1 {
+  font-size: 24pt;
+  font-weight: bold;
+  color: #000;
+  margin: 0 0 10px 0;
+  letter-spacing: 2px;
+}
+
+#consultation-recipe-print-container .recipe-clinic-info {
+  font-size: 10pt;
+  color: #333;
+  margin-top: 10px;
+}
+
+#consultation-recipe-print-container .recipe-patient-info {
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+#consultation-recipe-print-container .info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+#consultation-recipe-print-container .info-item {
+  flex: 1;
+  font-size: 10pt;
+}
+
+#consultation-recipe-print-container .info-item strong {
+  color: #000;
+}
+
+#consultation-recipe-print-container .recipe-section {
+  margin-bottom: 25px;
+  page-break-inside: avoid;
+}
+
+#consultation-recipe-print-container .recipe-section-title {
+  font-size: 12pt;
+  font-weight: bold;
+  color: #000;
+  margin-bottom: 12px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #000;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#consultation-recipe-print-container .recipe-section-content {
+  padding: 10px 0;
+  font-size: 11pt;
+  line-height: 1.8;
+  text-align: justify;
+}
+
+#consultation-recipe-print-container .recipe-section-content p {
+  margin: 0 0 10px 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+#consultation-recipe-print-container .treatment-text {
+  font-size: 11pt;
+  line-height: 2;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+#consultation-recipe-print-container .recipe-signature {
+  margin-top: 50px;
+  padding-top: 20px;
+  border-top: 1px solid #000;
+}
+
+#consultation-recipe-print-container .signature-line {
+  margin-bottom: 15px;
+}
+
+#consultation-recipe-print-container .signature-line p {
+  margin: 5px 0;
+  font-size: 10pt;
+}
+
+#consultation-recipe-print-container .signature-space {
+  margin-top: 50px !important;
+  padding-top: 5px;
+  border-top: 1px solid #000;
+}
+
+#consultation-recipe-print-container .signature-crmv {
+  margin-top: 10px;
+  font-size: 10pt;
+}
+
+#consultation-recipe-print-container .signature-date {
+  text-align: right;
+  margin-top: 20px;
+  font-size: 10pt;
+}
+
+#consultation-recipe-print-container .recipe-footer {
+  margin-top: 40px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+#consultation-recipe-print-container .recipe-warning {
+  font-size: 9pt;
+  color: #d32f2f;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+#consultation-recipe-print-container .recipe-validity {
+  font-size: 8pt;
+  color: #666;
+  text-align: center;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+@media print {
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  
+  body > *:not(#consultation-recipe-print-container) {
+    display: none !important;
+  }
+  
+  #consultation-recipe-print-container {
+    position: relative !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+  }
+  
+  #consultation-recipe-print-container .page-header,
+  #consultation-recipe-print-container .page-footer {
+    position: fixed;
+  }
+  
+  #consultation-recipe-print-container .recipe-section {
+    page-break-inside: avoid;
+  }
+  
+  #consultation-recipe-print-container .recipe-signature {
+    page-break-inside: avoid;
+  }
+}
+

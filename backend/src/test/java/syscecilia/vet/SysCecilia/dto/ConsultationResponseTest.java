@@ -21,6 +21,7 @@ class ConsultationResponseTest {
         assertNull(response.getId());
         assertNull(response.getAnimal());
         assertNull(response.getConsultationDate());
+        assertNull(response.getVeterinarianId());
         assertNull(response.getVeterinarianName());
         assertNull(response.getReason());
         assertNull(response.getDescription());
@@ -40,6 +41,7 @@ class ConsultationResponseTest {
         Long id = 1L;
         AnimalBasicInfo animal = new AnimalBasicInfo(1L, "Rex", "Dog", "Golden Retriever", "John Doe");
         LocalDateTime consultationDate = LocalDateTime.of(2024, 1, 15, 10, 30);
+        Long veterinarianId = 20L;
         String veterinarianName = "Dr. Silva";
         Integer reasonCode = 1;
         String reason = "Routine checkup";
@@ -54,7 +56,7 @@ class ConsultationResponseTest {
         
         // When
         ConsultationResponse response = new ConsultationResponse(
-            id, animal, consultationDate, veterinarianName, reasonCode, reason,
+            id, animal, consultationDate, veterinarianId, veterinarianName, reasonCode, reason,
             description, diagnosis, treatmentPrescribed, observations,
             nextAppointmentDate, status, createdAt, updatedAt
         );
@@ -64,6 +66,7 @@ class ConsultationResponseTest {
         assertEquals(id, response.getId());
         assertEquals(animal, response.getAnimal());
         assertEquals(consultationDate, response.getConsultationDate());
+        assertEquals(veterinarianId, response.getVeterinarianId());
         assertEquals(veterinarianName, response.getVeterinarianName());
         assertEquals(reason, response.getReason());
         assertEquals(description, response.getDescription());
@@ -263,13 +266,14 @@ class ConsultationResponseTest {
     void shouldHandleNullValues() {
         // Given & When
         ConsultationResponse response = new ConsultationResponse(
-            null, null, null, null, null, null, null, null, null, null, null, null, null, null
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null
         );
         
         // Then
         assertNull(response.getId());
         assertNull(response.getAnimal());
         assertNull(response.getConsultationDate());
+        assertNull(response.getVeterinarianId());
         assertNull(response.getVeterinarianName());
         assertNull(response.getReasonCode());
         assertNull(response.getReason());
@@ -281,6 +285,20 @@ class ConsultationResponseTest {
         assertNull(response.getStatus());
         assertNull(response.getCreatedAt());
         assertNull(response.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("Should set and get veterinarian id")
+    void shouldSetAndGetVeterinarianId() {
+        // Given
+        ConsultationResponse response = new ConsultationResponse();
+        Long veterinarianId = 7L;
+
+        // When
+        response.setVeterinarianId(veterinarianId);
+
+        // Then
+        assertEquals(veterinarianId, response.getVeterinarianId());
     }
 
     @Test

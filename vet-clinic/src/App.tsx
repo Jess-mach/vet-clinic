@@ -1,16 +1,16 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { Header } from './components/Header';
-import { Hero } from './components/Hero';
-import { Services } from './components/Services';
-import { Specialties } from './components/Specialties';
-import { Differentials } from './components/Differentials';
-import { Testimonials } from './components/Testimonials';
-import { Footer } from './components/Footer';
-import { CreateAnimal } from './components/CreateAnimal';
-import { PetsPage } from './components/PetsPage';
-import { ConsultationsPage } from './components/ConsultationsPage';
-import { CreateConsultation } from './components/CreateConsultation';
+import { Header } from './components/shared/Header';
+import { Footer } from './components/shared/Footer';
+import { Hero } from './components/landing/Hero';
+import { Services } from './components/landing/Services';
+import { Specialties } from './components/landing/Specialties';
+import { Differentials } from './components/landing/Differentials';
+import { Testimonials } from './components/landing/Testimonials';
+import { CreateAnimal } from './components/animals/CreateAnimal';
+import { PetsPage } from './components/animals/PetsPage';
+import { ConsultationsPage } from './components/consultations/ConsultationsPage';
+import { CreateConsultation } from './components/consultations/CreateConsultation';
 import './App.css';
 
 function ScrollToHash() {

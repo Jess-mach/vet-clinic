@@ -1,6 +1,5 @@
 package syscecilia.vet.SysCecilia.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,11 +11,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import syscecilia.vet.SysCecilia.config.TestConfig;
+import syscecilia.vet.SysCecilia.dto.VeterinarianAvailabilityResponse;
 import syscecilia.vet.SysCecilia.dto.VeterinarianResponse;
 import syscecilia.vet.SysCecilia.exception.GlobalExceptionHandler;
 import syscecilia.vet.SysCecilia.service.VeterinarianService;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -39,16 +41,14 @@ class VeterinarianControllerTest {
 
     @MockBean
     private VeterinarianService veterinarianService;
-
-    private ObjectMapper objectMapper;
     private VeterinarianResponse veterinarian1;
     private VeterinarianResponse veterinarian2;
     private VeterinarianResponse veterinarian3;
+    private VeterinarianAvailabilityResponse morningAvailability;
+    private VeterinarianAvailabilityResponse afternoonAvailability;
 
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper();
-
         veterinarian1 = new VeterinarianResponse();
         veterinarian1.setId(1L);
         veterinarian1.setName("Dr. Amelia Rivers");
@@ -72,6 +72,20 @@ class VeterinarianControllerTest {
         veterinarian3.setSpecialty("Consulta com cardiologista");
         veterinarian3.setCreatedAt(LocalDateTime.now());
         veterinarian3.setUpdatedAt(LocalDateTime.now());
+
+        morningAvailability = new VeterinarianAvailabilityResponse(
+                LocalDate.of(2025, 11, 25),
+                LocalTime.of(8, 0),
+                LocalTime.of(10, 0),
+                "America/Sao_Paulo"
+        );
+
+        afternoonAvailability = new VeterinarianAvailabilityResponse(
+                LocalDate.of(2025, 11, 25),
+                LocalTime.of(13, 0),
+                LocalTime.of(18, 0),
+                "America/Sao_Paulo"
+        );
     }
 
     @Test
@@ -194,5 +208,34 @@ class VeterinarianControllerTest {
         verify(veterinarianService, times(1)).findAll(null, null);
     }
 
+    @Test
+    @DisplayName("GET /api/veterinarians/{id}/availability - Should return availability intervals")
+    void testGetAvailability_ReturnsIntervals() throws Exception {
+        List<VeterinarianAvailabilityResponse> intervals = Arrays.asList(morningAvailability, afternoonAvailability);
+        when(veterinarianService.findAvailability(1L, null)).thenReturn(intervals);
+
+        mockMvc.perform(get("/api/veterinarians/{id}/availability", 1L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].date", is("2025-11-25")))
+                .andExpect(jsonPath("$[0].startTime", is("08:00:00")))
+                .andExpect(jsonPath("$[0].endTime", is("10:00:00")))
+                .andExpect(jsonPath("$[0].timezone", is("America/Sao_Paulo")))
+                .andExpect(jsonPath("$[1].startTime", is("13:00:00")));
+
+        verify(veterinarianService, times(1)).findAvailability(1L, null);
+    }
+
+    @Test
+    @DisplayName("GET /api/veterinarians/{id}/availability - Should validate veterinarian id")
+    void testGetAvailability_InvalidId_ReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/veterinarians/{id}/availability", -1L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+
+        verify(veterinarianService, never()).findAvailability(anyLong(), any());
+    }
 }
 

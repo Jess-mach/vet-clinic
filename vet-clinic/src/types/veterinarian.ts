@@ -12,3 +12,10 @@ export interface VeterinarianFilters {
   specialtyCode?: number;
 }
 
+export interface VeterinarianAvailabilityResponse {
+  date: string;
+  startTime: string;
+  endTime: string;
+  timezone: string;
+}
+

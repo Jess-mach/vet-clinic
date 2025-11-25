@@ -161,7 +161,7 @@ public class ConsultationServiceTest {
         )).thenReturn(page);
 
         Page<ConsultationResponse> consultations = consultationService.findByFilters(
-                "Luna", null, "Dr. Santos", null, "COMPLETED", null, null, null, null,
+                "Luna", null, null, "Dr. Santos", null, "COMPLETED", null, null, null, null,
                 PageRequest.of(0, 10)
         );
         
