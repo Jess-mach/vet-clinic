@@ -1,71 +1,89 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # Banco de Dados PostgreSQL
   postgres:
     image: postgres:16-alpine
-    container_name: postgres_syscecilia
+    container_name: syscecilia-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USERNAME:-jess}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgresql}
-      POSTGRES_DB: ${DB_NAME:-syscecilia}
-      POSTGRES_SCHEMA: ${DB_SCHEMA:-syscecilia}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - syscecilia_network
+      - syscecilia-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jess -d appdb"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Backend - Spring Boot
+  # Backend Spring Boot
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: backend_syscecilia
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME:-syscecilia}
-      DB_USERNAME: ${DB_USERNAME:-postgresql}
-      DB_PASSWORD: ${DB_PASSWORD:-postgresql}
-      DB_SCHEMA: ${DB_SCHEMA:-syscecilia}
-      SPRING_PROFILES_ACTIVE: docker
-    ports:
-      - "8080:8080"
+    container_name: syscecilia-backend
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
+    environment:
+      # Configurações do Banco de Dados
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: postgres
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_SCHEMA: postgres
+      # Configurações do Spring
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+    ports:
+      - "8080:8080"
     networks:
-      - syscecilia_network
-    restart: unless-stopped
+      - syscecilia-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/swagger-ui.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
 
-  # Frontend - React + Vite
+  # Frontend React
   frontend:
     build:
-      context: ./vet-clinic
+      context: ./frontend
       dockerfile: Dockerfile
-    container_name: frontend_syscecilia
+    container_name: syscecilia-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
     environment:
+      # URL da API do Backend
       VITE_API_URL: http://localhost:8080/api
     ports:
       - "5173:5173"
-    depends_on:
-      - backend
     networks:
-      - syscecilia_network
-    restart: unless-stopped
+      - syscecilia-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5173"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
-networks:
-  syscecilia_network:
-    driver: bridge
-
+# Volumes persistentes
 volumes:
   postgres_data:
     driver: local
+
+# Rede para comunicação entre containers
+networks:
+  syscecilia-network:
+    driver: bridge
 

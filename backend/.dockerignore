@@ -1,16 +1,40 @@
+# Diretórios de build e cache
 target/
+.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.settings/
+.project
+.classpath
+
+# Logs
+*.log
+
+# Arquivos temporários
+*.tmp
+*.bak
+*.swp
+*~
+
+# OS específicos
+.DS_Store
+Thumbs.db
+
+# Git
 .git/
 .gitignore
-.env
-.env.local
-.env.*.local
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.DS_Store
-.idea/
-*.iml
-*.log
-.vscode/
+.gitattributes
 
+# Documentação
+README.md
+HELP.md
+*.md
+
+# Docker
+Dockerfile
+.dockerignore
