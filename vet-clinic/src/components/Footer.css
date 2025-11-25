@@ -20,6 +20,8 @@
   font-size: var(--font-size-2xl);
   color: var(--color-white);
   margin-bottom: var(--spacing-xs);
+  margin-top: 0;
+  line-height: 1.2;
 }
 
 .footer-subtitle {
@@ -27,6 +29,7 @@
   color: var(--color-primary-light);
   margin-bottom: var(--spacing-md);
   font-weight: var(--font-weight-medium);
+  line-height: 1.2;
 }
 
 .footer-description {
@@ -39,7 +42,9 @@
   font-size: var(--font-size-lg);
   color: var(--color-white);
   margin-bottom: var(--spacing-md);
+  margin-top: 0;
   font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
 }
 
 .footer-links {

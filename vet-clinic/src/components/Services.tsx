@@ -48,9 +48,6 @@ export function Services() {
               <div className="service-icon">{service.icon}</div>
               <h3 className="service-title">{service.title}</h3>
               <p className="service-description">{service.description}</p>
-              <a href={`#${service.id}`} className="service-link">
-                Saiba mais →
-              </a>
             </div>
           ))}
         </div>
