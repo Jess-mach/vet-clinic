@@ -173,7 +173,7 @@ Consulte a documentação Swagger para a lista completa.
 **Soluções**:
 - Backend (8080): Altere `server.port` em `application.properties` ou pare o processo usando a porta
 - Frontend (5173): Altere a porta no `vite.config.ts` ou pare o processo
-- PostgreSQL (5432): Pare o serviço PostgreSQL local ou altere a porta no docker-compose.yml
+- PostgreSQL (5432): Pare o serviço PostgreSQL local ou altere a porta no docker
 
 #### 3. Erro de migração Flyway
 
