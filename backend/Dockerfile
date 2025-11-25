@@ -15,14 +15,10 @@ COPY src ./src
 # Build da aplicação (pula testes para build mais rápido)
 RUN mvn clean package -DskipTests -B
 
-# Imagem final
-FROM eclipse-temurin:21-jre-alpine
+# Imagem final - usando Distroless (muito mais leve e seguro)
+FROM gcr.io/distroless/java21-debian12:nonroot
 
 WORKDIR /app
-
-# Criar usuário não-root para segurança
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
 
 # Copiar JAR da etapa anterior
 COPY --from=builder /app/target/*.jar app.jar
@@ -38,10 +34,8 @@ ENV DB_HOST=postgres \
     DB_PASSWORD=postgres \
     DB_SCHEMA=postgres
 
-# Health check (verifica se a aplicação está respondendo)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=5 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/swagger-ui.html || exit 1
+# Nota: Distroless não tem shell, então healthcheck precisa ser feito externamente
+# O healthcheck será gerenciado pelo docker-compose
 
 # Comando para iniciar a aplicação
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
-

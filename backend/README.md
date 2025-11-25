@@ -111,7 +111,7 @@ mvn clean install
 mvn clean package -DskipTests#### 5. Executar a Aplicação
 
 # **1. Executar o Backend**: Usando Maven
-mvn spring-boot:run 
+cd backend && mvn spring-boot:run 
 
 # Opção completa - todas as variáveis (Ou passando os parametros caso use um postgreSQL já existente:)
 cd backend &&
@@ -179,7 +179,7 @@ Consulte a documentação Swagger para a lista completa.
 **Soluções**:
 - Backend (8080): Altere `server.port` em `application.properties` ou pare o processo usando a porta
 - Frontend (5173): Altere a porta no `vite.config.ts` ou pare o processo
-- PostgreSQL (5432): Pare o serviço PostgreSQL local ou altere a porta no docker-compose.yml
+- PostgreSQL (5432): Pare o serviço PostgreSQL local ou altere a porta no docker
 
 #### 3. Erro de migração Flyway
 

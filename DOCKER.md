@@ -4,8 +4,21 @@
 
 ### 1. Subir toda a aplicação
 
+#### Install docker-compose (Ubuntu)
+# Remover versão antiga
+sudo apt-get remove docker-compose
+
+# Baixar versão mais recente
+sudo curl -SL https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+
+# Dar permissão de execução
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Verificar
+docker-compose --version
+
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 Isso vai:
