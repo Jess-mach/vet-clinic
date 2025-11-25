@@ -191,7 +191,7 @@ export function AnimalSearchModal({
         </div>
 
         <div className="animal-search-modal-footer">
-          <button className="btn btn-secondary" onClick={onClose}>
+          <button className="btn btn-primary"  onClick={onClose}>
             Cancelar
           </button>
         </div>

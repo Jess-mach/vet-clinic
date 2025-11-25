@@ -265,7 +265,7 @@ export function ConsultationFiltersComponent({
             </button>
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-primary" 
               onClick={handleClear}
               disabled={!hasFilters}
             >

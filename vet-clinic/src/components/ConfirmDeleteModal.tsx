@@ -41,7 +41,7 @@ export function ConfirmDeleteModal({
 
         <div className="confirm-delete-modal-footer">
           <button
-            className="btn btn-secondary"
+            className="btn btn-primary" 
             onClick={onCancel}
             disabled={isLoading}
           >

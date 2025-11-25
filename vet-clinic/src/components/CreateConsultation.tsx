@@ -916,7 +916,7 @@ export function CreateConsultation() {
           {isEditMode && consultation && (
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-primary" 
                   onClick={handlePrintRecipe}
                   title="Imprimir receita"
                 >
@@ -944,7 +944,7 @@ export function CreateConsultation() {
             {isEditMode && consultation && (
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-primary" 
                   onClick={handlePrintDetails}
                   title="Imprimir detalhes da consulta"
                 >
@@ -970,7 +970,7 @@ export function CreateConsultation() {
             {selectedAnimal && formData.animalId > 0 && (
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="btn btn-primary" 
                 onClick={() => setConsultationHistoryModalOpen(true)}
                 disabled={loading}
                 title="Ver histórico de consultas do animal"
@@ -999,7 +999,7 @@ export function CreateConsultation() {
             <button
               type="button"
               onClick={handleCancel}
-              className="btn btn-secondary"
+              className="btn btn-primary" 
               disabled={loading}
             >
               Cancelar

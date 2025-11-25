@@ -110,7 +110,7 @@ export function AnimalFiltersComponent({ onSearch, onClear }: AnimalFiltersProps
               <button type="submit" className="btn btn-primary">
                 🔍 Buscar
               </button>
-              <button type="button" onClick={handleClear} className="btn btn-secondary">
+              <button type="button" onClick={handleClear} className="btn btn-primary" >
                 ✕ Limpar Filtros
               </button>
             </div>

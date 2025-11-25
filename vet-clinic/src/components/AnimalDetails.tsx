@@ -189,7 +189,7 @@ export function AnimalDetails({ animalId, onClose }: AnimalDetailsProps) {
 
             <div className="animal-details-actions">
               <button 
-                className="btn btn-secondary" 
+                className="btn btn-primary"  
                 onClick={() => setConsultationHistoryModalOpen(true)}
                 title="Ver histórico de consultas"
               >

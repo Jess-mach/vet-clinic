@@ -399,7 +399,7 @@ export function AnimalConsultationHistoryModal({
           <div className="animal-consultation-history-modal-footer">
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-primary" 
               onClick={handlePrintAll}
               disabled={loading || totalElements === 0}
               title="Imprimir histórico completo de consultas"
@@ -422,7 +422,7 @@ export function AnimalConsultationHistoryModal({
               </svg>
               Imprimir Histórico
             </button>
-            <button className="btn btn-secondary" onClick={onClose}>
+            <button className="btn btn-primary"  onClick={onClose}>
               Fechar
             </button>
           </div>

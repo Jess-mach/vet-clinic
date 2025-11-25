@@ -563,7 +563,7 @@ export function CreateAnimal() {
             <button
               type="button"
               onClick={handleCancel}
-              className="btn btn-secondary"
+              className="btn btn-primary" 
               disabled={loading}
             >
               Cancelar
