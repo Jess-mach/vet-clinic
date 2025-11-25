@@ -41,104 +41,174 @@ src/main/java/syscecilia/vet/SysCecilia/
 - **Consultas** - Registro e histórico de consultas veterinárias
 - **Veterinários** - Cadastro e disponibilidade de profissionais
 
-## ⚙️ Configuração
+### Configuração do Banco de Dados
 
-### Variáveis de Ambiente
+### Configuração Padrão
 
-```bash
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=postgres
-DB_USERNAME=postgres
-DB_PASSWORD=postgres
-DB_SCHEMA=postgres
+- **Host**: localhost (ou `postgres` no Docker)
+- **Porta**: 5432
+- **Database**: postgres
+- **Schema**: postgres
+- **Usuário padrão (Docker)**: postgres
+- **Senha padrão (Docker)**: postgres
+
+### Instalação do Banco de Dados via Docker
+```shell
+sudo docker run -d   --name syscecilia   -e POSTGRES_PASSWORD=postgres   -e POSTGRES_USER=postgres   -e POSTGRES_DB=postgres   -p 5432:5432 postgres:15
 ```
 
-### application.properties
+OU
 
-As configurações principais estão em:
-- `src/main/resources/application.properties` - Desenvolvimento
-- `src/main/resources/application-prod.properties` - Produção
+#### Baixar o Instalador
+O método mais seguro e padrão é usar o instalador mantido pela EnterpriseDB.
 
-## 🔧 Instalação e Execução
+Acesse a página oficial de downloads: [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](PostgreSQL Downloads for Windows.)
 
-### Modo Desenvolvimento
+Clique no botão Download correspondente à versão mais recente (atualmente a versão 16 ou 17) na coluna "Windows x86-64".
 
-1. Clone o repositório
-```bash
-git clone <repository-url>
-cd SysCecilia/backend
+Se estiver instalando manualmente, execute os seguintes comandos:
+
+### Frontend (React + Vite)
+
+#### 1. Pré-requisitos
+
+# Verificar Node.js
+node -version  # Deve ser Node.js 22+
+
+# Verificar npm
+npm -version    # Deve ser npm 9+#### 
+
+2. Instalar Dependências
+cd frontend
+
+# Instalar dependências (usar --no-bin-links conforme regra do projeto)
+npm install --no-bin-links
+
+#### 3. Configurar URL da API
+O frontend está configurado para usar `http://localhost:8080/api` por padrão. Se necessário, altere em:
+
+4. Executar em Modo Desenvolvimento
+npm run dev
+
+A aplicação estará disponível em: http://localhost:5173
+
+### Backend (Spring Boot)
+
+#### 1. Pré-requisitos
+
+# Verificar Java
+java -version  # Deve ser Java 21
+
+# Verificar Maven
+mvn -version   # Deve ser Maven 3.9+#### 2. Configurar Banco de Dados
+
+Certifique-se de que o PostgreSQL está rodando veja seção [Configuração do Banco de Dados](#configuração-do-banco-de-dados)).
+
+# Instalar dependências e compilar
+mvn clean install
+
+# Ou apenas compilar sem rodar testes
+mvn clean package -DskipTests#### 5. Executar a Aplicação
+
+# **1. Executar o Backend**: Usando Maven
+mvn spring-boot:run 
+
+# Opção completa - todas as variáveis (Ou passando os parametros caso use um postgreSQL já existente:)
+cd backend &&
+DB_HOST=localhost \
+DB_PORT=5432 \
+DB_NAME=syscecilia \
+DB_USERNAME=postgres \
+DB_PASSWORD=minhasenha \
+DB_SCHEMA=syscecilia \
+mvn spring-boot:run
+
+
+**2. Executar o Frontend**
+
+Em um novo terminal, navegue até a pasta do frontend e execute:
+
+```shell
+cd frontend
+npm run dev
 ```
 
-2. Configure o banco de dados PostgreSQL
+## Acessos e Endpoints
 
-3. Execute a aplicação
-```bash
-./mvnw spring-boot:run
-```
+### Frontend
 
-A aplicação estará disponível em `http://localhost:8080`
+- **URL**: http://localhost:5173 (desenvolvimento) ou http://localhost:5173 (Docker)
 
-### Modo Docker
+### Backend
 
-```bash
-# Na raiz do projeto
-docker-compose up -d
-```
-
-## 📚 Documentação da API
-
-Após iniciar a aplicação, acesse:
-
+- **API Base**: http://localhost:8080/api
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
-- **OpenAPI JSON**: http://localhost:8080/v3/api-docs
+- **API Docs (JSON)**: http://localhost:8080/v3/api-docs
 
-## 🧪 Testes
+### Endpoints Principais
 
-### Executar todos os testes
-```bash
-./mvnw test
-```
+- `GET /api/animals` - Listar animais
+- `POST /api/animals` - Criar animal
+- `GET /api/animals/{id}` - Buscar animal por ID
+- `PUT /api/animals/{id}` - Atualizar animal
+- `DELETE /api/animals/{id}` - Deletar animal
+- `GET /api/consultations` - Listar consultas
+- `POST /api/consultations` - Criar consulta
+- `GET /api/veterinarians` - Listar veterinários
 
-### Gerar relatório de cobertura
-```bash
-./mvnw test jacoco:report
-```
+Consulte a documentação Swagger para a lista completa.
 
-O relatório estará disponível em: `target/site/jacoco/index.html`
+## Troubleshooting
 
-**Meta de cobertura**: Mínimo de 50% de cobertura de linhas
+### Problemas Comuns
 
-## 📝 Padrões de Código
+#### 1. Backend não conecta ao banco de dados
 
-- **DTOs**: Sempre utilizar Request/Response objects, nunca expor entidades diretamente
-- **Validação**: Usar Spring Validator com mensagens customizadas
-- **Documentação**: Todas as APIs documentadas com SpringDoc annotations
-- **Testes**: Testes unitários e de integração com MockMVC obrigatórios
+**Sintoma**: Erro de conexão ao iniciar o backend
 
-## 🗄️ Migrations
+**Soluções**:
+- Verifique se o PostgreSQL está rodando: `sudo systemctl status postgresql`
+- Verifique as credenciais em `application.properties` ou variáveis de ambiente
+- No Docker, verifique se o container do postgres está saudável: `docker ps`
+- Verifique se o banco `postgres` existe: `psql -U postgres -l`
 
-As migrations do banco de dados estão em `src/main/resources/db/migration/`
+#### 2. Porta já em uso
 
-O Flyway executa automaticamente as migrations ao iniciar a aplicação.
+**Sintoma**: Erro "Address already in use"
 
-## 📦 Build
+**Soluções**:
+- Backend (8080): Altere `server.port` em `application.properties` ou pare o processo usando a porta
+- Frontend (5173): Altere a porta no `vite.config.ts` ou pare o processo
+- PostgreSQL (5432): Pare o serviço PostgreSQL local ou altere a porta no docker-compose.yml
 
-Para gerar o JAR da aplicação:
+#### 3. Erro de migração Flyway
 
-```bash
-./mvnw clean package
-```
+**Sintoma**: Erro ao executar migrações do Flyway
 
-O arquivo JAR será gerado em `target/SysCecilia-0.0.1-SNAPSHOT.jar`
+**Soluções**:
+- Verifique se o schema existe: `CREATE SCHEMA IF NOT EXISTS syscecilia;`
+- Limpe a tabela de histórico do Flyway (cuidado!): `DROP TABLE IF EXISTS flyway_schema_history;`
+- Verifique os scripts SQL em `backend/src/main/resources/db/migration/`
 
-## 🐳 Docker
+#### 4. Frontend não conecta ao backend
 
-Build da imagem Docker:
+**Sintoma**: Erro de CORS ou "Network error"
 
-```bash
-docker build -t syscecilia-backend .
-```
+**Soluções**:
+- Verifique se o backend está rodando: http://localhost:8080/swagger-ui.html
+- Verifique a URL da API em `frontend/src/services/api.ts`
+- No Docker, use `http://backend:8080/api` dentro da rede Docker
+- Verifique configurações de CORS no backend (se aplicável)
+
+#### 5. Erro ao instalar dependências do frontend
+
+**Sintoma**: Erro no `npm install`
+
+**Soluções**:
+- Use `npm install --no-bin-links` conforme regra do projeto
+- Limpe o cache: `npm cache clean --force`
+- Remova `node_modules` e `package-lock.json` e reinstale
+- Verifique a versão do Node.js (deve ser 22+)
 
 ## 📄 Licença
 

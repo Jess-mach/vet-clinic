@@ -60,7 +60,7 @@ mvn spring-boot:run
 
 **3. Rodar o frontend:**
 ```bash
-cd vet-clinic
+cd frontend
 npm install --no-bin-links
 npm run dev
 ```
@@ -85,7 +85,7 @@ mvn test
 ```
 SysCecilia/
 ├── backend/          # API Spring Boot
-├── vet-clinic/       # Frontend React
+├── frontend/       # Frontend React
 ├── docker-compose.yml
 └── README.md
 ```

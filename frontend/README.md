@@ -18,7 +18,7 @@ O frontend do SysCecilia é uma aplicação web moderna desenvolvida em React + 
 ## 📁 Estrutura do Projeto
 
 ```
-vet-clinic/
+frontend/
 ├── public/                      # Arquivos públicos e imagens
 │   ├── cardiologista.png
 │   ├── Clinico-geral.png
@@ -126,7 +126,7 @@ vet-clinic/
 1. Clone o repositório:
 ```bash
 git clone <url-do-repositorio>
-cd SysCecilia/vet-clinic
+cd SysCecilia/frontend
 ```
 
 2. Instale as dependências:
