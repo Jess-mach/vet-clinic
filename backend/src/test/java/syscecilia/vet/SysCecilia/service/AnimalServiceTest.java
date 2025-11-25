@@ -13,6 +13,7 @@ import syscecilia.vet.SysCecilia.exception.BusinessException;
 import syscecilia.vet.SysCecilia.exception.ResourceNotFoundException;
 import syscecilia.vet.SysCecilia.model.Animal;
 import syscecilia.vet.SysCecilia.repository.AnimalRepository;
+import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -33,6 +34,9 @@ class AnimalServiceTest {
 
     @Mock
     private AnimalRepository animalRepository;
+
+    @Mock
+    private ConsultationRepository consultationRepository;
 
     @InjectMocks
     private AnimalService animalService;
@@ -677,6 +681,7 @@ class AnimalServiceTest {
     void shouldInactivateAnimalSuccessfullyWhenExists() {
         // Given
         when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(animal1));
+        when(consultationRepository.existsByAnimalId(1L)).thenReturn(true);
         when(animalRepository.save(any(Animal.class))).thenReturn(animal1);
 
         // When
@@ -685,8 +690,26 @@ class AnimalServiceTest {
         // Then
         verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
         verify(animalRepository, times(1)).save(any(Animal.class));
+        verify(animalRepository, never()).delete(any(Animal.class));
         assert(!animal1.getIsActive());
         assert(animal1.getInactivatedAt() != null);
+    }
+
+    @Test
+    @DisplayName("Should delete animal permanently when no consultations exist")
+    void shouldDeleteAnimalPermanentlyWhenNoConsultationsExist() {
+        // Given
+        when(animalRepository.findByIdAndIsActiveTrue(1L)).thenReturn(Optional.of(animal1));
+        when(consultationRepository.existsByAnimalId(1L)).thenReturn(false);
+
+        // When
+        animalService.delete(1L);
+
+        // Then
+        verify(animalRepository, times(1)).findByIdAndIsActiveTrue(1L);
+        verify(consultationRepository, times(1)).existsByAnimalId(1L);
+        verify(animalRepository, times(1)).delete(animal1);
+        verify(animalRepository, never()).save(any(Animal.class));
     }
 
     @Test

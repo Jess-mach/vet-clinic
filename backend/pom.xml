@@ -113,25 +113,21 @@
 						<configuration>
 							<excludes>
 								<exclude>syscecilia/vet/SysCecilia/config/**</exclude>
+								<exclude>syscecilia/vet/SysCecilia/exception/**</exclude>
 								<exclude>syscecilia/vet/SysCecilia/SysCeciliaApplication*</exclude>
 							</excludes>
 						</configuration>
 					</execution>
 					<execution>
 						<id>jacoco-check</id>
+						<phase>test</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
 						<configuration>
 							<rules>
 								<rule>
-									<element>PACKAGE</element>
-									<excludes>
-										<exclude>*Test</exclude>
-										<exclude>syscecilia.vet.SysCecilia.config</exclude>
-										<exclude>syscecilia.vet.SysCecilia.exception</exclude>
-										<exclude>syscecilia.vet.SysCecilia.SysCeciliaApplication</exclude>
-									</excludes>
+									<element>BUNDLE</element>
 									<limits>
 										<limit>
 											<counter>LINE</counter>

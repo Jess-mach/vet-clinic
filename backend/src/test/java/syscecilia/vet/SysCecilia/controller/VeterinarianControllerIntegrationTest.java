@@ -17,9 +17,11 @@ import syscecilia.vet.SysCecilia.repository.AnimalRepository;
 import syscecilia.vet.SysCecilia.repository.ConsultationRepository;
 import syscecilia.vet.SysCecilia.repository.VeterinarianRepository;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,6 +45,8 @@ public class VeterinarianControllerIntegrationTest {
 
     @Autowired
     private AnimalRepository animalRepository;
+
+    private static final ZoneId BR_ZONE = ZoneId.of("America/Sao_Paulo");
 
     private Veterinarian vet1;
     private Veterinarian vet2;
@@ -211,17 +215,18 @@ public class VeterinarianControllerIntegrationTest {
     @Test
     @DisplayName("GET /api/veterinarians/{id}/availability - Should return full business intervals when no bookings exist")
     void testGetAvailability_NoBookings() throws Exception {
-        LocalDate referenceDate = LocalDate.of(2025, 11, 24); // Monday
+        LocalDate referenceDate = getNextBusinessDayAfterToday();
 
         mockMvc.perform(get("/api/veterinarians/{id}/availability", vet1.getId())
                         .param("date", referenceDate.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].date", is("2025-11-24")))
+                .andExpect(jsonPath("$", hasSize(10)))
+                .andExpect(jsonPath("$[0].date", is(referenceDate.toString())))
                 .andExpect(jsonPath("$[0].startTime", is("08:00:00")))
                 .andExpect(jsonPath("$[0].endTime", is("12:00:00")))
+                .andExpect(jsonPath("$[1].date", is(referenceDate.toString())))
                 .andExpect(jsonPath("$[1].startTime", is("13:00:00")))
                 .andExpect(jsonPath("$[1].endTime", is("18:00:00")));
     }
@@ -229,18 +234,21 @@ public class VeterinarianControllerIntegrationTest {
     @Test
     @DisplayName("GET /api/veterinarians/{id}/availability - Should remove booked slots from availability")
     void testGetAvailability_WithBooking() throws Exception {
-        LocalDate referenceDate = LocalDate.of(2025, 11, 24);
+        LocalDate referenceDate = getNextBusinessDayAfterToday();
         scheduleConsultation(vet1, referenceDate, 10);
 
         mockMvc.perform(get("/api/veterinarians/{id}/availability", vet1.getId())
                         .param("date", referenceDate.toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$", hasSize(10)))
+                .andExpect(jsonPath("$[0].date", is(referenceDate.toString())))
                 .andExpect(jsonPath("$[0].startTime", is("08:00:00")))
                 .andExpect(jsonPath("$[0].endTime", is("10:00:00")))
+                .andExpect(jsonPath("$[1].date", is(referenceDate.toString())))
                 .andExpect(jsonPath("$[1].startTime", is("11:00:00")))
                 .andExpect(jsonPath("$[1].endTime", is("12:00:00")))
+                .andExpect(jsonPath("$[2].date", is(referenceDate.toString())))
                 .andExpect(jsonPath("$[2].startTime", is("13:00:00")))
                 .andExpect(jsonPath("$[2].endTime", is("18:00:00")));
     }
@@ -264,6 +272,15 @@ public class VeterinarianControllerIntegrationTest {
         consultation.setReasonCode(1);
         consultation.setStatus("SCHEDULED");
         consultationRepository.save(consultation);
+    }
+
+    private LocalDate getNextBusinessDayAfterToday() {
+        LocalDate candidate = LocalDate.now(BR_ZONE).plusDays(1);
+        while (candidate.getDayOfWeek() == DayOfWeek.SATURDAY ||
+                candidate.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            candidate = candidate.plusDays(1);
+        }
+        return candidate;
     }
 }
 

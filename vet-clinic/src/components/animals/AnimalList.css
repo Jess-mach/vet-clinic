@@ -61,7 +61,7 @@
 }
 
 .animal-table th.col-name {
-  width: 300px;
+  width: 200px;
 }
 
 .animal-table th.col-species {
@@ -69,7 +69,7 @@
 }
 
 .animal-table th.col-breed {
-  width: 120px;
+  width: 220px;
 }
 
 .animal-table th.col-gender {
@@ -77,7 +77,7 @@
 }
 
 .animal-table th.col-birth {
-  width: 140px;
+  width: 160px;
 }
 
 .animal-table th.col-owner {

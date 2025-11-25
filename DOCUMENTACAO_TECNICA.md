@@ -1,112 +1,53 @@
-
----
-
 ## Configuração do Banco de Dados
 
 ### Configuração Padrão
 
 - **Host**: localhost (ou `postgres` no Docker)
 - **Porta**: 5432
-- **Database**: syscecilia
-- **Schema**: postgresql
-- **Usuário padrão (Docker)**: postgresql
-- **Senha padrão (Docker)**: postgresql
+- **Database**: postgres
+- **Schema**: postgres
+- **Usuário padrão (Docker)**: postgres
+- **Senha padrão (Docker)**: postgres
 
-### Criando o Banco de Dados Manualmente
+### Instalação do Banco de Dados via Docker
 ```shell
-sudo docker run -d   --name postgres   -e POSTGRES_PASSWORD=postgresql   -e POSTGRES_USER=postgresql   -e POSTGRES_DB=postgresql   -p 5432:5432  
+sudo docker run -d   --name syscecilia   -e POSTGRES_PASSWORD=postgres   -e POSTGRES_USER=postgres   -e POSTGRES_DB=postgres   -p 5432:5432 postgres:15
 ```
 
 OU
 
-Baixar o Instalador
+#### Baixar o Instalador
 O método mais seguro e padrão é usar o instalador mantido pela EnterpriseDB.
 
-Acesse a página oficial de downloads: [(https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)](PostgreSQL Downloads for Windows.)
+Acesse a página oficial de downloads: [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](PostgreSQL Downloads for Windows.)
 
 Clique no botão Download correspondente à versão mais recente (atualmente a versão 16 ou 17) na coluna "Windows x86-64".
 
 Se estiver instalando manualmente, execute os seguintes comandos:
 
-# Criar o banco de dados
-CREATE DATABASE syscecilia;
+### Frontend (React + Vite)
 
-# Criar o schema (opcional, o Flyway pode criar)
-\c syscecilia
-CREATE SCHEMA IF NOT EXISTS syscecilia;
+#### 1. Pré-requisitos
 
+# Verificar Node.js
+node -version  # Deve ser Node.js 22+
 
-## Execução via Docker
+# Verificar npm
+npm -version    # Deve ser npm 9+#### 
 
-### Pré-requisitos
+2. Instalar Dependências
+cd vet-clinic
 
-1. Certifique-se de que o Docker e Docker Compose estão instalados e rodando
-2. Verifique se as portas 5432, 8080 e 5173 estão disponíveis
+# Instalar dependências (usar --no-bin-links conforme regra do projeto)
+npm install --no-bin-links
 
-### Passo a Passo
+#### 3. Configurar URL da API
+O frontend está configurado para usar `http://localhost:8080/api` por padrão. Se necessário, altere em:
 
-#### 1. Clone o repositório (se ainda não tiver)
+4. Executar em Modo Desenvolvimento
+npm run dev
 
-cd /caminho/para/SysCecilia#### 2. Configure variáveis de ambiente (opcional)
-
-Crie um arquivo `.env` na raiz do projeto para personalizar as configurações:
-
-# .env
-DB_USERNAME=postgresql
-DB_PASSWORD=postgresql
-DB_NAME=syscecilia
-DB_SCHEMA=syscecilia#### 3. Execute o Docker Compose
-
-# Construir e iniciar todos os serviços
-docker-compose up -d
-
-# Ou para ver os logs em tempo real
-docker-compose up#### 4. Verificar o status dos containers
-
-docker-compose psVocê deve ver três containers rodando:
-- `postgres_syscecilia` (PostgreSQL)
-- `backend_syscecilia` (Spring Boot)
-- `frontend_syscecilia` (React)
-
-#### 5. Verificar logs
-
-# Todos os serviços
-docker-compose logs -f
-
-# Apenas backend
-docker-compose logs -f backend
-
-# Apenas frontend
-docker-compose logs -f frontend
-
-# Apenas banco de dados
-docker-compose logs -f postgres#### 6. Parar os serviços
-
-# Parar e manter volumes
-docker-compose stop
-
-# Parar e remover containers (mantém volumes)
-docker-compose down
-
-# Parar e remover containers e volumes
-docker-compose down -v### Rebuild das Imagens
-
-Se houver alterações no código, reconstrua as imagens:
-
-# Rebuild forçado
-docker-compose build --no-cache
-
-# Rebuild e iniciar
-docker-compose up -d --build### Acessos no Docker
-
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8080/api
-- **Swagger UI**: http://localhost:8080/swagger-ui.html
-- **PostgreSQL**: localhost:5432
-
----
-
-## Instalação e Execução Manual
+A aplicação estará disponível em: http://localhost:5173
 
 ### Backend (Spring Boot)
 
@@ -118,28 +59,7 @@ java -version  # Deve ser Java 21
 # Verificar Maven
 mvn -version   # Deve ser Maven 3.9+#### 2. Configurar Banco de Dados
 
-Certifique-se de que o PostgreSQL está rodando e o banco `syscecilia` foi criado (veja seção [Configuração do Banco de Dados](#configuração-do-banco-de-dados)).
-
-#### 3. Configurar Variáveis de Ambiente
-
-Crie um arquivo `.env` na pasta `backend/` (opcional, mas recomendado):
-h
-# backend/.env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=syscecilia
-DB_USERNAME=jess
-DB_PASSWORD=morangos
-DB_SCHEMA=sysceciliaOu configure as variáveis de ambiente do sistema:
-
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_NAME=syscecilia
-export DB_USERNAME=jess
-export DB_PASSWORD=morangos
-export DB_SCHEMA=syscecilia#### 4. Instalar Dependências e Compilar
-
-cd backend
+Certifique-se de que o PostgreSQL está rodando veja seção [Configuração do Banco de Dados](#configuração-do-banco-de-dados)).
 
 # Instalar dependências e compilar
 mvn clean install
@@ -147,103 +67,28 @@ mvn clean install
 # Ou apenas compilar sem rodar testes
 mvn clean package -DskipTests#### 5. Executar a Aplicação
 
-# Opção 1: Usando Maven
+# **1. Executar o Backend**: Usando Maven
+mvn spring-boot:run 
+
+# Opção completa - todas as variáveis (Ou passando os parametros caso use um postgreSQL já existente:)
+cd backend &&
+DB_HOST=localhost \
+DB_PORT=5432 \
+DB_NAME=syscecilia \
+DB_USERNAME=postgres \
+DB_PASSWORD=minhasenha \
+DB_SCHEMA=syscecilia \
 mvn spring-boot:run
 
-# Opção 2: Executar o JAR gerado
-java -jar target/SysCecilia-0.0.1-SNAPSHOT.jar
 
-# Opção 3: Usando o wrapper Maven (se disponível)
-./mvnw spring-boot:run#### 6. Verificar se está rodando
+**2. Executar o Frontend**
 
-Acesse: http://localhost:8080/swagger-ui.html
+Em um novo terminal, navegue até a pasta do frontend e execute:
 
-### Frontend (React + Vite)
-
-#### 1. Pré-requisitos
-
-# Verificar Node.js
-node -version  # Deve ser Node.js 22+
-
-# Verificar npm
-npm -version    # Deve ser npm 9+#### 2. Instalar Dependências
-h
+```shell
 cd vet-clinic
-
-# Instalar dependências (usar --no-bin-links conforme regra do projeto)
-npm install --no-bin-links#### 3. Configurar URL da API
-
-O frontend está configurado para usar `http://localhost:8080/api` por padrão. Se necessário, altere em:
-
-- `vet-clinic/src/services/api.ts` (linha 5)
-
-Ou configure via variável de ambiente:
-
-export VITE_API_URL=http://localhost:8080/api#### 4. Executar em Modo Desenvolvimento
-sh
-npm run devA aplicação estará disponível em: http://localhost:5173
-
-#### 5. Build para Produção
-
-npm run buildOs arquivos compilados estarão em `vet-clinic/dist/`
-
-#### 6. Preview da Build de Produção
-
-npm run preview### Executar Backend e Frontend Simultaneamente
-
-Use o script fornecido:
-
-# Na raiz do projeto
-chmod +x start.sh
-./start.shEste script:
-- Inicia o frontend em background
-- Inicia o backend em background
-- Exibe logs em tempo real
-- Para ambos ao pressionar Ctrl+C
-
-Os logs são salvos em `~/.syscecilia-logs/`
-
----
-
-## Configurações e Variáveis de Ambiente
-
-### Backend
-
-#### application.properties (Desenvolvimento)
-
-Localização: `backend/src/main/resources/application.properties`
-
-Principais configurações:
-- `spring.datasource.url`: URL de conexão JDBC
-- `spring.datasource.username`: Usuário do banco
-- `spring.datasource.password`: Senha do banco
-- `server.port`: Porta do servidor (padrão: 8080)
-
-#### application-docker.properties (Docker)
-
-Localização: `backend/src/main/resources/application-docker.properties`
-
-Usado automaticamente quando `SPRING_PROFILES_ACTIVE=docker`
-
-### Frontend
-
-#### Variáveis de Ambiente
-
-- `VITE_API_URL`: URL base da API (padrão: `http://localhost:8080/api`)
-
-Configure via arquivo `.env` na pasta `vet-clinic/`:
-
-VITE_API_URL=http://localhost:8080/api### Docker Compose
-
-Variáveis de ambiente no `docker-compose.yml`:
-
-- `DB_USERNAME`: Usuário do PostgreSQL
-- `DB_PASSWORD`: Senha do PostgreSQL
-- `DB_NAME`: Nome do banco de dados
-- `DB_SCHEMA`: Schema do banco de dados
-- `SPRING_PROFILES_ACTIVE`: Profile Spring (docker)
-
----
+npm run dev
+```
 
 ## Acessos e Endpoints
 
@@ -270,15 +115,6 @@ Variáveis de ambiente no `docker-compose.yml`:
 
 Consulte a documentação Swagger para a lista completa.
 
-### Banco de Dados
-
-- **Host**: localhost (ou `postgres` no Docker)
-- **Porta**: 5432
-- **Database**: syscecilia
-- **Schema**: syscecilia
-
----
-
 ## Troubleshooting
 
 ### Problemas Comuns
@@ -290,8 +126,8 @@ Consulte a documentação Swagger para a lista completa.
 **Soluções**:
 - Verifique se o PostgreSQL está rodando: `sudo systemctl status postgresql`
 - Verifique as credenciais em `application.properties` ou variáveis de ambiente
-- No Docker, verifique se o container do postgres está saudável: `docker-compose ps`
-- Verifique se o banco `syscecilia` existe: `psql -U postgres -l`
+- No Docker, verifique se o container do postgres está saudável: `docker ps`
+- Verifique se o banco `postgres` existe: `psql -U postgres -l`
 
 #### 2. Porta já em uso
 
@@ -340,88 +176,3 @@ Consulte a documentação Swagger para a lista completa.
 - Verifique se as portas estão disponíveis
 - Verifique se há erros de build: `docker-compose build --no-cache`
 - Verifique as variáveis de ambiente no docker-compose.yml
-
-#### 7. Erro de permissão no script start.sh
-
-**Sintoma**: "Permission denied" ao executar `./start.sh`
-
-**Soluções**:
-chmod +x start.sh
-./start.sh### Verificações Úteis
-
-# Verificar processos Java rodando
-jps -l
-
-# Verificar processos Node rodando
-ps aux | grep node
-
-# Verificar portas em uso
-netstat -tulpn | grep -E ':(8080|5173|5432)'
-
-# Verificar containers Docker
-docker ps -a
-
-# Verificar logs do Docker
-docker-compose logs --tail=100 [serviço]---
-
-## Comandos Úteis
-
-### Docker
-h
-# Iniciar serviços
-docker-compose up -d
-
-# Parar serviços
-docker-compose stop
-
-# Remover containers
-docker-compose down
-
-# Rebuild forçado
-docker-compose build --no-cache
-
-# Ver logs
-docker-compose logs -f
-
-# Executar comando em container
-docker-compose exec backend bash
-docker-compose exec postgres psql -U postgresql -d syscecilia### Backend
-
-# Compilar
-mvn clean package
-
-# Executar testes
-mvn test
-
-# Executar com cobertura
-mvn clean test jacoco:report
-
-# Ver relatório de cobertura
-open backend/target/site/jacoco/index.html### Frontend
-
-# Instalar dependências
-npm install --no-bin-links
-
-# Desenvolvimento
-npm run dev
-
-# Build produção
-npm run build
-
-# Preview build
-npm run preview
-
-# Lint
-npm run lint---
-
-## Suporte
-
-Para mais informações, consulte:
-- Documentação do Spring Boot: https://spring.io/projects/spring-boot
-- Documentação do React: https://react.dev
-- Documentação do Vite: https://vitejs.dev
-- Documentação do PostgreSQL: https://www.postgresql.org/docs/
-
----
-
-**Última atualização**: Dezembro 2024

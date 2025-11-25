@@ -30,5 +30,8 @@ public interface ConsultationRepository extends JpaRepository<Consultation, Long
             LocalDateTime endDate,
             String status
     );
+
+    boolean existsByAnimalId(Long animalId);
 }
+
 

@@ -117,7 +117,7 @@ export function AnimalList({
               <th className="col-species">Espécie</th>
               <th className="col-breed">Raça</th>
               <th className="col-gender">Gênero</th>
-              <th className="col-birth">Data Nascimento</th>
+              <th className="col-birth">Dt.Nascimento</th>
               <th className="col-owner">Dono</th>
               <th className="col-actions">Ações</th>
             </tr>
@@ -200,8 +200,8 @@ export function AnimalList({
         title="Confirmar Exclusão"
         message={
           deleteConfirmModal.animal
-            ? `Tem certeza que deseja deletar o animal "${deleteConfirmModal.animal.name}"? Esta ação não pode ser desfeita.`
-            : 'Tem certeza que deseja deletar este animal?'
+            ? `Tem certeza que deseja deletar o animal "${deleteConfirmModal.animal.name}"? Caso existam consultas vinculadas a este animal, ele será apenas inativado e não poderá ser utilizado em novos atendimentos.`
+            : 'Tem certeza que deseja deletar este animal? Caso existam consultas vinculadas a este animal, ele será apenas inativado e não poderá ser utilizado em novos atendimentos.'
         }
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}

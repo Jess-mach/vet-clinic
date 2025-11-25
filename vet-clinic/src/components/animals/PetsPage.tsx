@@ -11,14 +11,14 @@ import { PaginationControls } from '../shared/PaginationControls';
 import './PetsPage.css';
 
 export function PetsPage() {
-  const [paginatedData, setPaginatedData] = useState<PaginatedResponse<Animal> | null>(null);
+  const [pagination, setPagination] = useState<PaginatedResponse<Animal> | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedAnimalId, setSelectedAnimalId] = useState<number | null>(null);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorModalTitle, setErrorModalTitle] = useState('Erro');
   const [errorModalMessage, setErrorModalMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [activeFilters, setActiveFilters] = useState<AnimalFilters>({});
   const navigate = useNavigate();
 
@@ -30,7 +30,7 @@ export function PetsPage() {
         page,
         pageSize: size
       });
-      setPaginatedData(data);
+      setPagination(data);
       setCurrentPage(page);
       setActiveFilters(filters);
     } catch (err) {
@@ -57,13 +57,13 @@ export function PetsPage() {
   };
 
   const handleNextPage = () => {
-    if (paginatedData?.hasNext) {
+    if (pagination?.hasNext) {
       loadAnimals(currentPage + 1, activeFilters);
     }
   };
 
   const handlePreviousPage = () => {
-    if (paginatedData?.hasPrevious) {
+    if (pagination?.hasPrevious) {
       loadAnimals(currentPage - 1, activeFilters);
     }
   };
@@ -112,24 +112,24 @@ export function PetsPage() {
             ) : (
               <>
                 <AnimalList 
-                  animals={paginatedData?.content || []} 
+                  animals={pagination?.content || []} 
                   onAnimalClick={handleAnimalClick}
                   loading={loading}
                   onAnimalDeleted={() => loadAnimals(currentPage, activeFilters)}
                 />
-                {paginatedData && paginatedData.totalElements > 0 && (
+                {pagination && pagination.totalElements > 0 && (
                   <div className="pagination-wrapper">
                     <PaginationControls 
-                      currentPage={paginatedData.pageNumber}
-                      totalPages={paginatedData.totalPages}
-                      totalElements={paginatedData.totalElements}
+                      currentPage={pagination.pageNumber}
+                      totalPages={pagination.totalPages}
+                      totalElements={pagination.totalElements}
                       onPreviousPage={handlePreviousPage}
                       onNextPage={handleNextPage}
                       disabled={loading}
                       showFirstLastButtons={false}
                     />
                     <PageSizeSelector 
-                      currentSize={paginatedData.totalElements}
+                      currentSize={pagination.pageSize}
                       onChange={handleSizeChange}
                       disabled={loading}
                     />
