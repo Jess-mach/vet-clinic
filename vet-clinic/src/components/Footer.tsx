@@ -6,7 +6,7 @@ export function Footer() {
       <div className="container">
         <div className="footer-content">
           <div className="footer-section">
-            <h3 className="footer-title">Vet Clínica Cecília</h3>
+            <h3 className="footer-title">Sys Cecília</h3>
             <p className="footer-subtitle">Clínica Veterinária</p>
             <p className="footer-description">
               Compromisso com a saúde do seu pet. Cuidado em cada fase da vida.
@@ -25,7 +25,7 @@ export function Footer() {
           <div className="footer-section">
             <h4 className="footer-heading">Sobre</h4>
             <ul className="footer-links">
-              <li><a href="#sobre">Sobre a Vet Clínica Cecília</a></li>
+              <li><a href="#sobre">Sobre a Sys Cecília</a></li>
               <li><a href="#especialidades">Especialidades</a></li>
               <li><a href="#servicos">Nossos Serviços</a></li>
               <li><a href="#contato">Fale conosco</a></li>
@@ -39,18 +39,18 @@ export function Footer() {
               <p className="contact-item">
                 <strong>WhatsApp:</strong>{' '}
                 <a href="https://wa.me/551130033381" target="_blank" rel="noopener noreferrer">
-                  (11) 3003-3381
+                  (11) 91055-9154
                 </a>
               </p>
               <p className="contact-item">
                 <strong>Atendimento:</strong><br />
-                De segunda a sexta-feira das 9h às 21h,<br />
-                e aos sábados das 9h30 às 16h.
+                De segunda a sexta-feira das 7h às 19h,<br />
+                e aos sábados das 7h às 14h.
               </p>
               <p className="contact-item">
                 <strong>Atendimento por telefone e WhatsApp:</strong><br />
-                De segunda a sexta-feira das 9h às 19h,<br />
-                e aos sábados das 8h às 13h.
+                De segunda a sexta-feira das 7h às 19h,<br />
+                e aos sábados das 7h às 14h.
               </p>
             </div>
           </div>
@@ -69,10 +69,10 @@ export function Footer() {
         <div className="footer-bottom">
           <div className="footer-legal">
             <p className="footer-responsible">
-              <strong>Responsável técnico:</strong> Dra. Juliana Weckx Peña Muñoz - CRMV-SP 51.569
+              
             </p>
             <p className="footer-copyright">
-              Vet Clínica Cecília - Compromisso com a saúde do seu pet | 2025 © Todos direitos reservados
+              Sys Cecília - Compromisso com a saúde do seu pet | 2025 © Todos direitos reservados
             </p>
           </div>
         </div>

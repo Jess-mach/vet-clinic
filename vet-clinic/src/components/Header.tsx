@@ -35,7 +35,7 @@ export function Header() {
     <header className="header">
       <div className="header-container">
         <Link to="/" className="header-logo" onClick={closeMenu}>
-          <h1>Vet Clínica Cecília</h1>
+          <h1>Sys Cecília</h1>
           <span className="header-subtitle">Clínica Veterinária</span>
         </Link>
 

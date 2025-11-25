@@ -86,25 +86,24 @@
   align-items: center;
   margin-bottom: var(--spacing-2xl);
   padding: var(--spacing-lg);
-  border-bottom: 3px solid var(--color-primary);
-  background: linear-gradient(135deg, var(--color-purple-bg-light) 0%, rgba(221, 214, 254, 0.5) 100%);
+  border-bottom: 3px solid var(--color-primary-dark);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   border-radius: var(--radius-lg);
 }
 
 .consultation-details-header h2 {
   margin: 0;
   font-size: 28px;
-  color: var(--color-text-primary);
+  color: var(--color-white);
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
   font-weight: var(--font-weight-bold);
 }
 
 .consultation-details-status {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-  color: var(--color-white);
+  background: var(--color-white);
+  color: var(--color-primary);
   padding: var(--spacing-sm) var(--spacing-lg);
   border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
@@ -112,25 +111,34 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+  border: 2px solid var(--color-primary);
 }
 
 .consultation-details-status.status-completed {
   background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
+  color: var(--color-white);
+  border-color: #15803d;
   box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
 }
 
 .consultation-details-status.status-scheduled {
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  background: var(--color-white);
+  color: #1e40af;
+  border-color: #1e40af;
   box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
 }
 
 .consultation-details-status.status-cancelled {
-  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+  background: var(--color-white);
+  color: #b91c1c;
+  border-color: #b91c1c;
   box-shadow: 0 4px 12px rgba(185, 28, 28, 0.3);
 }
 
 .consultation-details-status.status-default {
-  background: linear-gradient(135deg, var(--color-gray-600) 0%, var(--color-gray-500) 100%);
+  background: var(--color-white);
+  color: var(--color-gray-600);
+  border-color: var(--color-gray-600);
   box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
 }
 
