@@ -1,3 +1,7 @@
+CREATE SCHEMA IF NOT EXISTS syscecilia;
+
+
+
 CREATE TABLE animals (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,

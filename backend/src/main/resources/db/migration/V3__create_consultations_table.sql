@@ -1,3 +1,5 @@
+
+
 CREATE TABLE consultations (
     id BIGSERIAL PRIMARY KEY,
     animal_id BIGINT NOT NULL,
@@ -33,4 +35,14 @@ COMMENT ON COLUMN consultations.next_appointment_date IS 'Date of the next sched
 COMMENT ON COLUMN consultations.status IS 'Status of the consultation (COMPLETED, SCHEDULED, CANCELLED)';
 COMMENT ON COLUMN consultations.created_at IS 'Timestamp when the record was created';
 COMMENT ON COLUMN consultations.updated_at IS 'Timestamp when the record was last updated';
+
+
+
+ALTER TABLE consultations
+    ADD COLUMN reason_code INTEGER NOT NULL DEFAULT 1;
+
+
+ALTER TABLE consultations
+    DROP COLUMN reason;
+
 

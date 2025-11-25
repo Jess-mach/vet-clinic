@@ -2,6 +2,8 @@
 -- Date: 2025-11-15
 -- Description: Adds is_active and inactivated_at columns for soft delete functionality
 
+
+
 ALTER TABLE animals 
 ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE,
 ADD COLUMN inactivated_at TIMESTAMP NULL;

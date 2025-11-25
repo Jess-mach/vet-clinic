@@ -1,6 +1,6 @@
 # 1 Primeiro Uso
 ```shell
-sudo docker run -d   --name postgres   -e POSTGRES_PASSWORD=postgresql   -e POSTGRES_USER=postgresql   -e POSTGRES_DB=postgresql   -p 5432:5432  
+sudo docker run -d   --name syscecilia   -e POSTGRES_PASSWORD=postgres   -e POSTGRES_USER=postgres   -e POSTGRES_DB=postgres   -p 5432:5432 postgres:15
 ```
 
 lsof -ti:8080 | xargs kill -9
@@ -31,7 +31,7 @@ lsof -i :8080 || netstat -tuln | grep 8080 || ss -tuln | grep 8080
 # Primeiro, encontre o PID
 lsof -ti :8080
 
-# Depois mate o processo
+# Depois mate o processo 
 kill <PID>
 
 http://localhost:8080/swagger-ui.html

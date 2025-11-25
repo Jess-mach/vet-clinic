@@ -1,3 +1,4 @@
+
 -- Migration: Alter consultations table to use veterinarian_id instead of veterinarian_name
 -- Date: 2025-11-19
 -- Description: Adds veterinarian_id column, migrates data from veterinarian_name to veterinarian_id, then removes veterinarian_name column
