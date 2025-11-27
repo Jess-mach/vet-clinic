@@ -71,7 +71,7 @@ node -version  # Deve ser Node.js 22+
 npm -version    # Deve ser npm 9+#### 
 
 2. Instalar Dependências
-cd vet-clinic
+cd frontend
 
 # Instalar dependências (usar --no-bin-links conforme regra do projeto)
 npm install --no-bin-links
@@ -123,7 +123,7 @@ mvn spring-boot:run
 Em um novo terminal, navegue até a pasta do frontend e execute:
 
 ```shell
-cd vet-clinic
+cd frontend
 npm run dev
 ```
 
@@ -190,7 +190,7 @@ Consulte a documentação Swagger para a lista completa.
 
 **Soluções**:
 - Verifique se o backend está rodando: http://localhost:8080/swagger-ui.html
-- Verifique a URL da API em `vet-clinic/src/services/api.ts`
+- Verifique a URL da API em `frontend/src/services/api.ts`
 - No Docker, use `http://backend:8080/api` dentro da rede Docker
 - Verifique configurações de CORS no backend (se aplicável)
 
