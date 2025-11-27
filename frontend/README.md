@@ -78,7 +78,6 @@ frontend/
 ├── tsconfig.json              # Configuração TypeScript
 ├── vite.config.ts             # Configuração Vite
 ├── package.json               # Dependências e scripts
-└── Dockerfile                 # Container Docker
 ```
 
 ## 🎯 Funcionalidades
@@ -228,25 +227,6 @@ export const ComponentName: React.FC<ComponentProps> = ({ prop1, prop2 }) => {
 - `npm run build` - Gera build de produção
 - `npm run preview` - Visualiza build de produção localmente
 - `npm run lint` - Executa linter ESLint
-
-## 🐳 Docker
-
-A aplicação pode ser executada via Docker:
-
-```bash
-# Build da imagem
-docker build -t syscecilia-frontend .
-
-# Executar container
-docker run -p 80:80 syscecilia-frontend
-```
-
-Ou utilizando o docker-compose na raiz do projeto:
-
-```bash
-cd ..
-docker-compose up frontend
-```
 
 ## 🎯 Features de Impressão
 

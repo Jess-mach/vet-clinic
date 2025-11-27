@@ -22,7 +22,7 @@ Sistema web para gerenciamento de clínica veterinária, desenvolvido com Spring
 
 - Java 21
 - Node.js (versão 18+)
-- Docker e Docker Compose
+- Docker
 - Maven
 
 ## 📁 Estrutura do Projeto
@@ -240,6 +240,3 @@ lsof -ti:8080 | xargs kill -9
 Jéssica Machado 
 
 Projeto acadêmico - ADS 3
- 
-## 🛠️ Comandos Úteis
-📖 **[Guia Completo Docker](DOCKER.md)** - Comandos, troubleshooting e dicas avançadas
