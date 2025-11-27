@@ -26,6 +26,20 @@ export function ConsultationFiltersComponent({
   const [veterinarians, setVeterinarians] = useState<Veterinarian[]>([]);
   const [loadingVeterinarians, setLoadingVeterinarians] = useState(false);
 
+  const CONSULTATION_REASON_OPTIONS = [
+    { value: 1, label: 'Consulta com clinico geral' },
+    { value: 2, label: 'Consulta com oftalmologista' },
+    { value: 3, label: 'Consulta com cardiologista' },
+    { value: 4, label: 'Consulta com ortopedista' },
+    { value: 5, label: 'Consulta com neurologista' },
+    { value: 6, label: 'Exames' },
+    { value: 7, label: 'Exame de imagem (raio-x, ultrassom, etc.)' },
+    { value: 8, label: 'Vacinação' },
+    { value: 9, label: 'Cirurgia' },
+    { value: 10, label: 'Retorno' },
+    { value: 11, label: 'Emergência' },
+  ];
+
   // Load veterinarians for filter dropdown
   useEffect(() => {
     const fetchVeterinarians = async () => {
@@ -67,7 +81,9 @@ export function ConsultationFiltersComponent({
       filters.veterinarianId = typeof veterinarianId === 'number' ? veterinarianId : Number(veterinarianId);
     }
     if (status) filters.status = status as 'COMPLETED' | 'SCHEDULED' | 'CANCELLED';
-    if (reason.trim()) filters.reason = reason.trim();
+    if (reason){ 
+      filters.reason = CONSULTATION_REASON_OPTIONS.find(option => option.value === Number(reason))?.label;
+    }
     if (description.trim()) filters.description = description.trim();
     if (createdAtStart) filters.createdAtStart = formatDateTimeForBackend(createdAtStart);
     if (createdAtEnd) filters.createdAtEnd = formatDateTimeForBackend(createdAtEnd);
@@ -208,14 +224,19 @@ export function ConsultationFiltersComponent({
               <label htmlFor="reason" className="filter-label">
                 📝 Motivo
               </label>
-              <input
-                id="reason"
-                type="text"
-                placeholder="Ex: Checkup, Vacinação..."
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                className="filter-input"
-              />
+              <select
+                  id="reason"
+                  name="reason"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="filter-select"
+                >
+
+                <option value="">Selecione um tipo</option>
+                {CONSULTATION_REASON_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+                </select>
             </div>
 
             <div className="filter-group">

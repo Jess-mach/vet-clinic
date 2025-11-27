@@ -87,13 +87,20 @@ export function AnimalFiltersComponent({ onSearch, onClear }: AnimalFiltersProps
 
             <div className="filter-group">
               <label htmlFor="species">Espécie</label>
-              <input
-                id="species"
-                type="text"
-                placeholder="Ex: Cachorro, Gato, Pássaro"
-                value={filters.species || ''}
-                onChange={(e) => handleChange('species', e.target.value)}
-              />
+                <select
+                  id="species"
+                  name="species"
+                  placeholder="Ex: Cachorro, Gato, Pássaro"
+                  value={filters.species || ''}
+                  onChange={(e) => handleChange('species', e.target.value)}
+                >
+                  <option value="">Selecione...</option>
+                  <option value="Dog">Cão</option>
+                  <option value="Cat">Gato</option>
+                  <option value="Bird">Ave</option>
+                  <option value="Rabbit">Coelho</option>
+                  <option value="Other">Outro</option>
+                </select>
             </div>
 
             <div className="filter-group">
