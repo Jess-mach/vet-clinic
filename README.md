@@ -237,6 +237,6 @@ lsof -ti:8080 | xargs kill -9
 
 ## 👥 Desenvolvido por
 
-Jéssica Machado 
+Jéssica Machado [Github](https://github.com/Jess-mach)
 
 Projeto acadêmico - ADS 3
